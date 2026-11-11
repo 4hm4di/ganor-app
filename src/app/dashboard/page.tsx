@@ -9,7 +9,8 @@ export const metadata: Metadata = { title: "My events" }
 
 const STATUS_LABEL: Record<string, string> = { draft: "Draft", published: "Live", cancelled: "Cancelled" }
 
-export default async function Dashboard() {
+export default async function Dashboard({ searchParams }: { searchParams: Promise<{ password?: string }> }) {
+  const sp = await searchParams
   const { supabase, userId } = await getUserId()
   if (!userId) redirect("/login")
 
@@ -38,6 +39,9 @@ export default async function Dashboard() {
         </Link>
       </div>
 
+      {sp.password === "updated" && (
+        <div className="alert alert--ok" role="status" style={{ marginBottom: 16 }}><Icon name="check-circle" /><span>Your password was updated.</span></div>
+      )}
       {!events?.length ? (
         <div className="card empty">
           <Icon name="ticket" size={48} />
