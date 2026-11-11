@@ -18,7 +18,7 @@ export default async function Dashboard({ searchParams }: { searchParams: Promis
     supabase.from("profiles").select("display_name").eq("id", userId).single(),
     supabase
       .from("events")
-      .select("id, title, city, venue_name, starts_at, status, ticket_types(quantity, sold)")
+      .select("id, title, city, venue_name, starts_at, status, cover_url, ticket_types(quantity, sold)")
       .eq("host_id", userId)
       .order("starts_at", { ascending: true }),
   ])
@@ -59,7 +59,11 @@ export default async function Dashboard({ searchParams }: { searchParams: Promis
             const sold = e.ticket_types.reduce((n, t) => n + t.sold, 0)
             return (
               <Link key={e.id} href={`/dashboard/events/${e.id}`} className="evrow">
-                <span className="datebox">
+                <span className={`datebox${e.cover_url ? " datebox--img" : ""}`}>
+                  {e.cover_url && (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={e.cover_url} alt="" width={128} height={64} loading="lazy" />
+                  )}
                   <b>{formatDate(e.starts_at, { day: "numeric" })}</b>
                   <span>{formatDate(e.starts_at, { month: "short" })}</span>
                 </span>

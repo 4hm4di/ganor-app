@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache"
 import { redirect } from "next/navigation"
 import { getUserId } from "@/lib/supabase/server"
 import { CATEGORIES, lagosLocalToIso, slugify } from "@/lib/ganor"
+import { isOwnImage, objectPath, type Bucket } from "@/lib/storage"
 
 export type FormState = { status: "idle" | "ok" | "error"; message?: string; fields?: Record<string, string> }
 
@@ -121,6 +122,25 @@ export async function deleteDraft(fd: FormData) {
 export async function addTicketType(_prev: FormState, fd: FormData): Promise<FormState> {
   const { supabase } = await requireHost()
   const event_id = str(fd, "event_id")
+  const { fields, errors, price_kobo, quantity, maxPer } = readTicket(fd)
+  if (errors.length) return { status: "error", message: errors.join(" "), fields }
+
+  const { count } = await supabase.from("ticket_types").select("id", { count: "exact", head: true }).eq("event_id", event_id)
+  const { error } = await supabase.from("ticket_types").insert({
+    event_id,
+    name: fields.name,
+    description: fields.description,
+    price_kobo,
+    quantity,
+    max_per_order: maxPer,
+    sort_order: count ?? 0,
+  })
+  if (error) return { status: "error", message: "We couldn't add the ticket. Try again.", fields }
+  await revalidateEvent(supabase, event_id)
+  return { status: "ok", message: `${fields.name} added.` }
+}
+
+function readTicket(fd: FormData) {
   const fields = {
     name: str(fd, "name"),
     price: str(fd, "price").replace(/[,\s₦]/g, ""),
@@ -136,21 +156,73 @@ export async function addTicketType(_prev: FormState, fd: FormData): Promise<For
   if (!Number.isFinite(price) || price < 0 || price > 10_000_000) errors.push("Enter a price in naira, or 0 for free.")
   if (!Number.isInteger(quantity) || quantity < 1 || quantity > 100000) errors.push("Enter how many tickets (1 to 100,000).")
   if (!Number.isInteger(maxPer) || maxPer < 1 || maxPer > 50) errors.push("Tickets per order must be 1 to 50.")
+  return { fields, errors, price_kobo: Math.round(price * 100), quantity, maxPer }
+}
+
+export async function updateTicketType(_prev: FormState, fd: FormData): Promise<FormState> {
+  const { supabase } = await requireHost()
+  const id = str(fd, "id")
+  const event_id = str(fd, "event_id")
+  const { fields, errors, price_kobo, quantity, maxPer } = readTicket(fd)
   if (errors.length) return { status: "error", message: errors.join(" "), fields }
 
-  const { count } = await supabase.from("ticket_types").select("id", { count: "exact", head: true }).eq("event_id", event_id)
-  const { error } = await supabase.from("ticket_types").insert({
-    event_id,
-    name: fields.name,
-    description: fields.description,
-    price_kobo: Math.round(price * 100),
-    quantity,
-    max_per_order: maxPer,
-    sort_order: count ?? 0,
-  })
-  if (error) return { status: "error", message: "We couldn't add the ticket. Try again.", fields }
-  revalidatePath(`/dashboard/events/${event_id}`)
-  return { status: "ok", message: `${fields.name} added.` }
+  const { data: current } = await supabase.from("ticket_types").select("sold, price_kobo").eq("id", id).single()
+  if (!current) return { status: "error", message: "We couldn't find that ticket.", fields }
+  if (quantity < current.sold) return { status: "error", message: `You've already sold ${current.sold}. The total can't go below that.`, fields }
+  if (current.sold > 0 && price_kobo !== current.price_kobo) return { status: "error", message: "The price is locked once tickets have sold. Add a new ticket type instead.", fields }
+
+  const { error } = await supabase
+    .from("ticket_types")
+    .update({ name: fields.name, description: fields.description, price_kobo, quantity, max_per_order: maxPer })
+    .eq("id", id)
+  if (error) return { status: "error", message: "We couldn't save the ticket. Try again.", fields }
+  await revalidateEvent(supabase, event_id)
+  return { status: "ok", message: `${fields.name} saved.` }
+}
+
+async function revalidateEvent(supabase: Awaited<ReturnType<typeof requireHost>>["supabase"], eventId: string) {
+  revalidatePath("/dashboard")
+  revalidatePath(`/dashboard/events/${eventId}`)
+  const { data } = await supabase.from("events").select("slug").eq("id", eventId).single()
+  if (data) revalidatePath(`/e/${data.slug}`)
+}
+
+export async function setFeeMode(fd: FormData) {
+  const { supabase } = await requireHost()
+  const id = str(fd, "id")
+  const mode = str(fd, "fee_mode")
+  if (mode !== "buyer" && mode !== "absorb") return
+  await supabase.from("events").update({ fee_mode: mode }).eq("id", id)
+  await revalidateEvent(supabase, id)
+}
+
+async function replaceImage(bucket: Bucket, url: string, oldUrl: string | null, userId: string, supabase: Awaited<ReturnType<typeof requireHost>>["supabase"]) {
+  if (url && !isOwnImage(url, bucket, userId)) return false
+  const oldPath = objectPath(oldUrl, bucket)
+  if (oldPath && oldUrl !== url) await supabase.storage.from(bucket).remove([oldPath])
+  return true
+}
+
+export async function saveEventBanner(eventId: string, url: string): Promise<{ ok: boolean; message?: string }> {
+  const { supabase, userId } = await requireHost()
+  const { data: ev } = await supabase.from("events").select("cover_url").eq("id", eventId).eq("host_id", userId).single()
+  if (!ev) return { ok: false, message: "We couldn't find that event." }
+  if (!(await replaceImage("event-banners", url, ev.cover_url, userId, supabase))) return { ok: false, message: "That image couldn't be used." }
+  const { error } = await supabase.from("events").update({ cover_url: url || null }).eq("id", eventId)
+  if (error) return { ok: false, message: "We couldn't save the banner. Try again." }
+  await revalidateEvent(supabase, eventId)
+  return { ok: true }
+}
+
+export async function saveHostLogo(url: string): Promise<{ ok: boolean; message?: string }> {
+  const { supabase, userId } = await requireHost()
+  const { data: p } = await supabase.from("profiles").select("logo_url").eq("id", userId).single()
+  if (!(await replaceImage("host-logos", url, p?.logo_url ?? null, userId, supabase))) return { ok: false, message: "That image couldn't be used." }
+  const { error } = await supabase.from("profiles").update({ logo_url: url || null }).eq("id", userId)
+  if (error) return { ok: false, message: "We couldn't save the logo. Try again." }
+  revalidatePath("/dashboard", "layout")
+  revalidatePath("/e/[slug]", "page")
+  return { ok: true }
 }
 
 export async function deleteTicketType(fd: FormData) {
@@ -158,18 +230,51 @@ export async function deleteTicketType(fd: FormData) {
   const id = str(fd, "id")
   const event_id = str(fd, "event_id")
   await supabase.from("ticket_types").delete().eq("id", id).eq("sold", 0)
-  revalidatePath(`/dashboard/events/${event_id}`)
+  await revalidateEvent(supabase, event_id)
 }
 
 export async function updateProfile(_prev: FormState, fd: FormData): Promise<FormState> {
   const { supabase, userId } = await requireHost()
-  const display_name = str(fd, "display_name")
-  const phone = str(fd, "phone")
-  if (display_name.length < 2 || display_name.length > 80) return { status: "error", message: "Enter the name guests will see (2 to 80 characters).", fields: { display_name, phone } }
-  if (phone && !/^(\+?234|0)[789][01]\d{8}$/.test(phone.replace(/[\s-]/g, ""))) return { status: "error", message: "Enter a Nigerian phone number, like 0810 330 1999.", fields: { display_name, phone } }
-  const { error: e1 } = await supabase.from("profiles").update({ display_name }).eq("id", userId)
-  const { error: e2 } = await supabase.from("host_contacts").upsert({ host_id: userId, phone: phone || null })
-  if (e1 || e2) return { status: "error", message: "We couldn't save your profile. Try again.", fields: { display_name, phone } }
+  const fields = {
+    display_name: str(fd, "display_name"),
+    bio: str(fd, "bio"),
+    contact_whatsapp: str(fd, "contact_whatsapp"),
+    contact_email: str(fd, "contact_email").toLowerCase(),
+    website: str(fd, "website"),
+    instagram: str(fd, "instagram").replace(/^@/, "").replace(/^https?:\/\/(www\.)?instagram\.com\//i, "").replace(/\/$/, ""),
+    phone: str(fd, "phone"),
+  }
+  const fail = (message: string) => ({ status: "error" as const, message, fields })
+  if (fields.display_name.length < 2 || fields.display_name.length > 80) return fail("Enter the name guests will see (2 to 80 characters).")
+  if (fields.bio.length > 280) return fail("Keep the short description under 280 characters.")
+
+  const toIntl = (v: string) => {
+    const d = v.replace(/[\s()-]/g, "")
+    if (/^0[789][01]\d{8}$/.test(d)) return "234" + d.slice(1)
+    if (/^\+?234[789][01]\d{8}$/.test(d)) return d.replace(/^\+/, "")
+    return null
+  }
+  const whatsapp = fields.contact_whatsapp ? toIntl(fields.contact_whatsapp) : null
+  if (fields.contact_whatsapp && !whatsapp) return fail("Enter the WhatsApp number as a Nigerian number, like 0810 330 1999.")
+  if (fields.contact_email && !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(fields.contact_email)) return fail("Check the contact email.")
+  let website = fields.website
+  if (website && !/^https?:\/\//i.test(website)) website = `https://${website}`
+  if (website && !/^https?:\/\/[^\s/]+\.[^\s]{2,}/i.test(website)) return fail("Check the website address.")
+  if (fields.instagram && !/^[A-Za-z0-9._]{1,30}$/.test(fields.instagram)) return fail("Check the Instagram username.")
+  const phone = fields.phone ? toIntl(fields.phone) : null
+  if (fields.phone && !phone) return fail("Enter your private number as a Nigerian number, like 0810 330 1999.")
+
+  const { error: e1 } = await supabase.from("profiles").update({
+    display_name: fields.display_name,
+    bio: fields.bio,
+    contact_whatsapp: whatsapp,
+    contact_email: fields.contact_email || null,
+    website: website || null,
+    instagram: fields.instagram || null,
+  }).eq("id", userId)
+  const { error: e2 } = await supabase.from("host_contacts").upsert({ host_id: userId, phone })
+  if (e1 || e2) return fail("We couldn't save your profile. Try again.")
   revalidatePath("/dashboard", "layout")
+  revalidatePath("/e/[slug]", "page")
   return { status: "ok", message: "Profile saved." }
 }

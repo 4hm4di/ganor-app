@@ -13,6 +13,7 @@ export type Database = {
           created_at: string
           description: string
           ends_at: string | null
+          fee_mode: string
           halal_friendly: boolean
           host_id: string
           id: string
@@ -32,6 +33,7 @@ export type Database = {
           created_at?: string
           description?: string
           ends_at?: string | null
+          fee_mode?: string
           halal_friendly?: boolean
           host_id: string
           id?: string
@@ -70,9 +72,31 @@ export type Database = {
         ]
       }
       profiles: {
-        Row: { created_at: string; display_name: string; id: string; updated_at: string }
-        Insert: { created_at?: string; display_name?: string; id: string; updated_at?: string }
-        Update: { created_at?: string; display_name?: string; id?: string; updated_at?: string }
+        Row: {
+          bio: string
+          contact_email: string | null
+          contact_whatsapp: string | null
+          created_at: string
+          display_name: string
+          id: string
+          instagram: string | null
+          logo_url: string | null
+          updated_at: string
+          website: string | null
+        }
+        Insert: {
+          bio?: string
+          contact_email?: string | null
+          contact_whatsapp?: string | null
+          created_at?: string
+          display_name?: string
+          id: string
+          instagram?: string | null
+          logo_url?: string | null
+          updated_at?: string
+          website?: string | null
+        }
+        Update: Partial<Database["public"]["Tables"]["profiles"]["Insert"]>
         Relationships: []
       }
       ticket_types: {
