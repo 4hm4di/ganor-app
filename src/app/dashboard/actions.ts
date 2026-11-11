@@ -278,3 +278,21 @@ export async function updateProfile(_prev: FormState, fd: FormData): Promise<For
   revalidatePath("/e/[slug]", "page")
   return { status: "ok", message: "Profile saved." }
 }
+
+// Called from the switches in the host tools. Row Level Security limits both to the event's host.
+export async function setTicketOnSale(ticketId: string, eventId: string, onSale: boolean): Promise<{ ok: boolean }> {
+  const { supabase } = await requireHost()
+  const { error } = await supabase.from("ticket_types").update({ on_sale: onSale }).eq("id", ticketId).eq("event_id", eventId)
+  if (error) return { ok: false }
+  await revalidateEvent(supabase, eventId)
+  return { ok: true }
+}
+
+export async function saveFeeMode(eventId: string, mode: "buyer" | "absorb"): Promise<{ ok: boolean }> {
+  if (mode !== "buyer" && mode !== "absorb") return { ok: false }
+  const { supabase } = await requireHost()
+  const { error } = await supabase.from("events").update({ fee_mode: mode }).eq("id", eventId)
+  if (error) return { ok: false }
+  await revalidateEvent(supabase, eventId)
+  return { ok: true }
+}

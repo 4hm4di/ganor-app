@@ -23,7 +23,7 @@ export function ForgotForm() {
         <input type="email" name="email" required autoComplete="email" inputMode="email" autoCapitalize="none" autoCorrect="off" enterKeyHint="send" defaultValue={state.email} placeholder="you@example.com" />
       </label>
       <SubmitButton pendingText="Sending…" block>Send reset link</SubmitButton>
-      <p className="small muted switch"><Link href="/login">Back to sign in</Link></p>
+      <p className="small muted authswitch"><Link href="/login">Back to sign in</Link></p>
     </form>
   )
 }

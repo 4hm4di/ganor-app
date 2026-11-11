@@ -58,7 +58,7 @@ export default async function EventPage({ params }: { params: Promise<{ slug: st
   if (!ev) notFound()
   const { userId } = await getUserId()
   const isHost = userId === ev.host_id
-  const tickets = ev.ticket_types ?? []
+  const tickets = (ev.ticket_types ?? []).filter((t) => t.on_sale)
   const host = ev.profiles as Host
   const ended = new Date(ev.ends_at ?? ev.starts_at) < new Date()
   const live = ev.status === "published"

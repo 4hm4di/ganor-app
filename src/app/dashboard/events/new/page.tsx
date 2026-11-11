@@ -1,5 +1,4 @@
 import type { Metadata } from "next"
-import Link from "next/link"
 import { EventForm } from "../../EventForm"
 import { Icon } from "@/components/Icon"
 
@@ -10,8 +9,8 @@ export default function NewEvent() {
     <div className="wrap--narrow">
       <div className="pagehead">
         <div>
-          <Link href="/dashboard" className="crumb"><Icon name="arrow-right" size={16} />My events</Link>
-          <h1>New event</h1>
+          <span className="kicker"><Icon name="add-circle" size={18} />Host dashboard</span>
+          <h1 style={{ marginTop: 10 }}>New event</h1>
           <p className="muted">It stays a draft until you publish it. You&rsquo;ll add tickets next.</p>
         </div>
       </div>

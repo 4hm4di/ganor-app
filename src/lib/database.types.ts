@@ -107,6 +107,7 @@ export type Database = {
           id: string
           max_per_order: number
           name: string
+          on_sale: boolean
           price_kobo: number
           quantity: number
           sold: number
@@ -120,6 +121,7 @@ export type Database = {
           id?: string
           max_per_order?: number
           name: string
+          on_sale?: boolean
           price_kobo?: number
           quantity: number
           sold?: number

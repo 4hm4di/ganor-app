@@ -4,6 +4,7 @@ import { useRef, useState, useTransition } from "react"
 import { createClient } from "@/lib/supabase/client"
 import type { Bucket } from "@/lib/storage"
 import { Icon } from "./Icon"
+import { Loader } from "./Loader"
 
 type SaveAction = (url: string) => Promise<{ ok: boolean; message?: string }>
 
@@ -82,7 +83,7 @@ export function ImageUpload({
         ) : (
           <span className="upload__empty"><Icon name="image" size={shape === "banner" ? 32 : 24} /></span>
         )}
-        {busy && <span className="upload__busy">Uploading…</span>}
+        {busy && <span className="upload__busy"><Loader size={36} /><span>Uploading…</span></span>}
       </div>
       <div className="upload__side">
         <span className="field__label">{label}</span>

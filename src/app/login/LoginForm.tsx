@@ -116,7 +116,7 @@ export function LoginForm({ mode, next, providers, error }: { mode: Mode; next: 
         </form>
       )}
 
-      <p className="small muted switch">
+      <p className="small muted authswitch">
         {mode === "signin" && <>New to Ganor? <Link href={q("signup")}>Create a host account</Link> · <Link href={q("link")}>Email me a link instead</Link></>}
         {mode === "signup" && <>Already have an account? <Link href={q("signin")}>Sign in</Link></>}
         {mode === "link" && <>Prefer a password? <Link href={q("signin")}>Sign in</Link> · <Link href={q("signup")}>Create an account</Link></>}
