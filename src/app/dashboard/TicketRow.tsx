@@ -3,6 +3,7 @@
 import { useActionState, useOptimistic, useState, useTransition } from "react"
 import { deleteTicketType, setTicketOnSale, updateTicketType, type FormState } from "./actions"
 import { SubmitButton } from "@/components/SubmitButton"
+import { ConfirmButton } from "@/components/ConfirmButton"
 import { Icon } from "@/components/Icon"
 import { formatNaira } from "@/lib/ganor"
 import type { TicketTypeRow } from "@/lib/database.types"
@@ -54,29 +55,29 @@ export function TicketRow({ t }: { t: TicketTypeRow }) {
         <input type="hidden" name="event_id" value={t.event_id} />
         {state.status === "error" && <div className="alert alert--error" role="alert"><Icon name="warning" /><span>{state.message}</span></div>}
         <label className="field"><span className="field__label">Ticket name</span>
-          <input name="name" required maxLength={60} defaultValue={state.fields?.name ?? t.name} />
+          <input autoComplete="off" name="name" required maxLength={60} defaultValue={state.fields?.name ?? t.name} />
         </label>
         <div className="grid2">
           <label className="field"><span className="field__label">Price (₦){t.sold > 0 && <small> locked</small>}</span>
-            <input name="price" inputMode="decimal" defaultValue={state.fields?.price ?? String(t.price_kobo / 100)} readOnly={t.sold > 0} aria-readonly={t.sold > 0} />
+            <input autoComplete="off" name="price" inputMode="decimal" defaultValue={state.fields?.price ?? String(t.price_kobo / 100)} readOnly={t.sold > 0} aria-readonly={t.sold > 0} />
           </label>
           <label className="field"><span className="field__label">How many</span>
-            <input name="quantity" required inputMode="numeric" defaultValue={state.fields?.quantity ?? String(t.quantity)} />
+            <input autoComplete="off" name="quantity" required inputMode="numeric" defaultValue={state.fields?.quantity ?? String(t.quantity)} />
           </label>
         </div>
         <label className="field"><span className="field__label">Most per order</span>
-          <input name="max_per_order" inputMode="numeric" defaultValue={state.fields?.max_per_order ?? String(t.max_per_order)} />
+          <input autoComplete="off" name="max_per_order" inputMode="numeric" defaultValue={state.fields?.max_per_order ?? String(t.max_per_order)} />
         </label>
         <label className="field"><span className="field__label">What&rsquo;s included <small>(optional)</small></span>
-          <input name="description" maxLength={280} defaultValue={state.fields?.description ?? t.description} />
+          <input autoComplete="off" name="description" maxLength={280} defaultValue={state.fields?.description ?? t.description} />
         </label>
         <div className="actions" style={{ justifyContent: "space-between" }}>
           <div className="actions" style={{ gap: 8 }}>
-            <SubmitButton size="xs" arrow={false} pendingText="Saving">Save</SubmitButton>
+            <SubmitButton size="xs" arrow={false} pendingText="Saving…">Save</SubmitButton>
             <button type="button" className="btn btn--ghost btn--xs btn--plain" onClick={() => setEditing(false)}>Cancel</button>
           </div>
           {t.sold === 0 && (
-            <button type="submit" formAction={deleteTicketType} className="btn btn--danger btn--xs btn--plain">Delete</button>
+            <ConfirmButton formAction={deleteTicketType} className="btn btn--danger btn--xs btn--plain" confirmText="Tap again to delete" pendingText="Deleting…">Delete</ConfirmButton>
           )}
         </div>
       </form>

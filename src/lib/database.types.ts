@@ -99,6 +99,28 @@ export type Database = {
         Update: Partial<Database["public"]["Tables"]["profiles"]["Insert"]>
         Relationships: []
       }
+      event_ratings: {
+        Row: {
+          comment: string
+          created_at: string
+          event_id: string
+          host_id: string
+          id: string
+          stars: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          comment?: string
+          event_id: string
+          stars: number
+        }
+        Update: {
+          comment?: string
+          stars?: number
+        }
+        Relationships: []
+      }
       ticket_types: {
         Row: {
           created_at: string
@@ -140,7 +162,12 @@ export type Database = {
         ]
       }
     }
-    Views: { [_ in never]: never }
+    Views: {
+      host_ratings: {
+        Row: { host_id: string; average: number; count: number }
+        Relationships: []
+      }
+    }
     Functions: { [_ in never]: never }
     Enums: { [_ in never]: never }
     CompositeTypes: { [_ in never]: never }

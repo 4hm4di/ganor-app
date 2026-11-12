@@ -4,6 +4,8 @@ import Link from "next/link"
 import { useActionState, useState } from "react"
 import { sendLoginLink, signInWithPassword, signInWithProvider, signUpWithPassword, type AuthState } from "./actions"
 import { SubmitButton } from "@/components/SubmitButton"
+import { Loader } from "@/components/Loader"
+import { useFormStatus } from "react-dom"
 import { Icon } from "@/components/Icon"
 import { ProviderLogo } from "@/components/ProviderLogo"
 
@@ -48,10 +50,7 @@ export function LoginForm({ mode, next, providers, error }: { mode: Mode; next: 
               <form action={signInWithProvider} key={p.id}>
                 <input type="hidden" name="provider" value={p.id} />
                 <input type="hidden" name="next" value={next} />
-                <button type="submit" className={`oauth__btn oauth__btn--${p.id}`}>
-                  <ProviderLogo id={p.id} />
-                  <span>Continue with {p.label}</span>
-                </button>
+                <ProviderButton id={p.id} label={p.label} />
               </form>
             ))}
           </div>
@@ -122,5 +121,16 @@ export function LoginForm({ mode, next, providers, error }: { mode: Mode; next: 
         {mode === "link" && <>Prefer a password? <Link href={q("signin")}>Sign in</Link> · <Link href={q("signup")}>Create an account</Link></>}
       </p>
     </div>
+  )
+}
+
+// Shows the Ganor loader in place of the provider logo while we hand off to Google, Microsoft or Apple.
+function ProviderButton({ id, label }: Provider) {
+  const { pending } = useFormStatus()
+  return (
+    <button type="submit" className={`oauth__btn oauth__btn--${id}`} disabled={pending} aria-busy={pending}>
+      {pending ? <Loader size={22} /> : <ProviderLogo id={id} />}
+      <span>{pending ? `Opening ${label}…` : `Continue with ${label}`}</span>
+    </button>
   )
 }

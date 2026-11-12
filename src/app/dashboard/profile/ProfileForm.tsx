@@ -31,7 +31,7 @@ export function ProfileForm({ initial }: { initial: Values }) {
       </label>
       <label className="field">
         <span className="field__label">About you <small>(optional, 280 characters)</small></span>
-        <textarea name="bio" maxLength={280} defaultValue={v.bio} style={{ minHeight: 90 }} placeholder="Who you are and the events you run." />
+        <textarea name="bio" maxLength={280} defaultValue={v.bio} style={{ minHeight: 90 }} placeholder="Who you are and the events you run…" />
       </label>
 
       <div>
@@ -41,21 +41,21 @@ export function ProfileForm({ initial }: { initial: Values }) {
       <div className="grid2">
         <label className="field">
           <span className="field__label">WhatsApp</span>
-          <input name="contact_whatsapp" type="tel" inputMode="tel" defaultValue={v.contact_whatsapp} placeholder="0810 330 1999" autoComplete="tel" />
+          <input name="contact_whatsapp" type="tel" inputMode="tel" defaultValue={v.contact_whatsapp} placeholder="0803 000 0000" autoComplete="tel" />
         </label>
         <label className="field">
           <span className="field__label">Email</span>
-          <input name="contact_email" type="email" inputMode="email" autoCapitalize="none" defaultValue={v.contact_email} placeholder="events@yourorg.ng" />
+          <input name="contact_email" type="email" inputMode="email" autoCapitalize="none" spellCheck={false} autoComplete="email" defaultValue={v.contact_email} placeholder="events@yourorg.ng" />
         </label>
       </div>
       <div className="grid2">
         <label className="field">
           <span className="field__label">Website</span>
-          <input name="website" inputMode="url" autoCapitalize="none" defaultValue={v.website} placeholder="yourorg.ng" />
+          <input name="website" inputMode="url" autoCapitalize="none" spellCheck={false} autoComplete="url" defaultValue={v.website} placeholder="yourorg.ng" />
         </label>
         <label className="field">
           <span className="field__label">Instagram</span>
-          <input name="instagram" autoCapitalize="none" defaultValue={v.instagram} placeholder="@yourorg" />
+          <input name="instagram" autoCapitalize="none" spellCheck={false} autoComplete="off" defaultValue={v.instagram} placeholder="@yourorg" />
         </label>
       </div>
 
@@ -64,7 +64,7 @@ export function ProfileForm({ initial }: { initial: Values }) {
       </div>
       <label className="field">
         <span className="field__label">Your phone number <small>(private)</small></span>
-        <input name="phone" type="tel" inputMode="tel" defaultValue={v.phone} placeholder="0810 330 1999" autoComplete="tel" />
+        <input name="phone" type="tel" inputMode="tel" defaultValue={v.phone} placeholder="0803 000 0000" autoComplete="tel" />
         <span className="field__hint">Only Ganor support sees this, to reach you about payouts.</span>
       </label>
       <div className="actions"><SubmitButton>Save profile</SubmitButton></div>

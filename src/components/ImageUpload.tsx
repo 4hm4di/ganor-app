@@ -83,7 +83,7 @@ export function ImageUpload({
         ) : (
           <span className="upload__empty"><Icon name="image" size={shape === "banner" ? 32 : 24} /></span>
         )}
-        {busy && <span className="upload__busy"><Loader size={36} /><span>Uploading…</span></span>}
+        {busy && <span className="upload__busy"><Loader size={48} /><span>Uploading…</span></span>}
       </div>
       <div className="upload__side">
         <span className="field__label">{label}</span>

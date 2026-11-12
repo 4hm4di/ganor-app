@@ -20,26 +20,26 @@ export function TicketForm({ eventId, first }: { eventId: string; first: boolean
       <div className="grid2">
         <label className="field">
           <span className="field__label">Ticket name</span>
-          <input name="name" required maxLength={60} defaultValue={state.fields?.name ?? (first ? "Regular" : "")} placeholder="Regular, VIP, Student" />
+          <input autoComplete="off" name="name" required maxLength={60} defaultValue={state.fields?.name ?? (first ? "Regular" : "")} placeholder="Regular, VIP, Student…" />
         </label>
         <label className="field">
           <span className="field__label">Price in naira <small>(0 for free)</small></span>
-          <input name="price" inputMode="decimal" defaultValue={state.fields?.price ?? ""} onChange={(e) => setPrice(e.target.value)} placeholder="5,000" />
+          <input autoComplete="off" name="price" inputMode="decimal" defaultValue={state.fields?.price ?? ""} onChange={(e) => setPrice(e.target.value)} placeholder="5,000" />
         </label>
       </div>
       <div className="grid2">
         <label className="field">
           <span className="field__label">How many</span>
-          <input name="quantity" required inputMode="numeric" defaultValue={state.fields?.quantity ?? ""} placeholder="200" />
+          <input autoComplete="off" name="quantity" required inputMode="numeric" defaultValue={state.fields?.quantity ?? ""} placeholder="200" />
         </label>
         <label className="field">
           <span className="field__label">Most per order</span>
-          <input name="max_per_order" inputMode="numeric" defaultValue={state.fields?.max_per_order ?? "10"} />
+          <input autoComplete="off" name="max_per_order" inputMode="numeric" defaultValue={state.fields?.max_per_order ?? "10"} />
         </label>
       </div>
       <label className="field">
         <span className="field__label">What&rsquo;s included <small>(optional)</small></span>
-        <input name="description" maxLength={280} defaultValue={state.fields?.description ?? ""} placeholder="Front rows, lunch, certificate" />
+        <input autoComplete="off" name="description" maxLength={280} defaultValue={state.fields?.description ?? ""} placeholder="Front rows, lunch, certificate…" />
       </label>
       <p className="field__hint">
         {kobo > 0

@@ -38,7 +38,7 @@ export function EventForm({ initial, mode }: { initial?: Values; mode: "create" 
 
       <label className="field">
         <span className="field__label">Event name</span>
-        <input name="title" required maxLength={120} defaultValue={String(v.title ?? "")} placeholder="Kano Halal Trade Fair 2026" />
+        <input autoComplete="off" name="title" required maxLength={120} defaultValue={String(v.title ?? "")} placeholder="Kano Halal Trade Fair 2026…" />
       </label>
 
       <div className="grid2">
@@ -59,7 +59,7 @@ export function EventForm({ initial, mode }: { initial?: Values; mode: "create" 
       <div className="grid2">
         <label className="field">
           <span className="field__label">Venue</span>
-          <input name="venue_name" required maxLength={120} defaultValue={String(v.venue_name ?? "")} placeholder="Kano State Banquet Hall" />
+          <input autoComplete="off" name="venue_name" required maxLength={120} defaultValue={String(v.venue_name ?? "")} placeholder="Kano State Banquet Hall…" />
         </label>
         <label className="field">
           <span className="field__label">Address <small>(optional)</small></span>
@@ -70,18 +70,18 @@ export function EventForm({ initial, mode }: { initial?: Values; mode: "create" 
       <div className="grid2">
         <label className="field">
           <span className="field__label">Starts</span>
-          <input type="datetime-local" name="starts_at" required defaultValue={String(v.starts_at ?? "")} />
+          <input autoComplete="off" type="datetime-local" name="starts_at" required defaultValue={String(v.starts_at ?? "")} />
         </label>
         <label className="field">
           <span className="field__label">Ends <small>(optional)</small></span>
-          <input type="datetime-local" name="ends_at" defaultValue={String(v.ends_at ?? "")} />
+          <input autoComplete="off" type="datetime-local" name="ends_at" defaultValue={String(v.ends_at ?? "")} />
         </label>
       </div>
       <p className="field__hint" style={{ marginTop: -8 }}>Times are Nigeria time (WAT).</p>
 
       <label className="field">
         <span className="field__label">About the event <small>(optional)</small></span>
-        <textarea name="description" maxLength={5000} defaultValue={String(v.description ?? "")} placeholder="What guests can expect, who it's for, what to bring." />
+        <textarea autoComplete="off" name="description" maxLength={5000} defaultValue={String(v.description ?? "")} placeholder="What guests can expect, who it’s for, what to bring…" />
       </label>
 
       <label className="check">

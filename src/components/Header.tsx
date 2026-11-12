@@ -1,5 +1,6 @@
 import Link from "next/link"
 import { getUserId } from "@/lib/supabase/server"
+import { Icon } from "./Icon"
 
 export async function Header() {
   const { userId } = await getUserId()
@@ -21,8 +22,10 @@ export async function Header() {
             </>
           ) : (
             <>
-              <a href="https://ganor.ng">ganor.ng</a>
-              <Link href="/login" className="btn btn--primary btn--xs">Host sign in</Link>
+              <Link href="/login" className="btn btn--primary btn--sm nav-cta">
+                <span>Host sign in</span>
+                <span className="btn__arrow" aria-hidden="true"><Icon name="arrow" /></span>
+              </Link>
             </>
           )}
         </nav>

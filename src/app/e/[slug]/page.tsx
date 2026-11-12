@@ -7,6 +7,8 @@ import { createClient, getUserId } from "@/lib/supabase/server"
 import { Icon } from "@/components/Icon"
 import { SocialIcon } from "@/components/SocialIcon"
 import { ShareButtons } from "@/components/ShareButtons"
+import { Stars } from "@/components/Stars"
+import { RateHost } from "./RateHost"
 import { CATEGORY_ICON, feeKobo, formatDate, formatNaira, formatTime } from "@/lib/ganor"
 
 type Host = {
@@ -56,8 +58,15 @@ export default async function EventPage({ params }: { params: Promise<{ slug: st
   const { slug } = await params
   const ev = await getEvent(slug)
   if (!ev) notFound()
-  const { userId } = await getUserId()
+  const { supabase, userId } = await getUserId()
   const isHost = userId === ev.host_id
+  const [{ data: summary }, { data: reviews }, { data: mine }] = await Promise.all([
+    supabase.from("host_ratings").select("average, count").eq("host_id", ev.host_id).maybeSingle(),
+    supabase.from("event_ratings").select("id, stars, comment, created_at").eq("host_id", ev.host_id).neq("comment", "").order("created_at", { ascending: false }).limit(3),
+    userId
+      ? supabase.from("event_ratings").select("stars, comment").eq("event_id", ev.id).eq("user_id", userId).maybeSingle()
+      : Promise.resolve({ data: null }),
+  ])
   const tickets = (ev.ticket_types ?? []).filter((t) => t.on_sale)
   const host = ev.profiles as Host
   const ended = new Date(ev.ends_at ?? ev.starts_at) < new Date()
@@ -141,7 +150,12 @@ export default async function EventPage({ params }: { params: Promise<{ slug: st
                 )}
                 <div>
                   <p className="hostcard__name">{host.display_name}</p>
-                  {host.bio && <p className="small muted">{host.bio}</p>}
+                  {summary && summary.count > 0 ? (
+                    <p className="rating"><Stars value={summary.average} />{summary.average.toFixed(1)}<small>· {summary.count} {summary.count === 1 ? "rating" : "ratings"}</small></p>
+                  ) : (
+                    <p className="small muted">No ratings yet</p>
+                  )}
+                  {host.bio && <p className="small muted" style={{ marginTop: 4 }}>{host.bio}</p>}
                 </div>
               </div>
               {contacts.length > 0 ? (
@@ -154,6 +168,36 @@ export default async function EventPage({ params }: { params: Promise<{ slug: st
                 </div>
               ) : (
                 <p className="small muted">Questions about the event? Contact the host.</p>
+              )}
+            </div>
+          )}
+          {host && reviews && reviews.length > 0 && (
+            <div className="card stack">
+              <span className="kicker"><Icon name="star" size={18} />What guests say</span>
+              <ul className="reviews">
+                {reviews.map((r) => (
+                  <li key={r.id}>
+                    <Stars value={r.stars} size={14} />
+                    <p>{r.comment}</p>
+                    <small>{formatDate(r.created_at, { day: "numeric", month: "short", year: "numeric" })}</small>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+          {host && live && ended && !isHost && (
+            <div className="card stack" id="rate">
+              <span className="kicker"><Icon name="star" size={18} />Rate the host</span>
+              {userId ? (
+                <RateHost eventId={ev.id} slug={ev.slug} host={host.display_name} mine={mine} />
+              ) : (
+                <>
+                  <p className="muted">Went to this event? Sign in to rate {host.display_name} and help other guests choose.</p>
+                  <Link href={`/login?next=${encodeURIComponent(`/e/${ev.slug}#rate`)}`} className="btn btn--primary btn--sm" style={{ justifySelf: "start" }}>
+                    <span>Sign in to rate</span>
+                    <span className="btn__arrow" aria-hidden="true"><Icon name="arrow" /></span>
+                  </Link>
+                </>
               )}
             </div>
           )}

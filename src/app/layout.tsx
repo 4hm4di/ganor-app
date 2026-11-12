@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next"
 import localFont from "next/font/local"
 import { Header } from "@/components/Header"
+import { Motion } from "@/components/Motion"
 import "./globals.css"
 
 const inter = localFont({
@@ -34,10 +35,15 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en" className={`${inter.variable} ${bricolage.variable}`}>
+    <html lang="en" className={`${inter.variable} ${bricolage.variable}`} suppressHydrationWarning>
+      <head>
+        {/* Motion styles apply only once JS runs, so content never stays hidden without it. */}
+        <script dangerouslySetInnerHTML={{ __html: "document.documentElement.classList.add('js')" }} />
+      </head>
       <body>
         <a className="skip" href="#main">Skip to content</a>
         <Header />
+        <Motion />
         <main id="main">{children}</main>
         <footer className="foot">
           <div className="wrap foot__in">

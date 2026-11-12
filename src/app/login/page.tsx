@@ -30,14 +30,14 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
 
   return (
     <div className="wrap--narrow" style={{ maxWidth: 480 }}>
-      <div className="pagehead">
+      <div className="pagehead" data-hero key={mode}>
         <div>
-          <span className="kicker">For hosts</span>
-          <h1 style={{ marginTop: 10 }}>{title}</h1>
-          <p className="muted">{lede}</p>
+          <span className="kicker" data-rise>For hosts</span>
+          <h1 style={{ marginTop: 10 }} data-lines><span className="line"><span>{title}</span></span></h1>
+          <p className="muted" data-rise>{lede}</p>
         </div>
       </div>
-      <div className="card">
+      <div className="card" data-reveal>
         <LoginForm mode={mode} next={next} providers={providers} error={sp.error ? ERRORS[sp.error] ?? ERRORS.link : undefined} />
       </div>
     </div>
