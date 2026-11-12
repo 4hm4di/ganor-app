@@ -28,7 +28,6 @@ export async function proxy(request: NextRequest) {
   const { data } = await supabase.auth.getClaims()
   let signedIn = Boolean(data?.claims?.sub)
   const path = request.nextUrl.pathname
-  const protectedPath = path.startsWith("/dashboard") || path.startsWith("/hq")
 
   if (signedIn) {
     // Idle timeout. A just-completed sign-in (within 5 minutes) counts as activity.
@@ -38,7 +37,7 @@ export async function proxy(request: NextRequest) {
     if (!request.cookies.get(ACTIVE_COOKIE) && !fresh) {
       await supabase.auth.signOut({ scope: "local" })
       signedIn = false
-      if (protectedPath) {
+      if (path.startsWith("/dashboard")) {
         const url = request.nextUrl.clone()
         url.pathname = "/login"
         url.search = `?expired=1&next=${encodeURIComponent(path)}`
@@ -51,7 +50,8 @@ export async function proxy(request: NextRequest) {
     response.cookies.set(ACTIVE_COOKIE, "1", { httpOnly: true, sameSite: "lax", secure: request.nextUrl.protocol === "https:", path: "/", maxAge: IDLE_MINUTES * 60 })
   }
 
-  if (!signedIn && protectedPath) {
+  // /hq never redirects to sign-in, so its address isn't revealed: signed-out visitors get a 404 page.
+  if (!signedIn && path.startsWith("/dashboard")) {
     const url = request.nextUrl.clone()
     url.pathname = "/login"
     url.search = `?next=${encodeURIComponent(path)}`
