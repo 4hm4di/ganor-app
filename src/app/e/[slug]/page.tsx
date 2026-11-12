@@ -8,7 +8,8 @@ import { Icon } from "@/components/Icon"
 import { SocialIcon } from "@/components/SocialIcon"
 import { ShareButtons } from "@/components/ShareButtons"
 import { Stars } from "@/components/Stars"
-import { RateHost } from "./RateHost"
+import { HostRating } from "@/components/HostRating"
+import { ReportReview } from "@/components/ReportReview"
 import { CATEGORY_ICON, feeKobo, formatDate, formatNaira, formatTime } from "@/lib/ganor"
 
 type Host = {
@@ -60,12 +61,15 @@ export default async function EventPage({ params }: { params: Promise<{ slug: st
   if (!ev) notFound()
   const { supabase, userId } = await getUserId()
   const isHost = userId === ev.host_id
-  const [{ data: summary }, { data: reviews }, { data: mine }] = await Promise.all([
-    supabase.from("host_ratings").select("average, count").eq("host_id", ev.host_id).maybeSingle(),
-    supabase.from("event_ratings").select("id, stars, comment, created_at").eq("host_id", ev.host_id).neq("comment", "").order("created_at", { ascending: false }).limit(3),
-    userId
-      ? supabase.from("event_ratings").select("stars, comment").eq("event_id", ev.id).eq("user_id", userId).maybeSingle()
-      : Promise.resolve({ data: null }),
+  const [{ data: summary }, { data: reviews }] = await Promise.all([
+    supabase.from("host_review_summary").select("*").eq("host_id", ev.host_id).maybeSingle(),
+    supabase
+      .from("event_reviews")
+      .select("id, rating, comment, display_name, attendance, publish_at, event_id")
+      .eq("host_id", ev.host_id)
+      .neq("comment", "")
+      .order("publish_at", { ascending: false })
+      .limit(5),
   ])
   const tickets = (ev.ticket_types ?? []).filter((t) => t.on_sale)
   const host = ev.profiles as Host
@@ -150,11 +154,7 @@ export default async function EventPage({ params }: { params: Promise<{ slug: st
                 )}
                 <div>
                   <p className="hostcard__name">{host.display_name}</p>
-                  {summary && summary.count > 0 ? (
-                    <p className="rating"><Stars value={summary.average} />{summary.average.toFixed(1)}<small>· {summary.count} {summary.count === 1 ? "rating" : "ratings"}</small></p>
-                  ) : (
-                    <p className="small muted">No ratings yet</p>
-                  )}
+                  <HostRating summary={summary} />
                   {host.bio && <p className="small muted" style={{ marginTop: 4 }}>{host.bio}</p>}
                 </div>
               </div>
@@ -174,31 +174,26 @@ export default async function EventPage({ params }: { params: Promise<{ slug: st
           {host && reviews && reviews.length > 0 && (
             <div className="card stack">
               <span className="kicker"><Icon name="star" size={18} />What guests say</span>
+              <HostRating summary={summary} showSpread />
               <ul className="reviews">
                 {reviews.map((r) => (
                   <li key={r.id}>
-                    <Stars value={r.stars} size={14} />
+                    <div className="actions" style={{ gap: 8 }}>
+                      <Stars value={r.rating} size={14} />
+                      <span className={`badge${r.attendance === "scanned" ? " badge--ok" : ""}`}>{r.attendance === "scanned" ? "Attended" : "Ticket holder"}</span>
+                    </div>
                     <p>{r.comment}</p>
-                    <small>{formatDate(r.created_at, { day: "numeric", month: "short", year: "numeric" })}</small>
+                    <small>{r.display_name} · {formatDate(r.publish_at, { day: "numeric", month: "short", year: "numeric" })}{r.event_id !== ev.id ? " · another event" : ""}</small>
+                    <ReportReview reviewId={r.id} />
                   </li>
                 ))}
               </ul>
             </div>
           )}
           {host && live && ended && !isHost && (
-            <div className="card stack" id="rate">
-              <span className="kicker"><Icon name="star" size={18} />Rate the host</span>
-              {userId ? (
-                <RateHost eventId={ev.id} slug={ev.slug} host={host.display_name} mine={mine} />
-              ) : (
-                <>
-                  <p className="muted">Went to this event? Sign in to rate {host.display_name} and help other guests choose.</p>
-                  <Link href={`/login?next=${encodeURIComponent(`/e/${ev.slug}#rate`)}`} className="btn btn--primary btn--sm" style={{ justifySelf: "start" }}>
-                    <span>Sign in to rate</span>
-                    <span className="btn__arrow" aria-hidden="true"><Icon name="arrow" /></span>
-                  </Link>
-                </>
-              )}
+            <div className="card stack">
+              <span className="kicker"><Icon name="star" size={18} />Rate this event</span>
+              <p className="small muted">Guests with a paid ticket get a private rating link on WhatsApp after the event, if they agreed to it at checkout. Lost yours? Email <a href="mailto:support@ganor.ng">support@ganor.ng</a> with your order number.</p>
             </div>
           )}
           {live && (

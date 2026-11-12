@@ -3,7 +3,7 @@ import Link from "next/link"
 import { redirect } from "next/navigation"
 import { getUserId } from "@/lib/supabase/server"
 import { Icon } from "@/components/Icon"
-import { Stars } from "@/components/Stars"
+import { HostRating } from "@/components/HostRating"
 import { formatDate, formatTime } from "@/lib/ganor"
 
 export const metadata: Metadata = { title: "My events" }
@@ -15,14 +15,15 @@ export default async function Dashboard({ searchParams }: { searchParams: Promis
   const { supabase, userId } = await getUserId()
   if (!userId) redirect("/login")
 
-  const [{ data: profile }, { data: events }, { data: rating }] = await Promise.all([
+  const [{ data: profile }, { data: events }, { data: rating }, { data: staff }] = await Promise.all([
     supabase.from("profiles").select("display_name").eq("id", userId).single(),
     supabase
       .from("events")
       .select("id, title, city, venue_name, starts_at, status, cover_url, ticket_types(quantity, sold)")
       .eq("host_id", userId)
       .order("starts_at", { ascending: true }),
-    supabase.from("host_ratings").select("average, count").eq("host_id", userId).maybeSingle(),
+    supabase.from("host_review_summary").select("*").eq("host_id", userId).maybeSingle(),
+    supabase.rpc("is_staff"),
   ])
 
   const first = profile?.display_name?.split(/\s+/)[0]
@@ -34,13 +35,9 @@ export default async function Dashboard({ searchParams }: { searchParams: Promis
           <span className="kicker"><Icon name="calendar" size={18} />Host dashboard</span>
           <h1 style={{ marginTop: 10 }}>{first ? `Hi ${first}` : "Your events"}</h1>
           <p className="muted">Create an event, add tickets, then publish to get your link.</p>
-          <p className="rating" style={{ marginTop: 10 }}>
-            {rating && rating.count > 0 ? (
-              <><Stars value={rating.average} />{rating.average.toFixed(1)}<small>· {rating.count} guest {rating.count === 1 ? "rating" : "ratings"}</small></>
-            ) : (
-              <><Stars value={0} /><small>No guest ratings yet. Guests can rate you after your event ends.</small></>
-            )}
-          </p>
+          <div style={{ marginTop: 10 }}><HostRating summary={rating} /></div>
+          <p className="small muted">Guests scanned at the gate rate you after your event. Your average shows once you have 5.</p>
+          {staff && <p className="small" style={{ marginTop: 6 }}><Link href="/admin/ratings">Ganor staff: rating requests and reports</Link></p>}
         </div>
         <Link href="/dashboard/events/new" className="btn btn--primary">
           <span>New event</span>
