@@ -1,6 +1,7 @@
 import { createServerClient } from "@supabase/ssr"
 import { cookies } from "next/headers"
 import type { Database } from "@/lib/database.types"
+import { sessionOnly } from "@/lib/session"
 
 // One client per request. Server Components can't set cookies, so writes there are skipped;
 // the proxy refreshes the session on every request instead.
@@ -16,7 +17,7 @@ export async function createClient() {
         },
         setAll(cookiesToSet) {
           try {
-            cookiesToSet.forEach(({ name, value, options }) => cookieStore.set(name, value, options))
+            cookiesToSet.forEach(({ name, value, options }) => cookieStore.set(name, value, sessionOnly(options)))
           } catch {
             // Called from a Server Component: ignore, the proxy keeps the session fresh.
           }

@@ -12,6 +12,7 @@ import { ImageUpload } from "@/components/ImageUpload"
 import { ShareButtons } from "@/components/ShareButtons"
 import { GanorSymbol } from "@/components/Loader"
 import { Icon } from "@/components/Icon"
+import { BackLink } from "@/components/BackLink"
 import { feeKobo, formatDate, formatNaira, formatTime, isoToLagosLocal } from "@/lib/ganor"
 
 
@@ -65,6 +66,7 @@ export function EventToolsView({ ev, userId, publicUrl, sp }: { ev: ToolsEvent; 
     <div className="wrap">
       <div className="pagehead">
         <div>
+          <BackLink href="/dashboard" label="My events" />
           <div className="actions" style={{ gap: 8 }}>
             <span className={`pill pill--${ev.status}`}>{live ? "Live" : ev.status === "draft" ? "Draft" : "Cancelled"}</span>
             {ev.halal_friendly && <span className="pill pill--halal"><Icon name="halal" size={14} />Halal-friendly</span>}

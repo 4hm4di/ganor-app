@@ -4,6 +4,7 @@ import { createClient, getUserId } from "@/lib/supabase/server"
 import { gateToken, type GateSession } from "@/lib/gate"
 import { formatDate, formatTime } from "@/lib/ganor"
 import { Scanner } from "./Scanner"
+import { CloseLink } from "@/components/BackLink"
 
 export const metadata: Metadata = { title: "Scan tickets", robots: { index: false } }
 
@@ -44,6 +45,7 @@ export default async function ScanPage({ params }: { params: Promise<{ eventId: 
           <p className="small muted">{formatDate(ev.starts_at)} · {formatTime(ev.starts_at)} · {ev.venue}</p>
           <h1 className="gate-title">{ev.title}</h1>
         </div>
+        <CloseLink href={who === "Host" || who === "Ganor staff" ? `/dashboard/events/${ev.id}` : "/gate"} label="Close scanner" />
       </div>
       <Scanner eventId={ev.id} initialIn={ev.checked_in} total={ev.total} scannerName={who} />
     </div>

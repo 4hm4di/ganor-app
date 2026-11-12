@@ -628,3 +628,58 @@ img { max-width: 100%; display: block; }
 .ecard__t { font: 700 18px/24px var(--ganor-font-body); text-wrap: balance; }
 .ecard__m { font: 500 14px/20px var(--ganor-font-body); color: var(--ganor-muted); }
 .ecard__p { margin-top: 6px; font: 700 15px/20px var(--ganor-font-body); font-variant-numeric: tabular-nums; }
+
+/* ---------- App header (signed in) ---------- */
+.topbar__link { font: 600 14px/20px var(--ganor-font-body); color: var(--ganor-ink); text-decoration: none; }
+.topbar--app .topbar__in { gap: 12px; }
+.appnav { display: flex; align-items: center; gap: 4px; margin-right: auto; margin-left: 20px; }
+.appnav__l { position: relative; padding: 8px 12px; border-radius: 10px; font: 600 14px/20px var(--ganor-font-body); color: var(--ganor-muted); text-decoration: none; transition: color 150ms ease, background-color 150ms ease; }
+.appnav__l.is-on { color: var(--ganor-ink); background: #fff; box-shadow: 0 0 0 1px var(--ganor-line); }
+@media (hover: hover) and (pointer: fine) { .appnav__l:hover { color: var(--ganor-ink); } }
+.topbar__end { display: flex; align-items: center; gap: 10px; }
+.acct { position: relative; }
+.acct__btn { display: flex; align-items: center; gap: 8px; height: 44px; padding: 0 10px 0 6px; border: 0; border-radius: 999px; background: #fff; box-shadow: 0 0 0 1px var(--ganor-line); font: 600 14px/20px var(--ganor-font-body); color: var(--ganor-ink); cursor: pointer; transition: transform 140ms var(--ganor-ease-out); }
+.acct__btn:active { transform: scale(0.97); }
+.acct__av { display: grid; place-items: center; width: 32px; height: 32px; border-radius: 50%; overflow: hidden; background: var(--ganor-indigo); color: #fff; font: 700 12px/1 var(--ganor-font-body); flex: none; }
+.acct__av img { width: 100%; height: 100%; object-fit: cover; }
+.acct__av--lg { width: 44px; height: 44px; font-size: 15px; }
+.acct__menu { position: absolute; right: 0; top: calc(100% + 8px); width: 260px; padding: 8px; border-radius: 16px; background: #fff; box-shadow: 0 0 0 1px var(--ganor-line), 0 18px 40px -16px rgba(21, 19, 42, .35); display: grid; gap: 2px; transform-origin: top right; animation: menu-in 160ms var(--ganor-ease-out); z-index: 20; }
+@keyframes menu-in { from { opacity: 0; transform: scale(.96) translateY(-4px); } }
+.acct__who { display: grid; gap: 2px; padding: 10px 12px 12px; border-bottom: 1px solid var(--ganor-line); margin-bottom: 4px; min-width: 0; }
+.acct__who b { font: 700 15px/20px var(--ganor-font-body); overflow-wrap: anywhere; }
+.acct__who small { font: 500 13px/18px var(--ganor-font-body); color: var(--ganor-muted); overflow-wrap: anywhere; }
+.acct__item { display: flex; align-items: center; gap: 10px; width: 100%; min-height: 44px; padding: 0 12px; border: 0; border-radius: 10px; background: none; font: 600 14px/20px var(--ganor-font-body); color: var(--ganor-ink); text-decoration: none; cursor: pointer; text-align: left; }
+.acct__item .i { color: var(--ganor-muted); }
+@media (hover: hover) and (pointer: fine) { .acct__item:hover { background: var(--ganor-sand); } }
+.acct__item--danger, .acct__item--danger .i { color: var(--ganor-danger); }
+.burger { display: none; position: relative; width: 44px; height: 44px; border: 0; border-radius: 12px; background: #fff; box-shadow: 0 0 0 1px var(--ganor-line); cursor: pointer; }
+.burger i { position: absolute; left: 13px; right: 13px; height: 2px; border-radius: 2px; background: var(--ganor-ink); }
+.burger i:first-child { top: 17px; } .burger i:last-child { bottom: 17px; }
+.appsheet { position: fixed; inset: 0; z-index: 50; display: grid; grid-template-rows: auto 1fr auto; gap: 8px; padding: calc(16px + env(safe-area-inset-top)) 20px calc(20px + env(safe-area-inset-bottom)); background: var(--ganor-sand); animation: sheet-in 220ms var(--ganor-ease-out); overflow-y: auto; overscroll-behavior: contain; }
+@keyframes sheet-in { from { opacity: 0; transform: translateY(-8px); } }
+.appsheet__top { display: grid; grid-template-columns: auto 1fr auto; gap: 12px; align-items: center; padding-bottom: 12px; border-bottom: 1px solid var(--ganor-line); }
+.appsheet__top .acct__who { border: 0; padding: 0; margin: 0; }
+.appsheet__close { width: 44px; height: 44px; }
+.appsheet__links { display: grid; align-content: start; gap: 4px; padding-top: 8px; }
+.appsheet__l { display: flex; align-items: center; gap: 14px; min-height: 56px; padding: 0 14px; border-radius: 14px; font: 700 20px/26px var(--ganor-font-body); color: var(--ganor-ink); text-decoration: none; animation: sheet-row 300ms var(--ganor-ease-out) both; animation-delay: calc(var(--i, 0) * 40ms); }
+.appsheet__l .i { color: var(--ganor-indigo); }
+.appsheet__l.is-on { background: #fff; box-shadow: 0 0 0 1px var(--ganor-line); }
+@keyframes sheet-row { from { opacity: 0; transform: translateY(8px); } }
+.appsheet__foot .acct__item { min-height: 52px; justify-content: center; background: #fff; box-shadow: 0 0 0 1px var(--ganor-line); border-radius: 14px; font-size: 16px; }
+html.is-locked { overflow: hidden; }
+@media (max-width: 900px) {
+  .appnav, .acct, .topbar__new { display: none; }
+  .burger { display: block; }
+}
+@media (prefers-reduced-motion: reduce) { .appsheet, .appsheet__l, .acct__menu { animation: none; } }
+
+/* Back and close links on task pages */
+.backlink { display: inline-flex; align-items: center; gap: 6px; min-height: 36px; padding: 0 12px 0 8px; margin-bottom: 10px; border-radius: 999px; background: #fff; box-shadow: 0 0 0 1px var(--ganor-line); font: 600 13px/18px var(--ganor-font-body); color: var(--ganor-ink); text-decoration: none; transition: transform 140ms var(--ganor-ease-out); }
+.backlink:active { transform: scale(0.97); }
+.backlink .i { transform: rotate(180deg); }
+.closebtn { display: inline-grid; place-items: center; width: 44px; height: 44px; flex: none; border-radius: 50%; background: #fff; box-shadow: 0 0 0 1px var(--ganor-line); color: var(--ganor-ink); text-decoration: none; transition: transform 140ms var(--ganor-ease-out); }
+.closebtn:active { transform: scale(0.94); }
+.pagehead--task { flex-wrap: nowrap; align-items: flex-start; }
+.topbar__nav .topbar__link, .nav-cta span { white-space: nowrap; }
+@media (max-width: 400px) { .topbar__nav { gap: 10px; } .topbar__nav .topbar__link { font-size: 13px; } }
+@media (max-width: 350px) { .topbar__nav .topbar__link { display: none; } }
