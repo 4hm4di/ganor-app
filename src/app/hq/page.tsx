@@ -8,7 +8,7 @@ import { CountUp } from "@/components/widgets/CountUp"
 import { BarChart } from "@/components/widgets/BarChart"
 import { LiveRefresh } from "@/components/widgets/LiveRefresh"
 
-export const metadata: Metadata = { title: "Ganor HQ", robots: { index: false } }
+export const metadata: Metadata = { title: { absolute: "Ganor" }, robots: { index: false } }
 
 type Overview = Record<string, number>
 

@@ -7,7 +7,7 @@ import { formatDate } from "@/lib/ganor"
 import { CreateLinks, Reissue, StopForm } from "./SendLinks"
 import { moderateReview } from "./actions"
 
-export const metadata: Metadata = { title: "Ratings · Staff", robots: { index: false } }
+export const metadata: Metadata = { title: { absolute: "Ganor" }, robots: { index: false } }
 
 function lastSixtyDays() {
   const t = Date.now()

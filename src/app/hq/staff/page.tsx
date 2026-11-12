@@ -3,7 +3,7 @@ import { getUserId } from "@/lib/supabase/server"
 import { formatDate, formatTime } from "@/lib/ganor"
 import { StaffRoleForm } from "../AdminForms"
 
-export const metadata: Metadata = { title: "Staff · Admin", robots: { index: false } }
+export const metadata: Metadata = { title: { absolute: "Ganor" }, robots: { index: false } }
 
 export default async function AdminStaff() {
   const { supabase } = await getUserId()

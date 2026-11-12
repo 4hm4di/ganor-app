@@ -3,7 +3,7 @@ import { getUserId } from "@/lib/supabase/server"
 import { formatDate } from "@/lib/ganor"
 import { SuspendForm } from "../AdminForms"
 
-export const metadata: Metadata = { title: "Hosts · Admin", robots: { index: false } }
+export const metadata: Metadata = { title: { absolute: "Ganor" }, robots: { index: false } }
 
 export default async function AdminHosts({ searchParams }: { searchParams: Promise<{ q?: string; show?: string }> }) {
   const { q = "", show = "all" } = await searchParams

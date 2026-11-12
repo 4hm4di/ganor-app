@@ -5,7 +5,7 @@ import { eventPhase, formatDate, formatTime } from "@/lib/ganor"
 import { PhasePill } from "@/components/PhasePill"
 import { setEventStatus } from "../actions"
 
-export const metadata: Metadata = { title: "Events · Admin", robots: { index: false } }
+export const metadata: Metadata = { title: { absolute: "Ganor" }, robots: { index: false } }
 
 const FILTERS: { value: string; label: string }[] = [
   { value: "active", label: "Live and upcoming" },
