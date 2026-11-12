@@ -6,7 +6,7 @@ type Point = { label: string; value: number; sub?: string }
 
 // One-series bar chart: thin rounded bars on a recessive grid, a hover/tap tooltip per bar,
 // bars grow in when the card reveals. Days run left to right, oldest first.
-export function BarChart({ points, unit, color = "var(--ganor-indigo)" }: { points: Point[]; unit: string; color?: string }) {
+export function BarChart({ points, unit, color = "var(--chart-bar)" }: { points: Point[]; unit: string; color?: string }) {
   const [hover, setHover] = useState<number | null>(null)
   const max = Math.max(1, ...points.map((p) => p.value))
   const ticks = [max, Math.round(max / 2), 0]

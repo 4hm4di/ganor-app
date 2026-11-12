@@ -27,11 +27,16 @@ export const metadata: Metadata = {
 }
 
 export const viewport: Viewport = {
-  themeColor: "#F6F1E7",
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#F6F1E7" },
+    { media: "(prefers-color-scheme: dark)", color: "#0E0D18" },
+  ],
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",
 }
+
+const THEME_SCRIPT = `(function(){try{var d=document.documentElement,m=matchMedia('(prefers-color-scheme: dark)');function t(){var c=document.cookie.match(/(?:^|; )ganor_theme=(system|light|dark)/);return c?c[1]:'system'}function a(){var v=t();d.classList.toggle('theme-dark',v==='dark'||(v==='system'&&m.matches))}a();m.addEventListener('change',a)}catch(e){}})()`
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
@@ -39,6 +44,8 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
       <head>
         {/* Motion styles apply only once JS runs, so content never stays hidden without it. */}
         <script dangerouslySetInnerHTML={{ __html: "document.documentElement.classList.add('js')" }} />
+        {/* Theme before first paint: ganor_theme cookie (system by default) + the device setting. */}
+        <script dangerouslySetInnerHTML={{ __html: THEME_SCRIPT }} />
       </head>
       <body>
         <a className="skip" href="#main">Skip to content</a>

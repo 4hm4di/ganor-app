@@ -6,6 +6,7 @@ import { useEffect, useRef, useState } from "react"
 import { createPortal } from "react-dom"
 import { Icon } from "./Icon"
 import { IdleGuard } from "./IdleGuard"
+import { ThemeSwitch } from "./ThemeSwitch"
 
 type Props = { name: string; email: string; logo: string | null; staff: boolean }
 
@@ -82,7 +83,9 @@ export function AppNav({ name, email, logo, staff }: Props) {
       <div className="wrap topbar__in">
         <Link href="/dashboard" className="topbar__logo" aria-label="Ganor dashboard">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/brand/ganor-lockup-indigo.svg" alt="Ganor" width={118} height={22} />
+          <img className="logo-light" src="/brand/ganor-lockup-indigo.svg" alt="Ganor" width={118} height={22} />
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img className="logo-dark" src="/brand/ganor-lockup-white.svg" alt="Ganor" width={118} height={22} />
         </Link>
 
         <nav className="appnav" aria-label="Dashboard">
@@ -111,11 +114,13 @@ export function AppNav({ name, email, logo, staff }: Props) {
                 <Link href="/dashboard/profile" className="acct__item" role="menuitem"><Icon name="user" size={18} />Host profile</Link>
                 <Link href="/events" className="acct__item" role="menuitem"><Icon name="search" size={18} />Find events</Link>
                 <a href="/" className="acct__item" role="menuitem"><Icon name="home" size={18} />Ganor homepage</a>
+                <div className="acct__theme"><small>Appearance</small><ThemeSwitch /></div>
                 {signOut}
               </div>
             )}
           </div>
 
+          <Link href="/dashboard/events/new" className="newfab" aria-label="New event" title="New event"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14" /></svg></Link>
           <button type="button" className="burger" aria-label="Open menu" aria-expanded={sheet} onClick={() => setSheet(true)}>
             <i /><i />
           </button>
@@ -140,7 +145,10 @@ export function AppNav({ name, email, logo, staff }: Props) {
             <Link href="/dashboard/events/new" className="appsheet__l" style={{ "--i": links.length } as React.CSSProperties}><Icon name="add-circle" size={22} />New event</Link>
             <Link href="/events" className="appsheet__l" style={{ "--i": links.length + 1 } as React.CSSProperties}><Icon name="search" size={22} />Find events</Link>
           </nav>
-          <div className="appsheet__foot">{signOut}</div>
+          <div className="appsheet__foot">
+            <div className="appsheet__theme"><small>Appearance</small><ThemeSwitch /></div>
+            {signOut}
+          </div>
         </div>,
         document.body,
       )}

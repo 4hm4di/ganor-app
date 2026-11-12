@@ -2,6 +2,7 @@ import type { Metadata } from "next"
 import { redirect } from "next/navigation"
 import { getUserId } from "@/lib/supabase/server"
 import { ProfileForm } from "./ProfileForm"
+import { EmailForm } from "./EmailForm"
 import { ImageUpload } from "@/components/ImageUpload"
 import { saveHostLogo } from "../actions"
 
@@ -50,6 +51,9 @@ export default async function Profile() {
               phone: local(contact?.phone ?? null),
             }}
           />
+        </div>
+        <div className="card">
+          <EmailForm current={email ?? ""} />
         </div>
       </div>
     </div>

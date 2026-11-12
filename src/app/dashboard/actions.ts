@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache"
 import { redirect } from "next/navigation"
+import { headers } from "next/headers"
 import { getUserId } from "@/lib/supabase/server"
 import { CATEGORIES, lagosLocalToIso, slugify } from "@/lib/ganor"
 import { isOwnImage, objectPath, type Bucket } from "@/lib/storage"
@@ -295,4 +296,21 @@ export async function saveFeeMode(eventId: string, mode: "buyer" | "absorb"): Pr
   if (error) return { ok: false }
   await revalidateEvent(supabase, eventId)
   return { ok: true }
+}
+
+// Move the sign-in email to a new address. Supabase emails a confirmation link; the change only
+// takes effect once it's clicked (with "secure email change" on, both addresses must confirm).
+export async function changeEmail(_prev: FormState, fd: FormData): Promise<FormState> {
+  const email = str(fd, "email").toLowerCase()
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return { status: "error", message: "Enter a valid email address.", fields: { email } }
+  const { supabase, email: current } = await getUserId()
+  if (email === (current ?? "").toLowerCase()) return { status: "error", message: "That's already your sign-in email.", fields: { email } }
+  const h = await headers()
+  const origin = `${h.get("x-forwarded-proto") ?? "https"}://${h.get("host")}`
+  const { error } = await supabase.auth.updateUser({ email }, { emailRedirectTo: `${origin}/auth/callback?next=/dashboard/profile` })
+  if (error) {
+    const msg = /already|registered|exists/i.test(error.message) ? "Another Ganor account already uses that email." : /rate|seconds/i.test(error.message) ? "Too many tries. Wait a minute and try again." : "We couldn't start the change. Try again in a moment."
+    return { status: "error", message: msg, fields: { email } }
+  }
+  return { status: "ok", message: `Check ${email} for a confirmation link. Your sign-in email changes once you click it. If asked, confirm from your current inbox too.`, fields: { email } }
 }
