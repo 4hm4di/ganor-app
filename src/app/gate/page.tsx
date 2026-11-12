@@ -28,7 +28,7 @@ export default async function Gate() {
         <div className="card" data-reveal>
           <GateLoginForm />
         </div>
-        {userId && <p className="small muted" style={{ marginTop: 16 }}>Hosting? Open the scanner from your event&rsquo;s Gate check-in card in <Link href="/dashboard">My events</Link>.</p>}
+        {userId && <p className="small muted" style={{ marginTop: 16 }}>Hosting? Open the scanner from your event&rsquo;s Gate check-in card in <Link href="/dashboard/events">My events</Link>.</p>}
       </div>
     )
   }

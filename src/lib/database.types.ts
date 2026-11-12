@@ -267,6 +267,7 @@ export type Database = {
       staff_session: { Args: { p_token: string }; Returns: Json }
       check_in_ticket: { Args: { p_event: string; p_code: string; p_staff_token?: string }; Returns: Json }
       admin_overview: { Args: Record<string, never>; Returns: Json }
+      host_stats: { Args: { p_days?: number }; Returns: Json }
       admin_daily: { Args: { p_days?: number }; Returns: { day: string; hosts: number; events: number; tickets: number; checkins: number }[] }
       admin_hosts: {
         Args: Record<string, never>

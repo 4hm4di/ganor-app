@@ -3,7 +3,7 @@ import { getUserId } from "@/lib/supabase/server"
 import { Icon } from "@/components/Icon"
 import { AdminTabs } from "./AdminTabs"
 
-// Everything under /admin is for Ganor staff only. The database checks again on every call.
+// Ganor HQ: everything under /hq is for Ganor staff only and linked from nowhere in the host app. The database checks again on every call.
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   const { supabase, userId } = await getUserId()
   if (!userId) notFound()
@@ -12,7 +12,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   return (
     <div className="wrap admin">
       <div className="admin__top">
-        <span className="kicker"><Icon name="shield" size={18} />Ganor admin</span>
+        <span className="kicker"><Icon name="shield" size={18} />Ganor HQ · staff only</span>
         <AdminTabs />
       </div>
       {children}

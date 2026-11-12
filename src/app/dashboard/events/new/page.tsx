@@ -14,7 +14,7 @@ export default function NewEvent() {
           <h1 style={{ marginTop: 10 }}>New event</h1>
           <p className="muted">It stays a draft until you publish it. You&rsquo;ll add tickets next.</p>
         </div>
-        <CloseLink href="/dashboard" label="Cancel and go back to My events" />
+        <CloseLink href="/dashboard/events" label="Cancel and go back to My events" />
       </div>
       <div className="card">
         <EventForm mode="create" />

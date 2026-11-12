@@ -4,11 +4,11 @@ import { getUserId } from "@/lib/supabase/server"
 import { Icon } from "@/components/Icon"
 import { PhasePill } from "@/components/PhasePill"
 import { eventPhase, formatDate, formatTime, PHASE_LABEL, RATINGS_ENABLED, type EventPhase } from "@/lib/ganor"
-import { CountUp } from "./widgets/CountUp"
-import { BarChart } from "./widgets/BarChart"
-import { LiveRefresh } from "./widgets/LiveRefresh"
+import { CountUp } from "@/components/widgets/CountUp"
+import { BarChart } from "@/components/widgets/BarChart"
+import { LiveRefresh } from "@/components/widgets/LiveRefresh"
 
-export const metadata: Metadata = { title: "Admin overview", robots: { index: false } }
+export const metadata: Metadata = { title: "Ganor HQ", robots: { index: false } }
 
 type Overview = Record<string, number>
 
@@ -40,20 +40,20 @@ export default async function AdminOverview() {
   const next = phased.filter((p) => p.phase === "upcoming" || p.phase === "soldout").slice(0, 5)
 
   const tiles = [
-    { label: "Hosts", value: v.hosts ?? 0, sub: `${v.new_hosts_7d ?? 0} new this week`, icon: "user", href: "/admin/hosts", tone: "indigo" },
-    { label: "On sale and live", value: counts.live + counts.upcoming + counts.soldout, sub: `${counts.live} happening now · ${counts.draft} drafts`, icon: "calendar", href: "/admin/events", tone: "green" },
+    { label: "Hosts", value: v.hosts ?? 0, sub: `${v.new_hosts_7d ?? 0} new this week`, icon: "user", href: "/hq/hosts", tone: "indigo" },
+    { label: "On sale and live", value: counts.live + counts.upcoming + counts.soldout, sub: `${counts.live} happening now · ${counts.draft} drafts`, icon: "calendar", href: "/hq/events", tone: "green" },
     { label: "Tickets sold", value: v.tickets_sold ?? 0, sub: `${v.paid_orders ?? 0} orders · ${v.refunds ?? 0} refunds`, icon: "ticket", tone: "marigold" },
     { label: "Gross sales", value: Math.round((v.gross_kobo ?? 0) / 100), sub: "Before fees and refunds", icon: "wallet", tone: "indigo", naira: true },
     { label: "Gate accounts", value: v.gate_accounts ?? 0, sub: "Active check-in logins", icon: "qr-code", tone: "ink" },
     RATINGS_ENABLED
-      ? { label: "Reports waiting", value: v.open_reports ?? 0, sub: `${v.reviews ?? 0} published reviews`, icon: "warning", href: "/admin/ratings", tone: "danger" }
-      : { label: "Suspended hosts", value: v.suspended ?? 0, sub: "Hidden from guests", icon: "shield", href: "/admin/hosts?show=suspended", tone: "danger" },
+      ? { label: "Reports waiting", value: v.open_reports ?? 0, sub: `${v.reviews ?? 0} published reviews`, icon: "warning", href: "/hq/ratings", tone: "danger" }
+      : { label: "Suspended hosts", value: v.suspended ?? 0, sub: "Hidden from guests", icon: "shield", href: "/hq/hosts?show=suspended", tone: "danger" },
   ]
 
   return (
     <div className="stack aov">
       <div className="aov__head">
-        <h1>Admin overview</h1>
+        <h1>Ganor overview</h1>
         <LiveRefresh />
       </div>
 
@@ -129,7 +129,7 @@ export default async function AdminOverview() {
         <section className="card awidget" data-reveal>
           <header className="awidget__head">
             <span className="awidget__ic awidget__ic--ink"><Icon name="shield" size={18} /></span>
-            <div><h2>Recent admin actions</h2><p><Link href="/admin/staff">Full log</Link></p></div>
+            <div><h2>Recent admin actions</h2><p><Link href="/hq/staff">Full log</Link></p></div>
           </header>
           {(log ?? []).length === 0 ? <p className="muted">Nothing yet. Suspensions, event changes and review decisions show here.</p> : (
             <ul className="sendlist">

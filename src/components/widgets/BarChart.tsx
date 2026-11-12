@@ -37,7 +37,12 @@ export function BarChart({ points, unit, color = "var(--ganor-indigo)" }: { poin
         )}
       </div>
       <div className="bars__x" aria-hidden="true">
-        {points.map((p, i) => <span key={i}>{i === 0 || i === points.length - 1 || i % 7 === 0 ? p.label : ""}</span>)}
+        {points.map((p, i) => {
+          const last = points.length - 1
+          const step = points.length > 45 ? 14 : 7
+          const show = i === 0 || (i % step === 0 && last - i >= step / 2) || i === last
+          return <span key={i}>{show ? p.label : ""}</span>
+        })}
       </div>
     </div>
   )

@@ -759,3 +759,54 @@ html.is-locked { overflow: hidden; }
 .stagekey li i { width: 10px; height: 10px; border-radius: 3px; flex: none; }
 .stagekey li b { margin-left: auto; font-variant-numeric: tabular-nums; }
 @media (prefers-reduced-motion: reduce) { .bars__col i, .stagebar i { transition: none; transform: none; } .livetag > i { animation: none; } }
+
+/* ---------- Host overview ---------- */
+.hov { display: grid; gap: 16px; padding-top: clamp(20px, 4vw, 40px); }
+.hov__head { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 14px; }
+.hov__head h1 { font: 800 clamp(30px, 5vw, 44px)/1.05 var(--ganor-font-display); margin-top: 8px; }
+.seg2 { display: inline-flex; gap: 2px; padding: 4px; border-radius: 12px; background: #fff; box-shadow: 0 0 0 1px var(--ganor-line); }
+.seg2 a { min-height: 36px; display: inline-flex; align-items: center; padding: 0 14px; border-radius: 9px; font: 600 13px/18px var(--ganor-font-body); color: var(--ganor-muted); text-decoration: none; white-space: nowrap; }
+.seg2 a.is-on { background: var(--ganor-ink); color: #fff; }
+.hov__kpis { grid-template-columns: repeat(auto-fill, minmax(min(100%, 230px), 1fr)); }
+.delta { font-weight: 700; font-variant-numeric: tabular-nums; }
+.delta--up { color: var(--ganor-success); }
+.delta--down { color: var(--ganor-danger); }
+.delta--flat { color: var(--ganor-muted); }
+.hov__main { display: grid; gap: 16px; }
+@media (min-width: 980px) { .hov__main { grid-template-columns: 1.7fr 1fr; } }
+.hov__lower { display: grid; gap: 16px; }
+@media (min-width: 900px) { .hov__lower { grid-template-columns: 1fr 1fr; } }
+.nextup { display: grid; gap: 12px; }
+.nextup__img { aspect-ratio: 2 / 1; border-radius: 14px; overflow: hidden; background: var(--ganor-indigo) url(/img/pattern-indigo.svg); background-size: 200px; display: grid; place-items: center; color: rgba(255,255,255,.6); }
+.nextup__img img { width: 100%; height: 100%; object-fit: cover; }
+.nextup__body { display: grid; gap: 4px; justify-items: start; }
+.nextup__body b { font: 700 18px/24px var(--ganor-font-body); }
+.nextup__body small { font: 500 13px/18px var(--ganor-font-body); color: var(--ganor-muted); }
+.nextup__actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.todo { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.todo a { display: grid; grid-template-columns: auto 1fr auto; gap: 10px; align-items: center; min-height: 48px; padding: 8px 12px; border-radius: 12px; background: var(--ganor-sand); color: var(--ganor-ink); text-decoration: none; font: 600 14px/20px var(--ganor-font-body); transition: background-color 150ms ease; }
+.todo a .i:first-child { color: #A86F00; }
+.todo a .i:last-child { color: var(--ganor-muted); }
+@media (hover: hover) and (pointer: fine) { .todo a:hover { background: #EDE6D6; } }
+.hov__foot { padding: 4px 2px 0; }
+
+/* ---------- Ganor HQ (our console, not linked from the host app) ---------- */
+.topbar--hq { background: var(--ganor-ink); border-bottom: 0; backdrop-filter: none; }
+.hqbrand { display: inline-flex; align-items: center; gap: 10px; text-decoration: none; }
+.hqbrand img { height: 20px; width: auto; }
+.hqbrand span { padding: 3px 8px; border-radius: 6px; background: var(--ganor-marigold); color: var(--ganor-ink); font: 800 11px/14px var(--ganor-font-body); letter-spacing: .08em; }
+.hqlink { background: none; border: 0; padding: 8px 6px; font: 600 13px/18px var(--ganor-font-body); color: #E9E6F7; text-decoration: none; cursor: pointer; white-space: nowrap; }
+@media (hover: hover) and (pointer: fine) { .hqlink:hover { color: #fff; text-decoration: underline; } }
+/* Grid children may not grow past the screen because of long labels or charts. */
+.hov > *, .hov__main > *, .hov__lower > *, .aov > *, .aov__charts > *, .admin > *, .admin__cols > *, .team > *, .bento > * { min-width: 0; }
+.switch { position: relative; }
+.switch::after { content: ""; position: absolute; inset: -8px -6px; }
+@media (max-width: 600px) {
+  .hov__kpis, .aov .astats { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+  .hov__kpis .astat, .aov .astat { padding: 14px; }
+  .hov__kpis .astat__v, .aov .astat__v { font-size: 26px; }
+  .hov__kpis .astat__ic, .aov .astat__ic { width: 30px; height: 30px; right: 10px; top: 10px; border-radius: 9px; }
+  .hov__kpis .astat__ic .i, .aov .astat__ic .i { width: 16px; height: 16px; }
+  .hov__kpis .astat__l, .aov .astat__l { padding-right: 34px; }
+  .hov__kpis .astat__s, .aov .astat__s { font-size: 12px; line-height: 16px; }
+}

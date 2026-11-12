@@ -47,7 +47,7 @@ export async function createRatingLinks(_prev: SendState, fd: FormData): Promise
   const { data, error } = await supabase.rpc("admin_create_rating_invites", { p_event: eventId })
   if (error) return { status: "error", message: error.message }
   const links = await buildLinks(data ?? [], ev)
-  revalidatePath("/admin/ratings")
+  revalidatePath("/hq/ratings")
   return links.length
     ? { status: "ok", links }
     : { status: "ok", links: [], message: "No new buyers to invite. Everyone eligible already has a link, or no paid orders agreed to rating messages." }
@@ -72,7 +72,7 @@ export async function suppressPhone(_prev: SendState, fd: FormData): Promise<Sen
   const scope = fd.get("scope") === "all" ? "all" : "rating_request"
   const { data, error } = await supabase.rpc("admin_suppress_phone", { p_phone: phone, p_scope: scope })
   if (error) return { status: "error", message: error.message }
-  revalidatePath("/admin/ratings")
+  revalidatePath("/hq/ratings")
   return { status: "ok", message: `Done. This number won't get ${scope === "all" ? "any more messages" : "rating requests"}${data ? `; ${data} open link${data === 1 ? "" : "s"} switched off` : ""}.` }
 }
 
@@ -82,5 +82,5 @@ export async function moderateReview(fd: FormData) {
   const reviewId = String(fd.get("review_id") ?? "")
   const status = fd.get("status") === "hidden" ? "hidden" : "published"
   await supabase.rpc("admin_set_review_status", { p_review: reviewId, p_status: status, p_note: status === "hidden" ? "hidden after report" : "kept after report" })
-  revalidatePath("/admin/ratings")
+  revalidatePath("/hq/ratings")
 }

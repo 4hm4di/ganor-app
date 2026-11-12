@@ -70,7 +70,7 @@ export function EventToolsView({ ev, userId, publicUrl, sp, guests }: { ev: Tool
     <div className="wrap">
       <div className="pagehead">
         <div>
-          <BackLink href="/dashboard" label="My events" />
+          <BackLink href="/dashboard/events" label="My events" />
           <div className="actions" style={{ gap: 8 }}>
             <PhasePill phase={phase} />
             {ev.halal_friendly && <span className="pill pill--halal"><Icon name="halal" size={14} />Halal-friendly</span>}

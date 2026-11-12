@@ -28,7 +28,7 @@ export async function proxy(request: NextRequest) {
   const { data } = await supabase.auth.getClaims()
   let signedIn = Boolean(data?.claims?.sub)
   const path = request.nextUrl.pathname
-  const protectedPath = path.startsWith("/dashboard") || path.startsWith("/admin")
+  const protectedPath = path.startsWith("/dashboard") || path.startsWith("/hq")
 
   if (signedIn) {
     // Idle timeout. A just-completed sign-in (within 5 minutes) counts as activity.

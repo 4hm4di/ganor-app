@@ -75,7 +75,7 @@ export async function createEvent(_prev: FormState, fd: FormData): Promise<FormS
   }
   if (!id) return { status: "error", message: "We couldn't save the event. Try again.", fields }
 
-  revalidatePath("/dashboard")
+  revalidatePath("/dashboard", "layout")
   redirect(`/dashboard/events/${id}?created=1`)
 }
 
@@ -105,7 +105,7 @@ export async function setEventStatus(fd: FormData) {
   }
 
   const { data } = await supabase.from("events").update({ status: to }).eq("id", id).select("slug").single()
-  revalidatePath("/dashboard")
+  revalidatePath("/dashboard", "layout")
   revalidatePath(`/dashboard/events/${id}`)
   if (data) revalidatePath(`/e/${data.slug}`)
   redirect(`/dashboard/events/${id}${to === "published" ? "?published=1" : ""}`)
@@ -115,8 +115,8 @@ export async function deleteDraft(fd: FormData) {
   const { supabase } = await requireHost()
   const id = str(fd, "id")
   await supabase.from("events").delete().eq("id", id).eq("status", "draft")
-  revalidatePath("/dashboard")
-  redirect("/dashboard")
+  revalidatePath("/dashboard", "layout")
+  redirect("/dashboard/events")
 }
 
 export async function addTicketType(_prev: FormState, fd: FormData): Promise<FormState> {
@@ -181,7 +181,7 @@ export async function updateTicketType(_prev: FormState, fd: FormData): Promise<
 }
 
 async function revalidateEvent(supabase: Awaited<ReturnType<typeof requireHost>>["supabase"], eventId: string) {
-  revalidatePath("/dashboard")
+  revalidatePath("/dashboard", "layout")
   revalidatePath(`/dashboard/events/${eventId}`)
   const { data } = await supabase.from("events").select("slug").eq("id", eventId).single()
   if (data) revalidatePath(`/e/${data.slug}`)

@@ -19,10 +19,10 @@ export function AppNav({ name, email, logo, staff }: Props) {
   const menuRef = useRef<HTMLDivElement>(null)
 
   const links = [
-    { href: "/dashboard", label: "My events", icon: "calendar", match: (p: string) => p === "/dashboard" || p.startsWith("/dashboard/events") },
+    { href: "/dashboard", label: "Overview", icon: "home", match: (p: string) => p === "/dashboard" },
+    { href: "/dashboard/events", label: "My events", icon: "calendar", match: (p: string) => p.startsWith("/dashboard/events") },
     { href: "/dashboard/team", label: "Gate team", icon: "users", match: (p: string) => p.startsWith("/dashboard/team") },
     { href: "/dashboard/profile", label: "Profile", icon: "user", match: (p: string) => p.startsWith("/dashboard/profile") },
-    ...(staff ? [{ href: "/admin", label: "Admin", icon: "shield", match: (p: string) => p.startsWith("/admin") }] : []),
   ]
 
   // Close menus on navigation, outside click and Escape.
@@ -56,6 +56,25 @@ export function AppNav({ name, email, logo, staff }: Props) {
       <button type="submit" className="acct__item acct__item--danger"><Icon name="close-circle" size={18} />Sign out</button>
     </form>
   )
+
+  if (staff && path.startsWith("/hq")) {
+    return (
+      <header className="topbar topbar--hq">
+        <IdleGuard />
+        <div className="wrap topbar__in">
+          <Link href="/hq" className="hqbrand" aria-label="Ganor HQ">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/brand/ganor-lockup-white.svg" alt="Ganor" width={104} height={20} />
+            <span>HQ</span>
+          </Link>
+          <div className="topbar__end">
+            <Link href="/dashboard" className="hqlink">Host dashboard</Link>
+            <form action="/auth/signout" method="post"><button type="submit" className="hqlink">Sign out</button></form>
+          </div>
+        </div>
+      </header>
+    )
+  }
 
   return (
     <header className="topbar topbar--app">
