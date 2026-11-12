@@ -2,12 +2,13 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
+import { RATINGS_ENABLED } from "@/lib/ganor"
 
 const TABS = [
-  { href: "/admin", label: "Overview" },
+  { href: "/admin", label: "Admin overview" },
   { href: "/admin/hosts", label: "Hosts" },
   { href: "/admin/events", label: "Events" },
-  { href: "/admin/ratings", label: "Ratings" },
+  ...(RATINGS_ENABLED ? [{ href: "/admin/ratings", label: "Ratings" }] : []),
   { href: "/admin/staff", label: "Staff & log" },
 ]
 

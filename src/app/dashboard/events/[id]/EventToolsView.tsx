@@ -12,8 +12,9 @@ import { ImageUpload } from "@/components/ImageUpload"
 import { ShareButtons } from "@/components/ShareButtons"
 import { GanorSymbol } from "@/components/Loader"
 import { Icon } from "@/components/Icon"
+import { PhasePill } from "@/components/PhasePill"
 import { BackLink } from "@/components/BackLink"
-import { feeKobo, formatDate, formatNaira, formatTime, isoToLagosLocal } from "@/lib/ganor"
+import { eventPhase, PHASE_LABEL, feeKobo, formatDate, formatNaira, formatTime, isoToLagosLocal } from "@/lib/ganor"
 
 
 const ERRORS: Record<string, string> = {
@@ -41,7 +42,9 @@ function chartPath(values: number[]) {
 
 export type ToolsEvent = EventRow & { ticket_types: TicketTypeRow[] }
 
-export function EventToolsView({ ev, userId, publicUrl, sp }: { ev: ToolsEvent; userId: string; publicUrl: string; sp: { created?: string; published?: string; error?: string } }) {
+export type ToolsGuest = { name: string; ticket: string; in: boolean }
+
+export function EventToolsView({ ev, userId, publicUrl, sp, guests }: { ev: ToolsEvent; userId: string; publicUrl: string; sp: { created?: string; published?: string; error?: string }; guests: ToolsGuest[] }) {
   const publicPath = `/e/${ev.slug}`
   const tickets = ev.ticket_types ?? []
   const live = ev.status === "published"
@@ -59,8 +62,9 @@ export function EventToolsView({ ev, userId, publicUrl, sp }: { ev: ToolsEvent; 
   const daily = days.map(() => 0)
   const chart = chartPath(daily)
   const today = daily[daily.length - 1]!
-  const checkedIn = 0
-  const guests: { name: string; ticket: string; in: boolean }[] = []
+  const checkedIn = guests.filter((g) => g.in).length
+  const phase = eventPhase(ev, tickets)
+  const over = phase === "ended" || phase === "cancelled"
 
   return (
     <div className="wrap">
@@ -68,7 +72,7 @@ export function EventToolsView({ ev, userId, publicUrl, sp }: { ev: ToolsEvent; 
         <div>
           <BackLink href="/dashboard" label="My events" />
           <div className="actions" style={{ gap: 8 }}>
-            <span className={`pill pill--${ev.status}`}>{live ? "Live" : ev.status === "draft" ? "Draft" : "Cancelled"}</span>
+            <PhasePill phase={phase} />
             {ev.halal_friendly && <span className="pill pill--halal"><Icon name="halal" size={14} />Halal-friendly</span>}
           </div>
           <h1 style={{ marginTop: 10 }}>{ev.title}</h1>
@@ -76,14 +80,16 @@ export function EventToolsView({ ev, userId, publicUrl, sp }: { ev: ToolsEvent; 
         </div>
         <div className="actions">
           <Link href={publicPath} className="btn btn--ghost btn--sm btn--plain" target="_blank">{live ? "View page" : "Preview"}</Link>
-          <form action={setEventStatus}>
-            <input type="hidden" name="id" value={ev.id} />
-            {live ? (
-              <SubmitButton name="to" value="draft" variant="outline" size="sm" arrow={false} pendingText="Unpublishing…">Unpublish</SubmitButton>
-            ) : (
-              <SubmitButton name="to" value="published" size="sm" pendingText="Publishing…">Publish</SubmitButton>
-            )}
-          </form>
+          {!over && (
+            <form action={setEventStatus}>
+              <input type="hidden" name="id" value={ev.id} />
+              {live ? (
+                <SubmitButton name="to" value="draft" variant="outline" size="sm" arrow={false} pendingText="Unpublishing…">Unpublish</SubmitButton>
+              ) : (
+                <SubmitButton name="to" value="published" size="sm" pendingText="Publishing…">Publish</SubmitButton>
+              )}
+            </form>
+          )}
         </div>
       </div>
 
@@ -93,7 +99,7 @@ export function EventToolsView({ ev, userId, publicUrl, sp }: { ev: ToolsEvent; 
 
       <div className="bento">
         <article className="card card--sales" data-reveal>
-          <header className="card__head"><h2 className="card__title"><Icon name="receipt" />Tickets sold</h2><span className="card__tag">{live ? "Live" : "Draft"}</span></header>
+          <header className="card__head"><h2 className="card__title"><Icon name="receipt" />Tickets sold</h2><span className="card__tag">{PHASE_LABEL[phase]}</span></header>
           <p className="card__big" style={{ fontVariantNumeric: "tabular-nums" }}><span>{sold}</span><small> of {total}</small></p>
           <div className="chart">
             <svg viewBox="0 0 600 180" preserveAspectRatio="none" aria-hidden="true">
@@ -143,21 +149,30 @@ export function EventToolsView({ ev, userId, publicUrl, sp }: { ev: ToolsEvent; 
           <header className="card__head"><h2 className="card__title"><Icon name="users" />Guest list</h2><span className="card__tag">{sold} {sold === 1 ? "guest" : "guests"}</span></header>
           {guests.length > 0 ? (
             <ul className="guests">
-              {guests.map((g, i) => (
+              {guests.slice(0, 5).map((g, i) => (
                 <li key={i}>
                   <span className="av">{initials(g.name)}</span>
                   <span><b>{g.name}</b><small>{g.ticket}</small></span>
                   {g.in ? <span className="ok"><Icon name="check-circle" />In</span> : <span className="wait"><Icon name="clock" />Not yet</span>}
                 </li>
               ))}
+              {guests.length > 5 && <li className="guests__more"><span /><span><small>+ {guests.length - 5} more in the download</small></span></li>}
             </ul>
           ) : (
             <ul className="guests">
               <li className="guests__empty"><span className="av"><Icon name="users" /></span><span><b>No guests yet</b><small>Guests show up here as they get tickets.</small></span></li>
             </ul>
           )}
-          <div className="meter"><i style={{ "--p": total ? checkedIn / total : 0 } as CSSProperties} /></div>
-          <p className="card__foot card__foot--plain"><span>{checkedIn}</span>&nbsp;of {total} checked in</p>
+          <div className="meter"><i style={{ "--p": guests.length ? checkedIn / guests.length : 0 } as CSSProperties} /></div>
+          <p className="card__foot card__foot--plain"><span>{checkedIn}</span>&nbsp;of {guests.length} checked in</p>
+          <div className="dl">
+            <a className="dl__btn" href={`/dashboard/events/${ev.id}/guests?format=pdf`} download>
+              <Icon name="doc" size={18} /><span><b>Guest list PDF</b><small>Ganor branded, ready to print</small></span>
+            </a>
+            <a className="dl__btn" href={`/dashboard/events/${ev.id}/guests?format=csv`} download>
+              <Icon name="receipt" size={18} /><span><b>Spreadsheet</b><small>CSV for Excel or Sheets</small></span>
+            </a>
+          </div>
         </article>
 
         <article className="card card--payout" data-reveal>

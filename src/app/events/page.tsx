@@ -2,7 +2,8 @@ import type { Metadata } from "next"
 import Link from "next/link"
 import { createClient } from "@/lib/supabase/server"
 import { Icon } from "@/components/Icon"
-import { CATEGORIES, CITIES, formatDate, formatNaira, formatTime } from "@/lib/ganor"
+import { CATEGORIES, CITIES, eventPhase, formatDate, formatNaira, formatTime } from "@/lib/ganor"
+import { PhasePill } from "@/components/PhasePill"
 
 export const metadata: Metadata = {
   title: "Find events",
@@ -21,11 +22,13 @@ export default async function Events({ searchParams }: { searchParams: Promise<S
   const supabase = await createClient()
   let query = supabase
     .from("events")
-    .select("slug, title, city, venue_name, starts_at, category, halal_friendly, cover_url, ticket_types(price_kobo, on_sale)")
+    .select("slug, title, city, venue_name, starts_at, ends_at, status, category, halal_friendly, cover_url, ticket_types(price_kobo, on_sale, quantity, sold)")
     .eq("status", "published")
     .order("starts_at", { ascending: true })
     .limit(60)
-  query = query.gte("starts_at", today())
+  // Hide events that have ended (no end time: treated as 6 hours long).
+  const { now, sixAgo } = clock()
+  query = query.or(`ends_at.gt.${now},and(ends_at.is.null,starts_at.gt.${sixAgo})`)
   if (type) query = query.eq("category", type)
   if (city) query = query.eq("city", city)
   if (halal) query = query.eq("halal_friendly", true)
@@ -68,6 +71,7 @@ export default async function Events({ searchParams }: { searchParams: Promise<S
           {(events ?? []).map((e) => {
             const prices = e.ticket_types.filter((t) => t.on_sale).map((t) => t.price_kobo)
             const from = prices.length ? Math.min(...prices) : null
+            const phase = eventPhase(e, e.ticket_types)
             return (
               <Link key={e.slug} href={`/e/${e.slug}`} className="ecard" data-reveal>
                 <span className="ecard__img">
@@ -77,6 +81,7 @@ export default async function Events({ searchParams }: { searchParams: Promise<S
                   ) : (
                     <span className="ecard__ph"><Icon name="calendar" size={32} /></span>
                   )}
+                  {(phase === "live" || phase === "soldout") && <span className="ecard__phase"><PhasePill phase={phase} /></span>}
                   <span className="ecard__date"><b>{formatDate(e.starts_at, { day: "numeric" })}</b>{formatDate(e.starts_at, { month: "short" })}</span>
                 </span>
                 <span className="ecard__body">
@@ -94,6 +99,7 @@ export default async function Events({ searchParams }: { searchParams: Promise<S
   )
 }
 
-function today() {
-  return new Date(Date.now() - 6 * 3_600_000).toISOString()
+function clock() {
+  const t = Date.now()
+  return { now: new Date(t).toISOString(), sixAgo: new Date(t - 6 * 3_600_000).toISOString() }
 }

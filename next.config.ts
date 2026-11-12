@@ -4,6 +4,8 @@ import type { NextConfig } from "next"
 // Cache Components can come later for public event pages.
 const nextConfig: NextConfig = {
   poweredByHeader: false,
+  // Fonts read at runtime by the guest-list PDF.
+  outputFileTracingIncludes: { "/dashboard/events/[id]/guests": ["./src/lib/pdf-fonts/**"] },
   // Rating links carry a private token: never leak it in referrers, caches or search indexes.
   // The homepage is the ganor.ng landing page, exported in launch mode into public/ (tools/export_app.py in the site repo).
   async rewrites() {

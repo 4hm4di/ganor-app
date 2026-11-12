@@ -30,5 +30,16 @@ export default async function EventTools({
   const h = await headers()
   const host = h.get("x-forwarded-host") ?? h.get("host") ?? "ganor-app.vercel.app"
   const publicUrl = `${host.startsWith("localhost") ? "http" : "https"}://${host}/e/${ev.slug}`
-  return <EventToolsView ev={ev} userId={userId} publicUrl={publicUrl} sp={sp} />
+  const { data: rows } = await supabase
+    .from("tickets")
+    .select("checked_in_at, ticket_types(name), orders!inner(buyer_name, status)")
+    .eq("event_id", id)
+    .eq("orders.status", "paid")
+    .order("checked_in_at", { ascending: false, nullsFirst: false })
+  const guests = (rows ?? []).map((r) => ({
+    name: (r.orders as unknown as { buyer_name: string }).buyer_name,
+    ticket: (r.ticket_types as unknown as { name: string } | null)?.name ?? "Ticket",
+    in: Boolean(r.checked_in_at),
+  }))
+  return <EventToolsView ev={ev} userId={userId} publicUrl={publicUrl} sp={sp} guests={guests} />
 }

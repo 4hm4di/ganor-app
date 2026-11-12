@@ -76,3 +76,39 @@ export function slugify(text: string) {
     .slice(0, 60)
     .replace(/-+$/g, "")
 }
+
+// Where an event is in its life, from its stored status and its dates.
+// Stored status is only draft | published | cancelled; "live", "ended" and "sold out" are derived.
+export type EventPhase = "draft" | "upcoming" | "soldout" | "live" | "ended" | "cancelled"
+
+export const PHASE_LABEL: Record<EventPhase, string> = {
+  draft: "Draft",
+  upcoming: "On sale",
+  soldout: "Sold out",
+  live: "Happening now",
+  ended: "Ended",
+  cancelled: "Cancelled",
+}
+
+// Events without an end time are treated as running for 6 hours.
+export function eventEndsAt(ev: { starts_at: string; ends_at: string | null }) {
+  return ev.ends_at ? new Date(ev.ends_at).getTime() : new Date(ev.starts_at).getTime() + 6 * 3_600_000
+}
+
+export function eventPhase(
+  ev: { status: string; starts_at: string; ends_at: string | null },
+  tickets?: { quantity: number; sold: number; on_sale?: boolean }[],
+  now: number = Date.now(),
+): EventPhase {
+  if (ev.status === "cancelled") return "cancelled"
+  const start = new Date(ev.starts_at).getTime()
+  const end = eventEndsAt(ev)
+  if (now >= end) return "ended"
+  if (ev.status !== "published") return "draft"
+  if (now >= start) return "live"
+  const selling = (tickets ?? []).filter((t) => t.on_sale !== false)
+  if (selling.length > 0 && selling.every((t) => t.sold >= t.quantity)) return "soldout"
+  return "upcoming"
+}
+
+export const RATINGS_ENABLED = false // Guest ratings are built but set aside for now.

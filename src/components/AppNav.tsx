@@ -75,7 +75,7 @@ export function AppNav({ name, email, logo, staff }: Props) {
         </nav>
 
         <div className="topbar__end">
-          <Link href="/dashboard/events/new" className="btn btn--primary btn--sm topbar__new">
+          <Link href="/dashboard/events/new" className="btn btn--primary btn--sm topbar__new" aria-label="New event">
             <span>New event</span>
             <span className="btn__arrow" aria-hidden="true"><Icon name="add-circle" /></span>
           </Link>

@@ -10,7 +10,8 @@ import { ShareButtons } from "@/components/ShareButtons"
 import { Stars } from "@/components/Stars"
 import { HostRating } from "@/components/HostRating"
 import { ReportReview } from "@/components/ReportReview"
-import { CATEGORY_ICON, feeKobo, formatDate, formatNaira, formatTime } from "@/lib/ganor"
+import { CATEGORY_ICON, feeKobo, formatDate, formatNaira, formatTime , eventPhase, RATINGS_ENABLED } from "@/lib/ganor"
+import { PhasePill } from "@/components/PhasePill"
 
 type Host = {
   display_name: string
@@ -61,7 +62,7 @@ export default async function EventPage({ params }: { params: Promise<{ slug: st
   if (!ev) notFound()
   const { supabase, userId } = await getUserId()
   const isHost = userId === ev.host_id
-  const [{ data: summary }, { data: reviews }] = await Promise.all([
+  const [{ data: summary }, { data: reviews }] = !RATINGS_ENABLED ? [{ data: null }, { data: null }] : await Promise.all([
     supabase.from("host_review_summary").select("*").eq("host_id", ev.host_id).maybeSingle(),
     supabase
       .from("event_reviews")
@@ -73,7 +74,8 @@ export default async function EventPage({ params }: { params: Promise<{ slug: st
   ])
   const tickets = (ev.ticket_types ?? []).filter((t) => t.on_sale)
   const host = ev.profiles as Host
-  const ended = new Date(ev.ends_at ?? ev.starts_at) < new Date()
+  const phase = eventPhase(ev, ev.ticket_types)
+  const ended = phase === "ended"
   const live = ev.status === "published"
   const h = await headers()
   const hostName = h.get("x-forwarded-host") ?? h.get("host") ?? "ganor-app.vercel.app"
@@ -107,6 +109,7 @@ export default async function EventPage({ params }: { params: Promise<{ slug: st
         <div className="wrap ev-hero__in">
           <div className="actions" style={{ gap: 10 }}>
             <span className="kicker"><Icon name={CATEGORY_ICON[ev.category] ?? "calendar"} size={18} />{ev.category}</span>
+            {phase !== "upcoming" && phase !== "draft" && <PhasePill phase={phase} />}
             {ev.halal_friendly && <span className="pill pill--halal"><Icon name="halal" size={14} />Halal-friendly</span>}
           </div>
           <h1>{ev.title}</h1>
@@ -154,7 +157,7 @@ export default async function EventPage({ params }: { params: Promise<{ slug: st
                 )}
                 <div>
                   <p className="hostcard__name">{host.display_name}</p>
-                  <HostRating summary={summary} />
+                  {RATINGS_ENABLED && <HostRating summary={summary} />}
                   {host.bio && <p className="small muted" style={{ marginTop: 4 }}>{host.bio}</p>}
                 </div>
               </div>
@@ -171,7 +174,7 @@ export default async function EventPage({ params }: { params: Promise<{ slug: st
               )}
             </div>
           )}
-          {host && reviews && reviews.length > 0 && (
+          {RATINGS_ENABLED && host && reviews && reviews.length > 0 && (
             <div className="card stack">
               <span className="kicker"><Icon name="star" size={18} />What guests say</span>
               <HostRating summary={summary} showSpread />
@@ -190,7 +193,7 @@ export default async function EventPage({ params }: { params: Promise<{ slug: st
               </ul>
             </div>
           )}
-          {host && live && ended && !isHost && (
+          {RATINGS_ENABLED && host && live && ended && !isHost && (
             <div className="card stack">
               <span className="kicker"><Icon name="star" size={18} />Rate this event</span>
               <p className="small muted">Guests with a paid ticket get a private rating link on WhatsApp after the event, if they agreed to it at checkout. Lost yours? Email <a href="mailto:support@ganor.ng">support@ganor.ng</a> with your order number.</p>
