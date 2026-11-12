@@ -3,7 +3,8 @@ import { getUserId } from "@/lib/supabase/server"
 import { Icon } from "./Icon"
 
 export async function Header() {
-  const { userId } = await getUserId()
+  const { supabase, userId } = await getUserId()
+  const staff = userId ? (await supabase.rpc("is_staff")).data === true : false
   return (
     <header className="topbar">
       <div className="wrap topbar__in">
@@ -15,7 +16,9 @@ export async function Header() {
           {userId ? (
             <>
               <Link href="/dashboard">My events</Link>
+              <Link href="/dashboard/team">Gate team</Link>
               <Link href="/dashboard/profile">Profile</Link>
+              {staff && <Link href="/admin">Admin</Link>}
               <form action="/auth/signout" method="post">
                 <button type="submit" className="linkbtn">Sign out</button>
               </form>

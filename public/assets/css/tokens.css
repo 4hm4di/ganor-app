@@ -1,0 +1,48 @@
+/* Ganor design tokens (from brand guidelines v1.2, November 2026). */
+/* Fonts: self-hosted, see assets/css/fonts.css */
+:root {
+  /* Core colours */
+  --ganor-indigo: #3730B8;      /* signature: buttons, links, icons' supporting tone */
+  --ganor-ink: #15132A;         /* text and dark backgrounds */
+  --ganor-sand: #F6F1E7;        /* light background */
+  --ganor-marigold: #FFB21E;    /* accent in small amounts, ALWAYS with Ink text */
+  --ganor-white: #FFFFFF;
+
+  /* Supporting colours */
+  --ganor-muted: #55526B;       /* secondary text on Sand/white (6.65:1) */
+  --ganor-lavender: #C9C3E8;    /* secondary text and icon tone on Indigo/Ink (5.5:1 on Indigo) */
+  --ganor-line: #E3DDD0;        /* hairlines and card borders on Sand */
+  --ganor-pattern-tint: #433CC9;/* symbol pattern on Indigo only; never behind text */
+
+  /* Interface status (check-in and app states only, never marketing) */
+  --ganor-success: #1C7A45;     /* white text 5.4:1 */
+  --ganor-warning: #FFB21E;     /* Ink text 10.0:1 */
+  --ganor-danger: #C2272D;      /* white text 5.8:1 */
+
+  /* Never pair: white on Marigold, Marigold on Sand, Indigo on Ink */
+
+  /* Type */
+  --ganor-font-display: "Bricolage Grotesque", Inter, system-ui, sans-serif;
+  --ganor-font-body: Inter, system-ui, sans-serif;   /* also ALL Hausa text with ɓ ɗ ƙ ƴ */
+  --ganor-display: 800 64px/68px var(--ganor-font-display);
+  --ganor-h1: 700 40px/46px var(--ganor-font-display);
+  --ganor-h2: 700 24px/30px var(--ganor-font-display);
+  --ganor-body: 400 16px/24px var(--ganor-font-body);
+  --ganor-small: 500 13px/20px var(--ganor-font-body);
+  --ganor-label: 600 11px/16px var(--ganor-font-body);  /* + letter-spacing: 1.6px; text-transform: uppercase */
+  --ganor-label-tracking: 1.6px;
+
+  /* Shape */
+  --ganor-radius-pill: 999px;   /* buttons, chips */
+  --ganor-radius-card: 18px;
+  --ganor-radius-icon-tile: 22.5%;
+
+  /* Icons: line duotone, 24 px grid, 1.5 px stroke */
+  --ganor-icon-sm: 16px; --ganor-icon-md: 20px; --ganor-icon: 24px; --ganor-icon-lg: 32px; --ganor-icon-xl: 48px;
+
+  /* Motion: interface moves 200–600 ms, one small overshoot at most */
+  --ganor-ease-in-out: cubic-bezier(.65,0,.35,1);
+  --ganor-ease-out: cubic-bezier(.22,1,.36,1);
+  --ganor-duration-fast: 200ms; --ganor-duration: 360ms; --ganor-duration-slow: 600ms;
+  --ganor-loader-duration: 1600ms;
+}

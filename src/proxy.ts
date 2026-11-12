@@ -38,5 +38,6 @@ export async function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/((?!_next/static|_next/image|favicon.ico|icon.svg|apple-icon.png|brand/|icons/).*)"],
+  // Skip static files (anything with an extension, plus the landing page assets) and the rewritten homepage.
+  matcher: ["/((?!_next/static|_next/image|assets/|brand/|icons/|img/|social/|$|.*\\.[a-z0-9]+$).+)"],
 }

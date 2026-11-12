@@ -127,7 +127,14 @@ export function EventToolsView({ ev, userId, publicUrl, sp }: { ev: ToolsEvent; 
             <div className="gatebox__finder" aria-hidden="true"><i /><i /><i /><i /><Icon name="qr-code" size={44} /></div>
             <p><b>Scan tickets with any phone.</b> Each code works once, so no copies get in.</p>
           </div>
-          <p className="card__empty">The scanner opens here when ticket sales start.</p>
+          <div className="actions" style={{ gap: 8 }}>
+            <Link href={`/gate/${ev.id}`} className="btn btn--primary btn--sm">
+              <span>Open scanner</span>
+              <span className="btn__arrow" aria-hidden="true"><Icon name="qr-code" /></span>
+            </Link>
+            <Link href="/dashboard/team" className="btn btn--ghost btn--sm btn--plain">Gate team</Link>
+          </div>
+          <p className="card__empty">Scan on your phone, or add gate accounts so your team can scan with their own username and password.</p>
         </article>
 
         <article className="card card--guests" data-reveal>

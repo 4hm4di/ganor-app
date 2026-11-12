@@ -15,7 +15,7 @@ export default async function Dashboard({ searchParams }: { searchParams: Promis
   const { supabase, userId } = await getUserId()
   if (!userId) redirect("/login")
 
-  const [{ data: profile }, { data: events }, { data: rating }, { data: staff }] = await Promise.all([
+  const [{ data: profile }, { data: events }, { data: rating }, { data: suspension }] = await Promise.all([
     supabase.from("profiles").select("display_name").eq("id", userId).single(),
     supabase
       .from("events")
@@ -23,8 +23,9 @@ export default async function Dashboard({ searchParams }: { searchParams: Promis
       .eq("host_id", userId)
       .order("starts_at", { ascending: true }),
     supabase.from("host_review_summary").select("*").eq("host_id", userId).maybeSingle(),
-    supabase.rpc("is_staff"),
+    supabase.rpc("my_suspension"),
   ])
+  const suspended = suspension as { reason: string; since: string } | null
 
   const first = profile?.display_name?.split(/\s+/)[0]
 
@@ -35,9 +36,14 @@ export default async function Dashboard({ searchParams }: { searchParams: Promis
           <span className="kicker"><Icon name="calendar" size={18} />Host dashboard</span>
           <h1 style={{ marginTop: 10 }}>{first ? `Hi ${first}` : "Your events"}</h1>
           <p className="muted">Create an event, add tickets, then publish to get your link.</p>
+          {suspended && (
+            <div className="alert alert--error" role="alert" style={{ marginTop: 12 }}>
+              <Icon name="warning" />
+              <span>Your host account is suspended, so your events are hidden and you can&rsquo;t publish. Reason: {suspended.reason}. Contact support@ganor.ng to resolve this.</span>
+            </div>
+          )}
           <div style={{ marginTop: 10 }}><HostRating summary={rating} /></div>
           <p className="small muted">Guests scanned at the gate rate you after your event. Your average shows once you have 5.</p>
-          {staff && <p className="small" style={{ marginTop: 6 }}><Link href="/admin/ratings">Ganor staff: rating requests and reports</Link></p>}
         </div>
         <Link href="/dashboard/events/new" className="btn btn--primary">
           <span>New event</span>

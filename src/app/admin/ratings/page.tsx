@@ -2,7 +2,6 @@ import type { Metadata } from "next"
 import Link from "next/link"
 import { notFound } from "next/navigation"
 import { getUserId } from "@/lib/supabase/server"
-import { Icon } from "@/components/Icon"
 import { Stars } from "@/components/Stars"
 import { formatDate } from "@/lib/ganor"
 import { CreateLinks, Reissue, StopForm } from "./SendLinks"
@@ -19,8 +18,6 @@ function lastSixtyDays() {
 export default async function StaffRatings() {
   const { supabase, userId } = await getUserId()
   if (!userId) notFound()
-  const { data: isStaff } = await supabase.rpc("is_staff")
-  if (!isStaff) notFound()
 
   const { since, now } = lastSixtyDays()
   const [{ data: events }, { data: orders }, { data: invites }, { data: reports }] = await Promise.all([
@@ -33,16 +30,9 @@ export default async function StaffRatings() {
   const ended = (events ?? []).filter((e) => new Date(e.ends_at ?? e.starts_at) < new Date())
 
   return (
-    <div className="wrap">
-      <div className="pagehead">
-        <div>
-          <span className="kicker"><Icon name="star" size={18} />Ganor staff</span>
-          <h1 style={{ marginTop: 10 }}>Ratings</h1>
-          <p className="muted">Send rating links after events, honour STOP replies and handle reported reviews.</p>
-        </div>
-      </div>
-
+    <div>
       <div className="stack">
+        <h1>Ratings</h1>
         <section className="card stack" aria-labelledby="send-h">
           <h2 id="send-h">Send rating requests</h2>
           <p className="small muted">Only paid orders that ticked the rating box at checkout get a link, one per WhatsApp number per event. Links work for 14 days. Send once, about 2 hours after the event ends (or 10:00 the next morning for late events).</p>

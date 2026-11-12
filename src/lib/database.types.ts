@@ -135,7 +135,7 @@ export type Database = {
         ]
       }
       tickets: {
-        Row: { checked_in_at: string | null; created_at: string; event_id: string; id: string; order_id: string; price_kobo: number; ticket_type_id: string }
+        Row: { checked_in_at: string | null; checked_in_by: string | null; code: string; created_at: string; event_id: string; id: string; order_id: string; price_kobo: number; ticket_type_id: string }
         Insert: { checked_in_at?: string | null; event_id: string; order_id: string; price_kobo?: number; ticket_type_id: string }
         Update: Partial<Database["public"]["Tables"]["tickets"]["Insert"]>
         Relationships: [
@@ -179,6 +179,21 @@ export type Database = {
         Update: { resolved_at?: string | null }
         Relationships: [
           { foreignKeyName: "review_reports_review_id_fkey"; columns: ["review_id"]; isOneToOne: false; referencedRelation: "event_reviews"; referencedColumns: ["id"] },
+        ]
+      }
+      host_staff: {
+        Row: { active: boolean; created_at: string; display_name: string; host_id: string; id: string; last_login_at: string | null; locked_until: string | null; updated_at: string; username: string }
+        Insert: never
+        Update: never
+        Relationships: []
+      }
+      host_staff_events: {
+        Row: { event_id: string; staff_id: string }
+        Insert: never
+        Update: never
+        Relationships: [
+          { foreignKeyName: "host_staff_events_event_id_fkey"; columns: ["event_id"]; isOneToOne: false; referencedRelation: "events"; referencedColumns: ["id"] },
+          { foreignKeyName: "host_staff_events_staff_id_fkey"; columns: ["staff_id"]; isOneToOne: false; referencedRelation: "host_staff"; referencedColumns: ["id"] },
         ]
       }
       ticket_types: {
@@ -243,6 +258,27 @@ export type Database = {
       }
       admin_suppress_phone: { Args: { p_phone: string; p_scope?: string }; Returns: number }
       is_staff: { Args: Record<string, never>; Returns: boolean }
+      host_create_staff: { Args: { p_username: string; p_display_name: string; p_password: string; p_event_ids?: string[] }; Returns: string }
+      host_update_staff: { Args: { p_staff: string; p_display_name: string; p_active: boolean; p_event_ids: string[] }; Returns: undefined }
+      host_set_staff_password: { Args: { p_staff: string; p_password: string }; Returns: undefined }
+      host_delete_staff: { Args: { p_staff: string }; Returns: undefined }
+      staff_login: { Args: { p_username: string; p_password: string }; Returns: Json }
+      staff_logout: { Args: { p_token: string }; Returns: undefined }
+      staff_session: { Args: { p_token: string }; Returns: Json }
+      check_in_ticket: { Args: { p_event: string; p_code: string; p_staff_token?: string }; Returns: Json }
+      admin_overview: { Args: Record<string, never>; Returns: Json }
+      admin_hosts: {
+        Args: Record<string, never>
+        Returns: { id: string; display_name: string; email: string | null; joined_at: string; last_sign_in_at: string | null; events: number; published: number; tickets_sold: number; gate_accounts: number; suspended: boolean; suspend_reason: string | null; is_staff: boolean }[]
+      }
+      admin_set_suspension: { Args: { p_host: string; p_suspend: boolean; p_reason?: string }; Returns: undefined }
+      admin_set_event_status: { Args: { p_event: string; p_status: string; p_note?: string }; Returns: undefined }
+      admin_set_staff_role: { Args: { p_email: string; p_grant: boolean }; Returns: undefined }
+      admin_recent_actions: {
+        Args: { p_limit?: number }
+        Returns: { created_at: string; actor_name: string; action: string; target_type: string; target_id: string | null; note: string | null }[]
+      }
+      my_suspension: { Args: Record<string, never>; Returns: Json }
       rating_invite: { Args: { p_token: string }; Returns: Json }
       submit_event_review: {
         Args: { p_attended: boolean; p_comment: string; p_display: string; p_rating: number; p_token: string }
