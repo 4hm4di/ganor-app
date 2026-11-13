@@ -1,8 +1,9 @@
 import { cache } from "react"
+import { notFound } from "next/navigation"
 import { getUserId } from "@/lib/supabase/server"
 
 export * from "./hq-roles"
-import type { HqMe } from "./hq-roles"
+import { hqAllows, type HqMe } from "./hq-roles"
 
 export const getHq = cache(async (): Promise<{ me: HqMe | null; supabase: Awaited<ReturnType<typeof getUserId>>["supabase"] }> => {
   const { supabase, userId } = await getUserId()
@@ -16,3 +17,10 @@ export const getHq = cache(async (): Promise<{ me: HqMe | null; supabase: Awaite
   }
   return { me: (data as HqMe | null) ?? null, supabase }
 })
+
+// Page guard: staff whose role doesn't include this page get a plain 404.
+export async function requireHqPage(page: import("./hq-roles").HqPage) {
+  const hq = await getHq()
+  if (!hq.me || !hqAllows(hq.me.role, page)) notFound()
+  return hq as { me: HqMe; supabase: typeof hq.supabase }
+}

@@ -1,5 +1,5 @@
 import type { Metadata } from "next"
-import { getHq } from "@/lib/hq"
+import { requireHqPage } from "@/lib/hq"
 import { deleteHost } from "../actions"
 import { ConfirmButton } from "@/components/ConfirmButton"
 import { Icon } from "@/components/Icon"
@@ -10,7 +10,7 @@ export const metadata: Metadata = { title: { absolute: "Ganor" }, robots: { inde
 
 export default async function AdminHosts({ searchParams }: { searchParams: Promise<{ q?: string; show?: string }> }) {
   const { q = "", show = "all" } = await searchParams
-  const { supabase, me } = await getHq()
+  const { supabase, me } = await requireHqPage("hosts")
   const { data } = await supabase.rpc("admin_hosts")
   const needle = q.trim().toLowerCase()
   const hosts = (data ?? []).filter((h) =>

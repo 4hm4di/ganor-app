@@ -1,6 +1,6 @@
 import type { Metadata } from "next"
 import { notFound } from "next/navigation"
-import { getHq } from "@/lib/hq"
+import { requireHqPage } from "@/lib/hq"
 import { formatDate, formatNaira } from "@/lib/ganor"
 import { maskAccount } from "@/lib/banks"
 import { planById, naira } from "@/lib/plans"
@@ -15,8 +15,8 @@ const LABEL: Record<string, [string, string]> = {
 
 export default async function Payouts({ searchParams }: { searchParams: Promise<{ show?: string; full?: string }> }) {
   const { show = "all", full } = await searchParams
-  const { me, supabase } = await getHq()
-  if (!me?.can.finance) notFound()
+  const { me, supabase } = await requireHqPage("payouts")
+  if (!me.can.finance) notFound()
   const [{ data }, { data: plans }] = await Promise.all([supabase.rpc("admin_payouts"), supabase.rpc("admin_rsvp_plans")])
   const due = (plans ?? []).filter((p) => !p.paid_at)
   const rows = (data ?? []).filter((r) => show === "all" || r.status === show)

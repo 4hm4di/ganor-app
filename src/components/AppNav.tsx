@@ -8,15 +8,17 @@ import { Icon } from "./Icon"
 import { GanorSymbol } from "./Loader"
 import { IdleGuard } from "./IdleGuard"
 import { ThemeSwitch } from "./ThemeSwitch"
+import { SignOutButton } from "./SignOutButton"
 import { NewEventChooser } from "./NewEventChooser"
+import { hqHome, hqPagesFor, type HqRole } from "@/lib/hq-roles"
+import { RATINGS_ENABLED } from "@/lib/ganor"
 
-type HqCan = { finance: boolean; team: boolean }
-type Props = { name: string; email: string; logo: string | null; staff: boolean; hqOnly?: boolean; hqCan?: HqCan }
+type Props = { name: string; email: string; logo: string | null; staff: boolean; hqOnly?: boolean; hqRole?: HqRole | null }
 
 const initials = (s: string) => s.split(/[\s@.]+/).filter(Boolean).slice(0, 2).map((w) => w[0]!.toUpperCase()).join("")
 
 // Signed-in header: section links, an account menu with Sign out, and a full-screen menu on phones.
-export function AppNav({ name, email, logo, staff, hqOnly, hqCan }: Props) {
+export function AppNav({ name, email, logo, staff, hqOnly, hqRole }: Props) {
   const path = usePathname()
   const [menu, setMenu] = useState(false) // account dropdown (desktop)
   const [sheet, setSheet] = useState(false) // full menu (phone)
@@ -25,15 +27,12 @@ export function AppNav({ name, email, logo, staff, hqOnly, hqCan }: Props) {
 
   // HQ uses the same header as hosts, with HQ sections instead of host ones.
   const hq = (staff && path.startsWith("/hq")) || !!hqOnly
-  const home = hq ? "/hq" : "/dashboard"
-  const links = hq ? [
-    { href: "/hq", label: "Overview", icon: "home", match: (p: string) => p === "/hq" },
-    { href: "/hq/watch", label: "Watchlist", icon: "warning", match: (p: string) => p.startsWith("/hq/watch") },
-    { href: "/hq/hosts", label: "Hosts", icon: "users", match: (p: string) => p.startsWith("/hq/hosts") },
-    { href: "/hq/events", label: "Events", icon: "calendar", match: (p: string) => p.startsWith("/hq/events") },
-    ...(hqCan?.finance !== false ? [{ href: "/hq/payouts", label: "Payouts", icon: "wallet", match: (p: string) => p.startsWith("/hq/payouts") }] : []),
-    { href: "/hq/staff", label: hqCan?.team === false ? "Team" : "Team", icon: "shield", match: (p: string) => p.startsWith("/hq/staff") },
-  ] : [
+  const home = hq ? hqHome(hqRole) : "/dashboard"
+  // HQ: each role only sees the pages it works in (see HQ_PAGES).
+  const links = hq ? hqPagesFor(hqRole).filter((p) => p.key !== "ratings" || RATINGS_ENABLED).map((p) => ({
+    href: p.href, label: p.label, icon: p.icon,
+    match: (x: string) => (p.href === "/hq" ? x === "/hq" : x.startsWith(p.href)),
+  })) : [
     { href: "/dashboard", label: "Overview", icon: "home", match: (p: string) => p === "/dashboard" },
     { href: "/dashboard/events", label: "My events", icon: "calendar", match: (p: string) => p.startsWith("/dashboard/events") },
     { href: "/dashboard/team", label: "Gate team", icon: "users", match: (p: string) => p.startsWith("/dashboard/team") },
@@ -66,11 +65,7 @@ export function AppNav({ name, email, logo, staff, hqOnly, hqCan }: Props) {
     <span>{initials(name)}</span>
   )
 
-  const signOut = (
-    <form action={hq ? "/auth/signout?to=hq" : "/auth/signout"} method="post">
-      <button type="submit" className="acct__item acct__item--danger"><Icon name="close-circle" size={18} />Sign out</button>
-    </form>
-  )
+  const signOut = <SignOutButton action={hq ? "/auth/signout?to=hq" : "/auth/signout"} />
 
   return (
     <header className="topbar topbar--app">
@@ -112,7 +107,7 @@ export function AppNav({ name, email, logo, staff, hqOnly, hqCan }: Props) {
                 {hq ? (
                   <>
                     <Link href="/hq/profile" className="acct__item" role="menuitem"><Icon name="pen" size={18} />Edit profile</Link>
-                    <Link href="/hq/staff" className="acct__item" role="menuitem"><Icon name="shield" size={18} />Team & roles</Link>
+                    {hqRole === "owner" && <Link href="/hq/staff" className="acct__item" role="menuitem"><Icon name="shield" size={18} />Team & roles</Link>}
                     {!hqOnly && <Link href="/dashboard" className="acct__item" role="menuitem"><Icon name="calendar" size={18} />Host dashboard</Link>}
                   </>
                 ) : (
@@ -122,7 +117,6 @@ export function AppNav({ name, email, logo, staff, hqOnly, hqCan }: Props) {
                     <Link href="/dashboard/team" className="acct__item" role="menuitem"><Icon name="users" size={18} />Gate team</Link>
                   </>
                 )}
-                <a href="/" className="acct__item" role="menuitem"><Icon name="home" size={18} />Ganor homepage</a>
                 <div className="acct__theme"><small>Appearance</small><ThemeSwitch /></div>
                 {signOut}
               </div>
@@ -169,7 +163,6 @@ export function AppNav({ name, email, logo, staff, hqOnly, hqCan }: Props) {
             ) : (
               <>
                 <button type="button" className="appsheet__l" style={{ "--i": links.length } as React.CSSProperties} onClick={() => { setSheet(false); setChooser(true) }}><Icon name="add-circle" size={22} />New event</button>
-                <a href="/" className="appsheet__l" style={{ "--i": links.length + 1 } as React.CSSProperties}><Icon name="home" size={22} />Ganor homepage</a>
               </>
             )}
           </nav>

@@ -3,6 +3,7 @@ import Link from "next/link"
 import { createClient, getUserId } from "@/lib/supabase/server"
 import { gateToken, type GateSession } from "@/lib/gate"
 import { Icon } from "@/components/Icon"
+import { SignOutButton } from "@/components/SignOutButton"
 import { formatDate, formatTime } from "@/lib/ganor"
 import { GateLoginForm } from "./GateLoginForm"
 import { gateLogout } from "./actions"
@@ -41,9 +42,7 @@ export default async function Gate() {
           <h1 style={{ marginTop: 10 }} data-lines><span className="line"><span>Hi {session.name.split(/\s+/)[0]}</span></span></h1>
           <p className="muted" data-rise>Pick the event you&rsquo;re checking in.</p>
         </div>
-        <form action={gateLogout}>
-          <button type="submit" className="btn btn--ghost btn--sm btn--plain">Sign out</button>
-        </form>
+        <SignOutButton action={gateLogout} className="btn btn--ghost btn--sm btn--plain" icon={false} />
       </div>
       {session.events.length === 0 ? (
         <div className="card"><p className="muted">You don&rsquo;t have any events to check in right now. Your host assigns events to your account.</p></div>

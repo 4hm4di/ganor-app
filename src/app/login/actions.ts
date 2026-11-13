@@ -48,7 +48,8 @@ export async function signUpWithPassword(_prev: AuthState, fd: FormData): Promis
     password,
     options: {
       data: { display_name: name },
-      emailRedirectTo: `${origin}/auth/callback?next=${encodeURIComponent(next)}`,
+      // The link confirms the email, then shows "verified, sign in" instead of opening the dashboard.
+      emailRedirectTo: `${origin}/auth/callback?verified=1&next=${encodeURIComponent(next)}`,
     },
   })
   if (error) return { status: "error", message: friendly(error.message), email }

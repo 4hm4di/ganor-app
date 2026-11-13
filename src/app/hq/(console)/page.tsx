@@ -1,6 +1,7 @@
 import type { Metadata } from "next"
 import Link from "next/link"
-import { getHq } from "@/lib/hq"
+import { notFound, redirect } from "next/navigation"
+import { getHq, hqAllows, hqHome } from "@/lib/hq"
 import { Icon } from "@/components/Icon"
 import { PhasePill } from "@/components/PhasePill"
 import { eventPhase, formatDate, formatTime, PHASE_LABEL, RATINGS_ENABLED, type EventPhase } from "@/lib/ganor"
@@ -24,6 +25,9 @@ const STAGES: { key: EventPhase; color: string }[] = [
 
 export default async function AdminOverview() {
   const { supabase, me } = await getHq()
+  if (!me) notFound()
+  if (!hqAllows(me.role, "overview")) redirect(hqHome(me.role))
+  const opens = (page: Parameters<typeof hqAllows>[1]) => hqAllows(me.role, page)
   const [{ data: o }, { data: log }, { data: daily }, { data: events }, { data: watch }, { data: hosts }] = await Promise.all([
     supabase.rpc("admin_overview"),
     me?.can.audit ? supabase.rpc("admin_recent_actions", { p_limit: 6 }) : Promise.resolve({ data: null }),
@@ -86,7 +90,7 @@ export default async function AdminOverview() {
         <article className="card awidget s-4" data-reveal>
           <header className="awidget__head">
             <span className={`awidget__ic${sev("high") ? " awidget__ic--marigold" : " awidget__ic--green"}`}><Icon name={sev("high") ? "warning" : "check-circle"} size={18} /></span>
-            <div><h2>{sev("high") ? `${sev("high")} need action` : "Nothing urgent"}</h2><p><Link href="/hq/watch">Open watchlist</Link></p></div>
+            <div><h2>{sev("high") ? `${sev("high")} need action` : "Nothing urgent"}</h2><p>{opens("watch") ? <Link href="/hq/watch">Open watchlist</Link> : "Hosts and events to keep an eye on"}</p></div>
           </header>
           <ul className="wsum">
             <li><span className="wsum__dot wsum__dot--high" /><span>Act now</span><b>{sev("high")}</b></li>
@@ -132,12 +136,12 @@ export default async function AdminOverview() {
         <article className="card awidget s-5" data-reveal>
           <header className="awidget__head">
             <span className="awidget__ic awidget__ic--ink"><Icon name="users" size={18} /></span>
-            <div><h2>Top hosts</h2><p>By tickets and RSVPs · <Link href="/hq/hosts">All hosts</Link></p></div>
+            <div><h2>Top hosts</h2><p>By tickets and RSVPs{opens("hosts") && <> · <Link href="/hq/hosts">All hosts</Link></>}</p></div>
           </header>
           {topHosts.length ? (
             <ul className="rank">
               {topHosts.map((h, i) => (
-                <li key={h.id}><Link href={`/hq/hosts?q=${encodeURIComponent(h.display_name)}`}>
+                <li key={h.id}><Link href={opens("hosts") ? `/hq/hosts?q=${encodeURIComponent(h.display_name)}` : "#"}>
                   <span className="rank__t">{h.display_name || "Unnamed host"}{h.suspended ? " · suspended" : ""}</span>
                   <span className="rank__n">{h.tickets_sold}<small> · {h.published} live</small></span>
                   <span className="rank__bar" aria-hidden="true"><i style={{ "--w": h.tickets_sold / topMax, "--d": `${i * 60}ms`, background: h.suspended ? "var(--ganor-danger)" : "var(--chart-bar)" } as React.CSSProperties} /></span>
@@ -150,7 +154,7 @@ export default async function AdminOverview() {
         <section className="card awidget s-7" data-reveal>
           <header className="awidget__head">
             <span className="awidget__ic awidget__ic--live"><Icon name="clock" size={18} /></span>
-            <div><h2>Happening now and next</h2><p>{happening.length} live · {next.length} coming up · <Link href="/hq/events">All events</Link></p></div>
+            <div><h2>Happening now and next</h2><p>{happening.length} live · {next.length} coming up{opens("events") && <> · <Link href="/hq/events">All events</Link></>}</p></div>
           </header>
           {happening.length + next.length === 0 ? <p className="muted">Nothing live or coming up.</p> : (
             <ul className="sendlist">
@@ -169,7 +173,7 @@ export default async function AdminOverview() {
           <section className="card awidget s-12" data-reveal>
             <header className="awidget__head">
               <span className="awidget__ic awidget__ic--ink"><Icon name="shield" size={18} /></span>
-              <div><h2>Recent HQ actions</h2><p><Link href="/hq/staff">Full log</Link></p></div>
+              <div><h2>Recent HQ actions</h2><p>{opens("staff") ? <Link href="/hq/staff">Full log</Link> : "Latest changes by the HQ team"}</p></div>
             </header>
             {(log ?? []).length === 0 ? <p className="muted">Nothing yet. Suspensions, event changes and payout checks show here.</p> : (
               <ul className="sendlist">

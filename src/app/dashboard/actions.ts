@@ -108,7 +108,7 @@ export async function updateEvent(_prev: FormState, fd: FormData): Promise<FormS
 }
 
 export async function setEventStatus(fd: FormData) {
-  const { supabase } = await requireHost()
+  const { supabase, userId } = await requireHost()
   const id = str(fd, "id")
   const to = str(fd, "to")
   if (!["draft", "published", "cancelled"].includes(to)) return
@@ -121,6 +121,9 @@ export async function setEventStatus(fd: FormData) {
     // RSVP events publish once their plan is paid (HQ finance confirms the payment).
     const paidAt = (ev as { plan_paid_at?: string | null }).plan_paid_at
     if (ev.event_kind === "rsvp" && ev.rsvp_plan !== "free" && paidAt === null) redirect(`/dashboard/events/${id}?error=plan`)
+    // Guests must be able to reach the host: a WhatsApp or call number is required to go live.
+    const { data: prof } = await supabase.from("profiles").select("contact_whatsapp, contact_phone").eq("id", userId).single()
+    if (!prof?.contact_whatsapp && !prof?.contact_phone) redirect(`/dashboard/events/${id}?error=contact`)
   }
 
   const { data } = await supabase.from("events").update({ status: to }).eq("id", id).select("slug").single()
@@ -258,6 +261,7 @@ export async function updateProfile(_prev: FormState, fd: FormData): Promise<For
     display_name: str(fd, "display_name"),
     bio: str(fd, "bio"),
     contact_whatsapp: str(fd, "contact_whatsapp"),
+    contact_phone: str(fd, "contact_phone"),
     contact_email: str(fd, "contact_email").toLowerCase(),
     website: str(fd, "website"),
     instagram: str(fd, "instagram").replace(/^@/, "").replace(/^https?:\/\/(www\.)?instagram\.com\//i, "").replace(/\/$/, ""),
@@ -275,6 +279,9 @@ export async function updateProfile(_prev: FormState, fd: FormData): Promise<For
   }
   const whatsapp = fields.contact_whatsapp ? toIntl(fields.contact_whatsapp) : null
   if (fields.contact_whatsapp && !whatsapp) return fail("Enter the WhatsApp number as a Nigerian number, like 0810 330 1999.")
+  const call = fields.contact_phone ? toIntl(fields.contact_phone) : null
+  if (fields.contact_phone && !call) return fail("Enter the call number as a Nigerian number, like 0810 330 1999.")
+  if (!whatsapp && !call) return fail("Add a WhatsApp or call number so guests can reach you. You need one to publish events.")
   if (fields.contact_email && !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(fields.contact_email)) return fail("Check the contact email.")
   let website = fields.website
   if (website && !/^https?:\/\//i.test(website)) website = `https://${website}`
@@ -287,6 +294,7 @@ export async function updateProfile(_prev: FormState, fd: FormData): Promise<For
     display_name: fields.display_name,
     bio: fields.bio,
     contact_whatsapp: whatsapp,
+    contact_phone: call,
     contact_email: fields.contact_email || null,
     website: website || null,
     instagram: fields.instagram || null,

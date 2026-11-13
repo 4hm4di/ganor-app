@@ -21,6 +21,7 @@ type Host = {
   logo_url: string | null
   bio: string | null
   contact_whatsapp: string | null
+  contact_phone: string | null
   contact_email: string | null
   website: string | null
   instagram: string | null
@@ -31,7 +32,7 @@ const getEvent = cache(async (slug: string) => {
   const supabase = await createClient()
   const { data } = await supabase
     .from("events")
-    .select("*, ticket_types(*), profiles(display_name, logo_url, bio, contact_whatsapp, contact_email, website, instagram)")
+    .select("*, ticket_types(*), profiles(display_name, logo_url, bio, contact_whatsapp, contact_phone, contact_email, website, instagram)")
     .eq("slug", slug)
     .order("sort_order", { referencedTable: "ticket_types", ascending: true })
     .maybeSingle()
@@ -92,6 +93,7 @@ export default async function EventPage({ params }: { params: Promise<{ slug: st
   const contacts = host
     ? [
         host.contact_whatsapp && { key: "wa", label: "WhatsApp", href: `https://wa.me/${host.contact_whatsapp}?text=${encodeURIComponent(`Hi, I have a question about ${ev.title}`)}`, icon: <SocialIcon name="whatsapp" size={18} /> },
+        host.contact_phone && { key: "call", label: "Call", href: `tel:+${host.contact_phone}`, icon: <Icon name="phone" size={18} /> },
         host.contact_email && { key: "mail", label: "Email", href: `mailto:${host.contact_email}?subject=${encodeURIComponent(ev.title)}`, icon: <Icon name="mail" size={18} /> },
         host.website && { key: "web", label: host.website.replace(/^https?:\/\/(www\.)?/, "").replace(/\/$/, ""), href: host.website, icon: <Icon name="globe" size={18} /> },
         host.instagram && { key: "ig", label: `@${host.instagram}`, href: `https://instagram.com/${host.instagram}`, icon: <SocialIcon name="instagram" size={18} /> },

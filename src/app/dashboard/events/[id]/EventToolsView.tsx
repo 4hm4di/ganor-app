@@ -26,6 +26,7 @@ import { eventPhase, PHASE_LABEL, feeKobo, formatDate, formatNaira, formatTime, 
 const ERRORS: Record<string, string> = {
   tickets: "Add at least one ticket type before you publish.",
   plan: "Pay for this event's RSVP plan before you publish. Payment details are in the Plan card below.",
+  contact: "Add a WhatsApp or call number to your host profile before you publish, so guests can reach you.",
   past: "This event's start time has passed. Change the date before you publish.",
   notfound: "We couldn't find that event.",
 }
@@ -40,7 +41,7 @@ export type ToolsGuest = { name: string; ticket: string; in: boolean }
 const dayLabel = (d: string) => formatDate(`${d}T12:00:00Z`, { day: "numeric", month: "short" })
 const hourLabel = (h: number) => `${((h + 11) % 12) + 1}${h < 12 ? "am" : "pm"}`
 
-export function EventToolsView({ ev, userId, publicUrl, sp, guests, daily, scanHours, daysLeft }: { ev: ToolsEvent; userId: string; publicUrl: string; sp: { created?: string; published?: string; error?: string; upgraded?: string }; guests: ToolsGuest[]; daily: { day: string; count: number }[]; scanHours: { hour: number; count: number }[]; daysLeft: number }) {
+export function EventToolsView({ ev, userId, publicUrl, sp, guests, daily, scanHours, daysLeft, hasContact }: { hasContact: boolean; ev: ToolsEvent; userId: string; publicUrl: string; sp: { created?: string; published?: string; error?: string; upgraded?: string }; guests: ToolsGuest[]; daily: { day: string; count: number }[]; scanHours: { hour: number; count: number }[]; daysLeft: number }) {
   const hasFree = ev.ticket_types.some((t) => t.price_kobo === 0)
   const publicPath = `/e/${ev.slug}`
   const tickets = ev.ticket_types ?? []
@@ -90,7 +91,8 @@ export function EventToolsView({ ev, userId, publicUrl, sp, guests, daily, scanH
       {sp.created && <div className="alert alert--ok" role="status" style={{ marginBottom: 14 }}><Icon name="check-circle" /><span>{sp.created === "rsvp" ? "Free event created as a draft. Choose your RSVP questions below, add a banner, then publish." : "Event created as a draft. Add a banner and your ticket types, then publish."}</span></div>}
       {sp.upgraded && <div className="alert alert--ok" role="status" style={{ marginBottom: 14 }}><Icon name="check-circle" /><span>Plan chosen. Pay with the reference in the Plan card; the new guest limit starts as soon as Ganor confirms it.</span></div>}
       {sp.published && <div className="alert alert--ok" role="status" style={{ marginBottom: 14 }}><Icon name="check-circle" /><span>Your event is live. Share the link below.</span></div>}
-      {sp.error && <div className="alert alert--error" role="alert" style={{ marginBottom: 14 }}><Icon name="warning" /><span>{ERRORS[sp.error] ?? "Something went wrong."}</span></div>}
+      {sp.error && <div className="alert alert--error" role="alert" style={{ marginBottom: 14 }}><Icon name="warning" /><span>{ERRORS[sp.error] ?? "Something went wrong."}</span>{sp.error === "contact" && <Link href="/dashboard/profile" className="alert__link">Add contact</Link>}</div>}
+      {!hasContact && !live && sp.error !== "contact" && <div className="alert alert--warn" role="status" style={{ marginBottom: 14 }}><Icon name="phone" /><span>Before you publish, add a WhatsApp or call number to your host profile. Email and social links are optional.</span><Link href="/dashboard/profile" className="alert__link">Add contact</Link></div>}
 
       <div className="bento">
         <article className="card card--sales" data-reveal>
@@ -170,7 +172,7 @@ export function EventToolsView({ ev, userId, publicUrl, sp, guests, daily, scanH
         })()}
 
         <article className="card" data-reveal style={{ gridColumn: "1 / -1" }} id="rsvp">
-          <header className="card__head"><h2 className="card__title"><Icon name="doc" />RSVP form</h2><span className="card__tag">{hasFree ? `${planById(ev.rsvp_plan).name} plan · up to ${planById(ev.rsvp_plan).cap.toLocaleString("en-NG")} guests` : "For free tickets"}</span></header>
+          <header className="card__head"><h2 className="card__title"><Icon name="doc" />RSVP form</h2>{hasFree ? <span className="chips"><span className="card__tag">{planById(ev.rsvp_plan).name}</span><span className="card__tag">{planById(ev.rsvp_plan).cap.toLocaleString("en-NG")} guests</span></span> : <span className="card__tag">For free tickets</span>}</header>
           {hasFree ? <RsvpBuilder eventId={ev.id} initial={parseRsvpFields(ev.rsvp_fields)} max={questionLimit(ev.rsvp_plan)} /> : <p className="card__empty">Add a free ticket type (price ₦0) and guests can RSVP on your event page. You choose a few short questions here.</p>}
         </article>
 

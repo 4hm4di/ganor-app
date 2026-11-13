@@ -9,9 +9,17 @@ export async function GET(request: NextRequest) {
   const { searchParams, origin } = request.nextUrl
   const next = safeNext(searchParams.get("next"))
   const supabase = await createClient()
+  // New host accounts: confirm the email, end the link's session and ask them to sign in.
+  const verified = async () => {
+    await supabase.auth.signOut({ scope: "local" })
+    return NextResponse.redirect(`${origin}/auth/verified`)
+  }
 
   const code = searchParams.get("code")
   if (code) {
+    // A sign-up code only arrives after Supabase has confirmed the email, so even if the
+    // link was opened on another device (no PKCE verifier here) the account is verified.
+    if (searchParams.get("verified") === "1") return verified()
     const { error } = await supabase.auth.exchangeCodeForSession(code)
     if (!error) return NextResponse.redirect(`${origin}${next}`)
   }
@@ -21,7 +29,10 @@ export async function GET(request: NextRequest) {
   const type = searchParams.get("type") as EmailOtpType | null
   if (tokenHash && type) {
     const { error } = await supabase.auth.verifyOtp({ token_hash: tokenHash, type })
-    if (!error) return NextResponse.redirect(`${origin}${type === "recovery" ? "/reset-password" : next}`)
+    if (!error) {
+      if (type === "signup" || searchParams.get("verified") === "1") return verified()
+      return NextResponse.redirect(`${origin}${type === "recovery" ? "/reset-password" : next}`)
+    }
   }
 
   const reason = searchParams.get("error") ? "provider" : "link"

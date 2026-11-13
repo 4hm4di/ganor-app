@@ -1,7 +1,6 @@
 import type { Metadata } from "next"
 import Link from "next/link"
-import { notFound } from "next/navigation"
-import { getUserId } from "@/lib/supabase/server"
+import { requireHqPage } from "@/lib/hq"
 import { Stars } from "@/components/Stars"
 import { formatDate } from "@/lib/ganor"
 import { CreateLinks, Reissue, StopForm } from "./SendLinks"
@@ -16,8 +15,7 @@ function lastSixtyDays() {
 
 // Ganor staff only: send rating links after events, honour STOP replies, handle reported reviews.
 export default async function StaffRatings() {
-  const { supabase, userId } = await getUserId()
-  if (!userId) notFound()
+  const { supabase } = await requireHqPage("ratings")
 
   const { since, now } = lastSixtyDays()
   const [{ data: events }, { data: orders }, { data: invites }, { data: reports }] = await Promise.all([

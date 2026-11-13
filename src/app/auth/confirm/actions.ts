@@ -18,6 +18,11 @@ export async function confirmEmailLink(fd: FormData) {
   const { data, error } = await supabase.auth.verifyOtp({ token_hash: tokenHash, type })
   if (error) redirect(type === "email_change" ? "/login?error=email" : "/login?error=link")
   if (type === "recovery") redirect("/reset-password")
+  if (type === "signup") {
+    // Confirmed. They sign in themselves, so the first visit to the dashboard is a deliberate one.
+    await supabase.auth.signOut({ scope: "local" })
+    redirect("/auth/verified")
+  }
   if (type === "email_change") {
     // With "secure email change" on, both inboxes must confirm. Until then the new address waits.
     const waiting = Boolean(data.user?.new_email)

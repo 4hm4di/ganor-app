@@ -63,5 +63,7 @@ export default async function EventTools({
     ? Array.from({ length: Math.max(...hours) - Math.min(...hours) + 1 }, (_, i) => { const h = Math.min(...hours) + i; return { hour: h, count: scans.get(String(h)) ?? 0 } })
     : []
   const daysLeft = Math.max(0, Math.ceil((new Date(ev.starts_at).getTime() - nowMs()) / 86_400_000))
-  return <EventToolsView ev={ev} userId={userId} publicUrl={publicUrl} sp={sp} guests={guests} daily={daily} scanHours={scanHours} daysLeft={daysLeft} />
+  const { data: prof } = await supabase.from("profiles").select("contact_whatsapp, contact_phone").eq("id", userId).maybeSingle()
+  const hasContact = Boolean(prof?.contact_whatsapp || prof?.contact_phone)
+  return <EventToolsView ev={ev} userId={userId} publicUrl={publicUrl} sp={sp} guests={guests} daily={daily} scanHours={scanHours} daysLeft={daysLeft} hasContact={hasContact} />
 }

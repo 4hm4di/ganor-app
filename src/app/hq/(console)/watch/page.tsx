@@ -1,6 +1,6 @@
 import type { Metadata } from "next"
 import Link from "next/link"
-import { getHq } from "@/lib/hq"
+import { requireHqPage } from "@/lib/hq"
 import { formatDate, formatTime } from "@/lib/ganor"
 import { Icon } from "@/components/Icon"
 
@@ -15,7 +15,7 @@ const SEV: Record<string, { label: string; cls: string; icon: string }> = {
 
 // One list of what needs attention across Ganor, worst first.
 export default async function Watchlist() {
-  const { supabase } = await getHq()
+  const { supabase } = await requireHqPage("watch")
   const [{ data }, { data: slugs }] = await Promise.all([
     supabase.rpc("admin_watchlist"),
     supabase.from("events").select("id, slug").limit(1000),

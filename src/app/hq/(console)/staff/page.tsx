@@ -1,15 +1,15 @@
 import type { Metadata } from "next"
-import { getHq, HQ_ROLES, roleLabel, roleIcon } from "@/lib/hq"
+import { requireHqPage, HQ_ROLES, roleLabel, roleIcon } from "@/lib/hq"
 import { formatDate, formatTime } from "@/lib/ganor"
 import { ConfirmButton } from "@/components/ConfirmButton"
-import { removeMember, transferOwner } from "../actions"
+import { removeMember } from "../actions"
 import { Icon } from "@/components/Icon"
 import { AddEmailMemberForm, CreateMemberForm, MemberRow } from "./TeamForms"
 
 export const metadata: Metadata = { title: { absolute: "Ganor" }, robots: { index: false } }
 
 export default async function HqTeam() {
-  const { me, supabase } = await getHq()
+  const { me, supabase } = await requireHqPage("staff")
   const [{ data: members }, { data: log }] = await Promise.all([
     supabase.rpc("hq_members"),
     me?.can.audit ? supabase.rpc("admin_recent_actions", { p_limit: 100 }) : Promise.resolve({ data: null }),
@@ -46,12 +46,6 @@ export default async function HqTeam() {
                   </small>
                 </div>
                 {owner && m.role !== "owner" && <MemberRow m={m} />}
-                {owner && m.role !== "owner" && m.active && (
-                  <form action={transferOwner}>
-                    <input type="hidden" name="user_id" value={m.user_id} />
-                    <ConfirmButton className="btn btn--ghost btn--xs btn--plain" confirmText="Tap again: they become owner, you become Operations" pendingText="Handing over…">Make owner</ConfirmButton>
-                  </form>
-                )}
                 {owner && m.role !== "owner" && (
                   <form action={removeMember}>
                     <input type="hidden" name="user_id" value={m.user_id} />

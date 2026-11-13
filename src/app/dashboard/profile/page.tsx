@@ -51,6 +51,7 @@ export default async function Profile({ searchParams }: { searchParams: Promise<
               display_name: p?.display_name ?? "",
               bio: p?.bio ?? "",
               contact_whatsapp: local(p?.contact_whatsapp ?? null),
+              contact_phone: local(p?.contact_phone ?? null),
               contact_email: p?.contact_email ?? "",
               website: p?.website ?? "",
               instagram: p?.instagram ?? "",

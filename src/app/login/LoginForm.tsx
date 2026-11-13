@@ -27,7 +27,7 @@ export function LoginForm({ mode, next, providers, error }: { mode: Mode; next: 
   if (signup.status === "confirm") {
     return (
       <div className="alert alert--ok" role="status"><Icon name="mail" />
-        <span>Almost there. We sent a confirmation link to <b>{signup.email}</b>. Open it on this device to finish creating your account.</span>
+        <span>Almost there. We sent a confirmation link to <b>{signup.email}</b>. Open it to verify your email, then sign in.</span>
       </div>
     )
   }

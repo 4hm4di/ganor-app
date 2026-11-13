@@ -84,6 +84,7 @@ export type Database = {
           bio: string
           contact_email: string | null
           contact_whatsapp: string | null
+          contact_phone: string | null
           created_at: string
           display_name: string
           id: string
@@ -96,6 +97,7 @@ export type Database = {
           bio?: string
           contact_email?: string | null
           contact_whatsapp?: string | null
+          contact_phone?: string | null
           created_at?: string
           display_name?: string
           id: string
@@ -303,7 +305,6 @@ export type Database = {
       admin_rsvp_plans: { Args: Record<string, never>; Returns: { event_id: string; title: string; host_name: string; plan: string; paid_at: string | null; starts_at: string; status: string; created_at: string }[] }
       admin_set_plan_paid: { Args: { p_event: string; p_paid: boolean }; Returns: undefined }
       admin_delete_host: { Args: { p_host: string }; Returns: undefined }
-      hq_transfer_owner: { Args: { p_user: string }; Returns: undefined }
       hq_update_me: { Args: { p_display_name: string }; Returns: undefined }
       admin_watchlist: { Args: Record<string, never>; Returns: { kind: string; severity: string; title: string; detail: string; event_id: string | null; host_id: string | null; at: string }[] }
       rsvp_submit: { Args: { p_event: string; p_ticket_type: string; p_name: string; p_phone: string; p_email: string; p_answers: Json; p_consent?: boolean }; Returns: Json }

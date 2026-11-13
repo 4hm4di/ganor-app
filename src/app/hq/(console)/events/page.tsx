@@ -1,6 +1,6 @@
 import type { Metadata } from "next"
 import Link from "next/link"
-import { getHq } from "@/lib/hq"
+import { requireHqPage } from "@/lib/hq"
 import { Icon } from "@/components/Icon"
 import { eventPhase, formatDate, formatTime } from "@/lib/ganor"
 import { PhasePill } from "@/components/PhasePill"
@@ -19,7 +19,7 @@ const FILTERS: { value: string; label: string }[] = [
 
 export default async function AdminEvents({ searchParams }: { searchParams: Promise<{ status?: string; q?: string }> }) {
   const { status = "active", q = "" } = await searchParams
-  const { supabase, me } = await getHq()
+  const { supabase, me } = await requireHqPage("events")
   let query = supabase
     .from("events")
     .select("id, title, slug, city, starts_at, ends_at, status, created_at, profiles(display_name), ticket_types(quantity, sold, on_sale)")

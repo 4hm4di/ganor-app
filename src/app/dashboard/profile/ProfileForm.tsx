@@ -9,6 +9,7 @@ type Values = {
   display_name: string
   bio: string
   contact_whatsapp: string
+  contact_phone: string
   contact_email: string
   website: string
   instagram: string
@@ -36,25 +37,31 @@ export function ProfileForm({ initial }: { initial: Values }) {
 
       <div>
         <span className="kicker"><Icon name="chat" size={16} />Contact for guests</span>
-        <p className="field__hint" style={{ marginTop: 6 }}>Shown on your event pages so guests can reach you about the event. Leave any of them empty to hide it.</p>
+        <p className="field__hint" style={{ marginTop: 6 }}>Shown on your event pages so guests can reach you. <b>A WhatsApp or call number is required to publish events.</b> Email and social links are optional.</p>
       </div>
       <div className="grid2">
         <label className="field">
-          <span className="field__label">WhatsApp</span>
+          <span className="field__label">WhatsApp <small>(this or call)</small></span>
           <input name="contact_whatsapp" type="tel" inputMode="tel" defaultValue={v.contact_whatsapp} placeholder="0803 000 0000" autoComplete="tel" />
         </label>
         <label className="field">
-          <span className="field__label">Email</span>
+          <span className="field__label">Call number <small>(this or WhatsApp)</small></span>
+          <input name="contact_phone" type="tel" inputMode="tel" defaultValue={v.contact_phone} placeholder="0803 000 0000" autoComplete="tel" />
+        </label>
+      </div>
+      <div className="grid2">
+        <label className="field">
+          <span className="field__label">Email <small>(optional)</small></span>
           <input name="contact_email" type="email" inputMode="email" autoCapitalize="none" spellCheck={false} autoComplete="email" defaultValue={v.contact_email} placeholder="events@yourorg.ng" />
         </label>
       </div>
       <div className="grid2">
         <label className="field">
-          <span className="field__label">Website</span>
+          <span className="field__label">Website <small>(optional)</small></span>
           <input name="website" inputMode="url" autoCapitalize="none" spellCheck={false} autoComplete="url" defaultValue={v.website} placeholder="yourorg.ng" />
         </label>
         <label className="field">
-          <span className="field__label">Instagram</span>
+          <span className="field__label">Instagram <small>(optional)</small></span>
           <input name="instagram" autoCapitalize="none" spellCheck={false} autoComplete="off" defaultValue={v.instagram} placeholder="@yourorg" />
         </label>
       </div>

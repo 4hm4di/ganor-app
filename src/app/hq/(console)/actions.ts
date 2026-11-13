@@ -97,14 +97,6 @@ export async function deleteHost(fd: FormData) {
   revalidatePath("/hq", "layout")
 }
 
-// Hand the single owner role to another member. The current owner becomes Operations.
-export async function transferOwner(fd: FormData) {
-  const supabase = await db()
-  if (!supabase) return
-  await supabase.rpc("hq_transfer_owner", { p_user: String(fd.get("user_id")) })
-  revalidatePath("/hq", "layout")
-}
-
 export async function updateMyProfile(_prev: AdminState, fd: FormData): Promise<AdminState> {
   const supabase = await db()
   if (!supabase) return { status: "error", message: "Sign in again." }
