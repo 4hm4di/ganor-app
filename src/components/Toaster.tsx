@@ -7,31 +7,29 @@ type Toast = { id: number; k: "ok" | "error"; m: string; out?: boolean }
 
 const COOKIE = "ganor_flash"
 
-function readFlash(): { k: "ok" | "error"; m: string; t: number } | null {
+type Flash = { k: "ok" | "error"; m: string; t: number }
+
+function readFlash(): Flash[] {
   const hit = document.cookie.match(new RegExp(`(?:^|; )${COOKIE}=([^;]*)`))
-  if (!hit) return null
+  if (!hit) return []
   document.cookie = `${COOKIE}=; Max-Age=0; path=/`
   let raw = hit[1]
   for (let i = 0; i < 3; i++) {
-    try { return JSON.parse(raw) } catch { try { raw = decodeURIComponent(raw) } catch { return null } }
+    try { const v = JSON.parse(raw); return Array.isArray(v) ? v : [v] } catch { try { raw = decodeURIComponent(raw) } catch { return [] } }
   }
-  return null
+  return []
 }
 
 // Pop-up banner for the result of any dashboard action. Server actions leave a one-shot cookie
 // (lib/flash.ts); this picks it up after the action finishes, shows it, then clears it.
-// Client code can also call window.dispatchEvent(new CustomEvent("ganor:toast", { detail: { k, m } })).
+// Hover or focus pauses the countdown. Client code can also call window.dispatchEvent(new CustomEvent("ganor:toast", { detail: { k, m } })).
 export function Toaster() {
   const [items, setItems] = useState<Toast[]>([])
   const seen = useRef(new Set<number>())
-  const timers = useRef(new Map<number, ReturnType<typeof setTimeout>>())
 
   const dismiss = useCallback((id: number) => {
     setItems((list) => list.map((t) => (t.id === id ? { ...t, out: true } : t)))
     setTimeout(() => setItems((list) => list.filter((t) => t.id !== id)), 180)
-    const tm = timers.current.get(id)
-    if (tm) clearTimeout(tm)
-    timers.current.delete(id)
   }, [])
 
   const push = useCallback((k: "ok" | "error", m: string, t = Date.now()) => {
@@ -39,18 +37,16 @@ export function Toaster() {
     seen.current.add(t)
     const id = t + Math.random()
     setItems((list) => [...list.slice(-2), { id, k, m }])
-    timers.current.set(id, setTimeout(() => dismiss(id), k === "error" ? 7000 : 4500))
-  }, [dismiss])
+  }, [])
 
   useEffect(() => {
-    const check = () => { const f = readFlash(); if (f) push(f.k === "error" ? "error" : "ok", f.m, f.t) }
+    const check = () => { for (const f of readFlash()) push(f.k === "error" ? "error" : "ok", f.m, f.t) }
     const onEvent = (e: Event) => { const d = (e as CustomEvent<{ k: "ok" | "error"; m: string }>).detail; if (d) push(d.k, d.m) }
     check()
     const iv = setInterval(check, 400)
     window.addEventListener("focus", check)
     window.addEventListener("ganor:toast", onEvent)
-    const t = timers.current
-    return () => { clearInterval(iv); window.removeEventListener("focus", check); window.removeEventListener("ganor:toast", onEvent); t.forEach(clearTimeout) }
+    return () => { clearInterval(iv); window.removeEventListener("focus", check); window.removeEventListener("ganor:toast", onEvent) }
   }, [push])
 
   return (
@@ -62,6 +58,8 @@ export function Toaster() {
           <button type="button" className="toast__x" aria-label="Dismiss" onClick={() => dismiss(t.id)}>
             <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18" /></svg>
           </button>
+          {/* The bar runs down the time left; when it ends the banner closes. Hovering pauses it. */}
+          <span className="toast__bar" aria-hidden="true" style={{ animationDuration: `${t.k === "error" ? 7000 : 4500}ms` }} onAnimationEnd={() => dismiss(t.id)} />
         </div>
       ))}
     </div>

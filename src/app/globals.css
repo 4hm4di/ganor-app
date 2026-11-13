@@ -1307,3 +1307,11 @@ html { scroll-padding-top: calc(76px + env(safe-area-inset-top)); }
 /* Dashboards: cards are ready just before they scroll into view and settle fast, so nothing trails the scroll. */
 .js :where(.dash, .bento, .admin, .wrap--narrow) [data-reveal] { transform: translateY(10px); transition: opacity 280ms ease, transform 360ms var(--ganor-ease-out); transition-delay: calc(var(--i, 0) * 30ms); }
 .js :where(.dash, .bento, .admin, .wrap--narrow) [data-reveal].is-in { transform: none; }
+/* Countdown bar along the bottom of each banner. */
+.toast { position: relative; overflow: hidden; }
+.toast__bar { position: absolute; left: 0; right: 0; bottom: 0; height: 3px; transform-origin: left center; animation: toast-time linear forwards; opacity: .9; }
+.toast--ok .toast__bar { background: #7FD6A3; }
+.toast--error .toast__bar { background: #FF9A9E; }
+.toast:focus-within .toast__bar { animation-play-state: paused; }
+@media (hover: hover) and (pointer: fine) { .toast:hover .toast__bar { animation-play-state: paused; } }
+@keyframes toast-time { from { transform: scaleX(1); } to { transform: scaleX(0); } }
