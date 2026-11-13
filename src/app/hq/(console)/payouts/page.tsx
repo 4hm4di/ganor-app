@@ -3,7 +3,8 @@ import { notFound } from "next/navigation"
 import { getHq } from "@/lib/hq"
 import { formatDate, formatNaira } from "@/lib/ganor"
 import { maskAccount } from "@/lib/banks"
-import { setPayoutStatus } from "../actions"
+import { planById, naira } from "@/lib/plans"
+import { setPayoutStatus, setPlanPaid } from "../actions"
 import { Icon } from "@/components/Icon"
 
 export const metadata: Metadata = { title: { absolute: "Ganor" }, robots: { index: false } }
@@ -16,7 +17,8 @@ export default async function Payouts({ searchParams }: { searchParams: Promise<
   const { show = "all", full } = await searchParams
   const { me, supabase } = await getHq()
   if (!me?.can.finance) notFound()
-  const { data } = await supabase.rpc("admin_payouts")
+  const [{ data }, { data: plans }] = await Promise.all([supabase.rpc("admin_payouts"), supabase.rpc("admin_rsvp_plans")])
+  const due = (plans ?? []).filter((p) => !p.paid_at)
   const rows = (data ?? []).filter((r) => show === "all" || r.status === show)
   const sum = (k: "gross_kobo" | "tickets_sold") => (data ?? []).reduce((n, r) => n + Number(r[k] ?? 0), 0)
   return (
@@ -29,6 +31,35 @@ export default async function Payouts({ searchParams }: { searchParams: Promise<
         <div className="card"><small className="muted">To check</small><b style={{ display: "block", font: "800 24px/30px var(--ganor-font-display)" }}>{(data ?? []).filter((r) => r.status === "pending").length}</b></div>
         <div className="card"><small className="muted">Missing details</small><b style={{ display: "block", font: "800 24px/30px var(--ganor-font-display)" }}>{(data ?? []).filter((r) => r.status === "missing").length}</b></div>
       </div>
+      <section className="stack" style={{ gap: 10 }}>
+        <h2 className="admin__h2">RSVP plan payments {due.length > 0 && <span className="badge badge--warn">{due.length} due</span>}</h2>
+        <p className="small muted">Hosts pay one plan per RSVP event by transfer, quoting the reference. Mark it paid once the money is in; they can publish straight away.</p>
+        {(plans ?? []).length === 0 ? <p className="muted">No RSVP events yet.</p> : (
+          <div className="alist">
+            {(plans ?? []).map((p) => {
+              const plan = planById(p.plan)
+              return (
+                <article key={p.event_id} className="card arow">
+                  <span className={`arow__ic${p.paid_at ? " arow__ic--info" : " arow__ic--medium"}`} aria-hidden="true"><Icon name={p.paid_at ? "check-circle" : "wallet"} size={20} /></span>
+                  <div className="arow__main">
+                    <b>{p.title} <span className={`badge ${p.paid_at ? "badge--ok" : "badge--warn"}`}>{p.paid_at ? "Paid" : "Due"}</span></b>
+                    <small>{plan.name} · {naira(plan.price)} · {p.host_name} · ref <b>{p.event_id.slice(0, 8).toUpperCase()}</b></small>
+                    <small>Event {formatDate(p.starts_at, { day: "numeric", month: "short", year: "numeric" })}{p.paid_at ? ` · paid ${formatDate(p.paid_at, { day: "numeric", month: "short" })}` : ""}</small>
+                  </div>
+                  <form action={setPlanPaid} className="arow__side">
+                    <input type="hidden" name="event_id" value={p.event_id} />
+                    {p.paid_at
+                      ? <button className="btn btn--ghost btn--xs btn--plain" name="paid" value="0">Undo paid</button>
+                      : <button className="btn btn--primary btn--xs btn--plain" name="paid" value="1">Mark paid</button>}
+                  </form>
+                </article>
+              )
+            })}
+          </div>
+        )}
+      </section>
+
+      <h2 className="admin__h2">Host payout accounts</h2>
       <form className="afilter" style={{ gridTemplateColumns: "1fr auto auto" }}>
         <select name="show" defaultValue={show} aria-label="Status">
           <option value="all">All hosts</option><option value="pending">To check</option><option value="missing">No details</option><option value="verified">Verified</option><option value="rejected">Rejected</option>

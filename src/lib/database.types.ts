@@ -20,6 +20,7 @@ export type Database = {
           published_at: string | null
           event_kind: string
           rsvp_plan: string
+          plan_paid_at: string | null
           rsvp_fields: Json
           slug: string
           starts_at: string
@@ -43,6 +44,7 @@ export type Database = {
           published_at?: string | null
           event_kind?: string
           rsvp_plan?: string
+          plan_paid_at?: string | null
           rsvp_fields?: Json
           slug: string
           starts_at: string
@@ -298,6 +300,9 @@ export type Database = {
       hq_remove_member: { Args: { p_user: string }; Returns: undefined }
       admin_payouts: { Args: Record<string, never>; Returns: { host_id: string; host_name: string; account_type: string | null; business_name: string | null; bank_name: string | null; account_number: string | null; account_name: string | null; settlement_email: string | null; settlement_phone: string | null; status: string; status_note: string | null; updated_at: string | null; paid_events: number; gross_kobo: number; tickets_sold: number }[] }
       admin_set_payout_status: { Args: { p_host: string; p_status: string; p_note?: string }; Returns: undefined }
+      admin_rsvp_plans: { Args: Record<string, never>; Returns: { event_id: string; title: string; host_name: string; plan: string; paid_at: string | null; starts_at: string; status: string; created_at: string }[] }
+      admin_set_plan_paid: { Args: { p_event: string; p_paid: boolean }; Returns: undefined }
+      admin_delete_host: { Args: { p_host: string }; Returns: undefined }
       admin_watchlist: { Args: Record<string, never>; Returns: { kind: string; severity: string; title: string; detail: string; event_id: string | null; host_id: string | null; at: string }[] }
       rsvp_submit: { Args: { p_event: string; p_ticket_type: string; p_name: string; p_phone: string; p_email: string; p_answers: Json; p_consent?: boolean }; Returns: Json }
       admin_recent_actions: {

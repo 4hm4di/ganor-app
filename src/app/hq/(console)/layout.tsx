@@ -1,7 +1,6 @@
 import { notFound } from "next/navigation"
 import { getHq, roleLabel } from "@/lib/hq"
 import { Icon } from "@/components/Icon"
-import { AdminTabs } from "./AdminTabs"
 
 // Ganor HQ: everything under /hq is for Ganor staff only and linked from nowhere in the host app. The database checks again on every call.
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
@@ -11,7 +10,6 @@ export default async function AdminLayout({ children }: { children: React.ReactN
     <div className="wrap admin">
       <div className="admin__top">
         <span className="kicker"><Icon name="shield" size={18} />Ganor HQ · {me.display_name ?? "staff"} · <span className="badge badge--ok">{roleLabel(me.role)}</span></span>
-        <AdminTabs can={me.can} />
       </div>
       {children}
     </div>

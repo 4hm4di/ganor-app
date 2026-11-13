@@ -6,6 +6,8 @@ import { Icon } from "@/components/Icon"
 import { formatDate } from "@/lib/ganor"
 import { NewStaffForm, StaffCard } from "./TeamForms"
 
+const clock = () => Date.now()
+
 export const metadata: Metadata = { title: "Gate team" }
 
 export default async function Team() {
@@ -14,10 +16,14 @@ export default async function Team() {
   const [{ data: staff }, { data: links }, { data: events }] = await Promise.all([
     supabase.from("host_staff").select("id, username, display_name, active, locked_until, last_login_at, created_at").eq("host_id", userId).order("created_at"),
     supabase.from("host_staff_events").select("staff_id, event_id"),
-    supabase.from("events").select("id, title, starts_at, status").eq("host_id", userId).neq("status", "cancelled").order("starts_at"),
+    supabase.from("events").select("id, title, starts_at, ends_at, status, venue_name").eq("host_id", userId).neq("status", "cancelled").order("starts_at"),
   ])
   const gateUrl = `${await siteOrigin()}/gate`
-  const evs = (events ?? []).map((e) => ({ id: e.id, label: `${e.title} · ${formatDate(e.starts_at, { day: "numeric", month: "short" })}${e.status === "draft" ? " (draft)" : ""}` }))
+  // Only events that can still be checked in: not ended (no end time means 6 hours after the start).
+  const now = clock()
+  const evs = (events ?? [])
+    .filter((e) => new Date(e.ends_at ?? new Date(new Date(e.starts_at).getTime() + 6 * 3_600_000).toISOString()).getTime() > now)
+    .map((e) => ({ id: e.id, label: e.title, hint: `${formatDate(e.starts_at, { weekday: "short", day: "numeric", month: "short" })} · ${e.venue_name}${e.status === "draft" ? " · draft" : ""}` }))
 
   return (
     <div className="wrap">

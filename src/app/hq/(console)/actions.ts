@@ -80,3 +80,18 @@ export async function setPayoutStatus(fd: FormData) {
   await supabase.rpc("admin_set_payout_status", { p_host: String(fd.get("host_id")), p_status: String(fd.get("status")), p_note: String(fd.get("note") ?? "") || undefined })
   revalidatePath("/hq", "layout")
 }
+
+export async function setPlanPaid(fd: FormData) {
+  const supabase = await db()
+  if (!supabase) return
+  await supabase.rpc("admin_set_plan_paid", { p_event: String(fd.get("event_id")), p_paid: fd.get("paid") === "1" })
+  revalidatePath("/hq", "layout")
+}
+
+// Suspended hosts only. Removes the host, their events, tickets and gate logins for good.
+export async function deleteHost(fd: FormData) {
+  const supabase = await db()
+  if (!supabase) return
+  await supabase.rpc("admin_delete_host", { p_host: String(fd.get("host_id")) })
+  revalidatePath("/hq", "layout")
+}

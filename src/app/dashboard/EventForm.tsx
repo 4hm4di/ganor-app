@@ -5,7 +5,7 @@ import { createEvent, updateEvent, type FormState } from "./actions"
 import { SubmitButton } from "@/components/SubmitButton"
 import { Icon } from "@/components/Icon"
 import { CATEGORIES, CITIES } from "@/lib/ganor"
-import { FREE_RSVP_CAP } from "@/lib/plans"
+import { planById } from "@/lib/plans"
 
 type Values = {
   id?: string
@@ -20,7 +20,8 @@ type Values = {
   halal_friendly: boolean
 }
 
-export function EventForm({ initial, mode, kind }: { initial?: Values; mode: "create" | "edit"; kind?: "rsvp" | "paid" }) {
+export function EventForm({ initial, mode, kind, plan }: { initial?: Values; mode: "create" | "edit"; kind?: "rsvp" | "paid"; plan?: string }) {
+  const cap = planById(plan).cap
   const [state, action] = useActionState<FormState, FormData>(mode === "create" ? createEvent : updateEvent, { status: "idle" })
   const v = { ...initial, ...(state.fields ?? {}) } as Partial<Record<keyof Values, string | boolean>>
   const halal = state.fields ? state.fields.halal_friendly === "on" : Boolean(initial?.halal_friendly)
@@ -31,6 +32,7 @@ export function EventForm({ initial, mode, kind }: { initial?: Values; mode: "cr
     <form action={action} className="stack" key={key} noValidate>
       {initial?.id && <input type="hidden" name="id" value={initial.id} />}
       {kind && <input type="hidden" name="kind" value={kind} />}
+      {plan && <input type="hidden" name="plan" value={plan} />}
       {state.status === "error" && (
         <div className="alert alert--error" role="alert"><Icon name="warning" /><span>{state.message}</span></div>
       )}
@@ -84,8 +86,8 @@ export function EventForm({ initial, mode, kind }: { initial?: Values; mode: "cr
       {kind === "rsvp" && (
         <label className="field">
           <span className="field__label">How many guests can come?</span>
-          <input type="number" name="capacity" required min={1} max={FREE_RSVP_CAP} inputMode="numeric" defaultValue={String((v as Record<string, unknown>).capacity ?? 100)} />
-          <span className="field__hint">Up to {FREE_RSVP_CAP} on the Free plan. RSVPs close when it&rsquo;s full.</span>
+          <input type="number" name="capacity" required min={1} max={cap} inputMode="numeric" defaultValue={String((v as Record<string, unknown>).capacity ?? cap)} />
+          <span className="field__hint">Up to {cap.toLocaleString("en-NG")} on the {planById(plan).name} plan. RSVPs close when it&rsquo;s full.</span>
         </label>
       )}
 

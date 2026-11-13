@@ -63,9 +63,11 @@ export async function createEvent(_prev: FormState, fd: FormData): Promise<FormS
   const fields: Record<string, string> = { ...base0 }
   const kind = str(fd, "kind") === "rsvp" ? "rsvp" : "paid"
   const capacity = Number(str(fd, "capacity") || 0)
+  const { planById } = await import("@/lib/plans")
+  const plan = planById(str(fd, "plan"))
   if (kind === "rsvp") {
     fields.capacity = str(fd, "capacity")
-    if (!Number.isInteger(capacity) || capacity < 1 || capacity > 100) errors.push("Guests: between 1 and 100 on the Free plan.")
+    if (!Number.isInteger(capacity) || capacity < 1 || capacity > plan.cap) errors.push(`Guests: between 1 and ${plan.cap.toLocaleString("en-NG")} on the ${plan.name} plan.`)
   }
   if (errors.length) return { status: "error", message: errors.join(" "), fields }
 
@@ -75,7 +77,7 @@ export async function createEvent(_prev: FormState, fd: FormData): Promise<FormS
     const suffix = Math.random().toString(36).slice(2, 6)
     const { data, error } = await supabase
       .from("events")
-      .insert({ ...row, host_id: userId, slug: `${base}-${suffix}`, event_kind: kind })
+      .insert({ ...row, host_id: userId, slug: `${base}-${suffix}`, event_kind: kind, ...(kind === "rsvp" ? { rsvp_plan: plan.id } : {}) })
       .select("id")
       .single()
     if (data) id = data.id
@@ -112,10 +114,13 @@ export async function setEventStatus(fd: FormData) {
   if (!["draft", "published", "cancelled"].includes(to)) return
 
   if (to === "published") {
-    const { data: ev } = await supabase.from("events").select("starts_at, ticket_types(id)").eq("id", id).single()
+    const { data: ev } = await supabase.from("events").select("*, ticket_types(id)").eq("id", id).single()
     if (!ev) redirect(`/dashboard/events/${id}?error=notfound`)
     if (!ev.ticket_types?.length) redirect(`/dashboard/events/${id}?error=tickets`)
     if (new Date(ev.starts_at) < new Date()) redirect(`/dashboard/events/${id}?error=past`)
+    // RSVP events publish once their plan is paid (HQ finance confirms the payment).
+    const paidAt = (ev as { plan_paid_at?: string | null }).plan_paid_at
+    if (ev.event_kind === "rsvp" && paidAt === null) redirect(`/dashboard/events/${id}?error=plan`)
   }
 
   const { data } = await supabase.from("events").update({ status: to }).eq("id", id).select("slug").single()
@@ -378,7 +383,7 @@ export async function saveRsvpFields(_prev: FormState, fd: FormData): Promise<Fo
   const { questionLimit } = await import("@/lib/plans")
   const { data: ev } = await supabase.from("events").select("rsvp_plan").eq("id", id).eq("host_id", userId).maybeSingle()
   if (!ev) return { status: "error", message: "We couldn't find that event." }
-  if (fields.length > questionLimit(ev.rsvp_plan)) return { status: "error", message: `The ${ev.rsvp_plan === "free" ? "Free" : "current"} plan allows up to ${questionLimit(ev.rsvp_plan)} questions.` }
+  if (fields.length > questionLimit(ev.rsvp_plan)) return { status: "error", message: `Your plan allows up to ${questionLimit(ev.rsvp_plan)} questions.` }
   const { error } = await supabase.from("events").update({ rsvp_fields: fields }).eq("id", id).eq("host_id", userId)
   if (error) return { status: "error", message: "We couldn't save the questions. Try again." }
   revalidatePath(`/dashboard/events/${id}`)

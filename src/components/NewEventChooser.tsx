@@ -5,7 +5,7 @@ import { useEffect, useRef, useState } from "react"
 import { createPortal } from "react-dom"
 import { useRouter } from "next/navigation"
 import { Icon } from "./Icon"
-import { RSVP_PLANS } from "@/lib/plans"
+import { RSVP_PLANS, naira } from "@/lib/plans"
 
 // "New event" opens this: pick paid tickets or a free RSVP; RSVP shows the plans first.
 export function NewEventChooser({ open, onClose }: { open: boolean; onClose: () => void }) {
@@ -31,8 +31,8 @@ export function NewEventChooser({ open, onClose }: { open: boolean; onClose: () 
         <div className="chooser__head">
           {step === "plans" && <button type="button" className="iconbtn" aria-label="Back" onClick={() => setStep("kind")}><span style={{ display: "inline-flex", transform: "rotate(180deg)" }}><Icon name="arrow-right" size={20} /></span></button>}
           <div>
-            <b id="chooser-t">{step === "kind" ? "What kind of event?" : "Free RSVP plans"}</b>
-            <small>{step === "kind" ? "You can add more ticket types later." : "Start free. Upgrade when your guest list grows."}</small>
+            <b id="chooser-t">{step === "kind" ? "What kind of event?" : "RSVP plans, per event"}</b>
+            <small>{step === "kind" ? "You can add more ticket types later." : "Pick the size of your guest list. You can upgrade before you publish."}</small>
           </div>
           <button type="button" className="burger burger--x chooser__x" aria-label="Close" onClick={close}><i /><i /></button>
         </div>
@@ -42,7 +42,7 @@ export function NewEventChooser({ open, onClose }: { open: boolean; onClose: () 
             <button type="button" className="kind" onClick={() => setStep("plans")}>
               <span className="kind__ic kind__ic--green"><Icon name="users" size={26} /></span>
               <b>Free RSVP</b>
-              <small>Guests register for free with name, phone and a few questions. Good for talks, meetups, launches and religious events.</small>
+              <small>Guests register for free with name, phone and a few questions. You pay one plan per event, from ₦50,000.</small>
               <span className="kind__go">See plans <Icon name="arrow-right" size={16} /></span>
             </button>
             <Link href="/dashboard/events/new?kind=paid" className="kind" onClick={close}>
@@ -55,20 +55,16 @@ export function NewEventChooser({ open, onClose }: { open: boolean; onClose: () 
         ) : (
           <div className="plans">
             {RSVP_PLANS.map((p) => (
-              <div key={p.id} className={`plan${p.id === "free" ? " plan--pick" : ""}`}>
-                <div className="plan__top"><b>{p.name}</b>{!p.available && <span className="badge">Soon</span>}</div>
-                <p className="plan__price">{p.price}<small> {p.per}</small></p>
+              <div key={p.id} className={`plan${p.popular ? " plan--pick" : ""}`}>
+                <div className="plan__top"><b>{p.name}</b>{p.popular && <span className="badge badge--ok">Popular</span>}</div>
+                <p className="plan__price">{naira(p.price)}<small> per event</small></p>
                 <ul>{p.perks.map((k) => <li key={k}><Icon name="check-circle" size={16} />{k}</li>)}</ul>
-                {p.available ? (
-                  <button type="button" className="btn btn--primary btn--sm" onClick={() => { close(); router.push("/dashboard/events/new?kind=rsvp") }}>
-                    <span>Start free</span><span className="btn__arrow" aria-hidden="true"><Icon name="arrow" /></span>
-                  </button>
-                ) : (
-                  <a className="btn btn--ghost btn--sm btn--plain" href={`mailto:support@ganor.ng?subject=${encodeURIComponent(`${p.name} plan`)}`}>Ask about {p.name}</a>
-                )}
+                <button type="button" className={`btn btn--sm ${p.popular ? "btn--primary" : "btn--ghost btn--plain"}`} onClick={() => { close(); router.push(`/dashboard/events/new?kind=rsvp&plan=${p.id}`) }}>
+                  <span>Choose {p.name}</span>{p.popular && <span className="btn__arrow" aria-hidden="true"><Icon name="arrow" /></span>}
+                </button>
               </div>
             ))}
-            <p className="plans__note small muted">Paid plans open with online payments. Until then every RSVP event starts on Free; if you need more than 100 guests now, email support@ganor.ng and we&rsquo;ll set it up.</p>
+            <p className="plans__note small muted">One payment per event. Set everything up first; you pay for the plan when you publish. Guests always RSVP for free.</p>
           </div>
         )}
       </div>

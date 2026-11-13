@@ -1,5 +1,7 @@
 import type { Metadata } from "next"
 import { getHq } from "@/lib/hq"
+import { deleteHost } from "../actions"
+import { ConfirmButton } from "@/components/ConfirmButton"
 import { Icon } from "@/components/Icon"
 import { formatDate } from "@/lib/ganor"
 import { SuspendForm } from "../AdminForms"
@@ -38,7 +40,17 @@ export default async function AdminHosts({ searchParams }: { searchParams: Promi
               <small>{h.events} events ({h.published} live) · {h.tickets_sold} tickets sold · {h.gate_accounts} gate accounts</small>
               {h.suspended && h.suspend_reason && <small>Reason: {h.suspend_reason}</small>}
             </div>
-            {me?.can.moderate && <SuspendForm hostId={h.id} suspended={h.suspended} />}
+            {me?.can.moderate && (
+              <div className="arow__side">
+                <SuspendForm hostId={h.id} suspended={h.suspended} />
+                {h.suspended && (
+                  <form action={deleteHost}>
+                    <input type="hidden" name="host_id" value={h.id} />
+                    <ConfirmButton className="btn btn--danger btn--xs btn--plain" confirmText="Tap again: delete host and all their events" pendingText="Deleting…">Delete host</ConfirmButton>
+                  </form>
+                )}
+              </div>
+            )}
           </article>
         ))}
       </div>

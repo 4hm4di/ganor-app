@@ -5,8 +5,9 @@ import { createStaff, deleteStaff, resetStaffPassword, updateStaff, type TeamSta
 import { SubmitButton } from "@/components/SubmitButton"
 import { ConfirmButton } from "@/components/ConfirmButton"
 import { Icon } from "@/components/Icon"
+import { MultiSelect } from "@/components/MultiSelect"
 
-type Ev = { id: string; label: string }
+type Ev = { id: string; label: string; hint?: string }
 type Staff = { id: string; username: string; display_name: string; active: boolean; locked_until: string | null; last_login_at: string | null }
 
 // Easy to read aloud, no look-alike characters.
@@ -18,14 +19,9 @@ function makePassword() {
 }
 
 function EventPicker({ events, selected = [] }: { events: Ev[]; selected?: string[] }) {
-  if (events.length === 0) return <p className="small muted">Create an event first, then assign it here.</p>
   return (
-    <fieldset className="choice">
-      <legend className="field__label">Events they can check in</legend>
-      {events.map((e) => (
-        <label key={e.id}><input type="checkbox" name="event_ids" value={e.id} defaultChecked={selected.includes(e.id)} /> {e.label}</label>
-      ))}
-    </fieldset>
+    <MultiSelect name="event_ids" label="Events they can check in" options={events.map((e) => ({ id: e.id, label: e.label, hint: e.hint }))}
+      defaultValue={selected} placeholder="Choose events…" empty="No events open for check-in. Publish an upcoming event first." />
   )
 }
 

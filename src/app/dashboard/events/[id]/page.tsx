@@ -62,5 +62,6 @@ export default async function EventTools({
   const scanHours = hours.length
     ? Array.from({ length: Math.max(...hours) - Math.min(...hours) + 1 }, (_, i) => { const h = Math.min(...hours) + i; return { hour: h, count: scans.get(String(h)) ?? 0 } })
     : []
-  return <EventToolsView ev={ev} userId={userId} publicUrl={publicUrl} sp={sp} guests={guests} daily={daily} scanHours={scanHours} />
+  const daysLeft = Math.max(0, Math.ceil((new Date(ev.starts_at).getTime() - nowMs()) / 86_400_000))
+  return <EventToolsView ev={ev} userId={userId} publicUrl={publicUrl} sp={sp} guests={guests} daily={daily} scanHours={scanHours} daysLeft={daysLeft} />
 }

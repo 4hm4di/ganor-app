@@ -1123,3 +1123,72 @@ button.newfab { border: 0; cursor: pointer; }
 
 /* The lead chart is taller so it fills its row next to "Next up". */
 @media (min-width: 1100px) { .dash > .s-8 .bars { --plot-h: 280px; } }
+
+/* ─── Numbers: Ganor's display face with rolling digits (same as the landing page) ─── */
+.roll { display: inline-flex; align-items: baseline; font-family: var(--ganor-font-display); font-weight: 800; letter-spacing: -.006em; font-variant-numeric: tabular-nums; line-height: 1; }
+.roll__d { display: inline-block; height: 1em; overflow: hidden; }
+.roll__col { display: flex; flex-direction: column; transform: translateY(calc(var(--n, 0) * -10%)); transition: transform 900ms var(--ganor-ease-in-out) calc(var(--i, 0) * 40ms); }
+.roll__col span { height: 1em; line-height: 1; text-align: center; }
+.roll__s { display: inline-block; }
+@media (prefers-reduced-motion: reduce) { .roll__col { transition-duration: 1ms; } }
+.astat__v { font: 800 clamp(30px, 3vw, 40px)/1 var(--ganor-font-display); letter-spacing: -.006em; font-variant-numeric: tabular-nums; display: flex; align-items: baseline; }
+.card__big, .num { font-family: var(--ganor-font-display); font-weight: 800; letter-spacing: -.006em; font-variant-numeric: tabular-nums; }
+.rank__n, .stagekey b, .wsum b, .evstats a b, .payout__num, .plan__price { font-family: var(--ganor-font-display); font-weight: 800; letter-spacing: -.006em; font-variant-numeric: tabular-nums; }
+
+/* ─── Tickets sold trend (landing style, real data) ─── */
+.strend__chart { cursor: crosshair; touch-action: pan-y; }
+.strend__area { fill: var(--ganor-indigo); opacity: 0; transition: opacity 800ms ease 900ms; fill-opacity: .1; }
+.card.is-in .strend__area { opacity: 1; }
+.strend__proj { fill: none; stroke: var(--ganor-indigo); stroke-width: 2.5; stroke-dasharray: 2 7; stroke-linecap: round; vector-effect: non-scaling-stroke; opacity: 0; transition: opacity 400ms ease 1500ms; }
+.strend__pdot { fill: var(--surface); stroke: var(--ganor-indigo); stroke-width: 2.5; vector-effect: non-scaling-stroke; opacity: 0; transition: opacity 400ms ease 1600ms; }
+.card.is-in .strend__proj, .card.is-in .strend__pdot { opacity: 1; }
+.strend__cap { stroke: var(--ganor-marigold); stroke-width: 1.5; stroke-dasharray: 6 6; vector-effect: non-scaling-stroke; }
+.strend .chart__dot, .strend .chart__tip { transition: left 120ms ease, top 120ms ease, opacity 200ms ease 1450ms, transform 300ms var(--ganor-ease-out) 1450ms; }
+.strend__foot { display: flex; justify-content: space-between; gap: 8px; }
+.strend__pl { color: var(--accent-text); font-weight: 700; }
+.theme-dark .chart__line, .theme-dark .strend__proj, .theme-dark .strend__pdot { stroke: #8F88F0; }
+.theme-dark .strend__area { fill: #8F88F0; }
+.theme-dark .chart__tip { background: #F2F0FA; color: #15132A; }
+.topbar__logo { position: relative; display: inline-flex; align-items: center; gap: 8px; }
+.hqtag { padding: 3px 7px; border-radius: 6px; background: var(--ganor-marigold); color: #15132A; font: 800 11px/14px var(--ganor-font-body); letter-spacing: .08em; }
+@media (min-width: 900px) and (max-width: 1180px) { .appnav--hq .appnav__l { padding-inline: 8px; } }
+
+/* ─── Multi-select dropdown ─── */
+.msel { position: relative; }
+.msel__btn { display: flex; align-items: center; justify-content: space-between; gap: 10px; width: 100%; min-height: 52px; padding: 0 14px 0 16px; border: 0; border-radius: 14px; background: var(--ganor-sand); color: var(--text); font: 500 16px/20px var(--ganor-font-body); text-align: left; cursor: pointer; }
+.msel__btn.is-empty { color: var(--ganor-muted); }
+.msel__btn[aria-expanded="true"] { box-shadow: inset 0 0 0 2px var(--ganor-indigo); }
+.msel__btn[aria-expanded="true"] .i { transform: rotate(180deg); }
+.msel__btn .i { transition: transform 160ms var(--ganor-ease-out); flex: none; }
+.msel__menu { position: absolute; z-index: 30; left: 0; right: 0; top: calc(100% + 6px); display: grid; gap: 2px; max-height: 320px; overflow: auto; padding: 8px; border-radius: 16px; background: var(--surface); box-shadow: 0 0 0 1px var(--ganor-line), 0 18px 40px -12px rgb(21 19 42 / .25); transform-origin: top center; animation: msel-in 160ms var(--ganor-ease-out); overscroll-behavior: contain; }
+@keyframes msel-in { from { opacity: 0; transform: translateY(-4px) scale(.98); } }
+.msel__tools { display: flex; justify-content: space-between; padding: 4px 8px 8px; border-bottom: 1px solid var(--ganor-line); margin-bottom: 4px; }
+.msel__opt { display: flex; align-items: center; gap: 12px; min-height: 48px; padding: 6px 10px; border-radius: 10px; cursor: pointer; }
+.msel__opt input { width: 20px; height: 20px; accent-color: var(--ganor-indigo); flex: none; }
+.msel__opt span { display: grid; min-width: 0; }
+.msel__opt b { font: 600 14px/18px var(--ganor-font-body); }
+.msel__opt small { font: 500 12px/16px var(--ganor-font-body); color: var(--ganor-muted); }
+.msel__opt[aria-selected="true"] { background: rgba(55,48,184,.08); }
+@media (hover: hover) and (pointer: fine) { .msel__opt:hover { background: var(--ganor-sand); } }
+.msel__done { justify-self: end; margin-top: 4px; }
+.msel__chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; }
+.linkbtn { background: none; border: 0; padding: 4px 0; font: 600 13px/18px var(--ganor-font-body); color: var(--accent-text); cursor: pointer; text-decoration: underline; text-underline-offset: 3px; }
+@media (min-width: 900px) { .chooser__panel:has(.plans) { width: min(1040px, 100%); } .plans { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+.plan { display: flex; flex-direction: column; }
+.plan .btn { margin-top: auto; }
+.plan ul { margin-bottom: 8px; }
+.planc__row { display: grid; gap: 14px; }
+@media (min-width: 760px) { .planc__row { grid-template-columns: auto 1fr; align-items: center; gap: 32px; } }
+.planc__perks { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); }
+.planc__perks li { display: flex; gap: 8px; align-items: center; font: 500 14px/20px var(--ganor-font-body); }
+.planc__perks .i { color: var(--ganor-success); }
+.planc:not(.planc--paid) { box-shadow: inset 0 0 0 2px var(--ganor-marigold); }
+.card.is-in .strend .chart__line { clip-path: inset(-10% -2% -10% 0); }
+.card.is-in .strend .chart__dot { opacity: 1; transform: scale(1); }
+.card.is-in .strend .chart__tip { opacity: 1; }
+.check span { font: 500 14px/20px var(--ganor-font-body); }
+/* Side-by-side fields line up: labels stay on one line so inputs start at the same height. */
+.grid2 { align-items: start; }
+.grid2 > .field > .field__label { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.field input, .field select, .field textarea { width: 100%; box-sizing: border-box; }
+.field__label { min-height: 20px; }

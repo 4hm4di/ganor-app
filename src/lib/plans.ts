@@ -1,13 +1,18 @@
-// RSVP plans for free events. Paid-ticket events don't use these: they pay the per-ticket fee.
-export type RsvpPlan = { id: "free" | "pass" | "org"; name: string; price: string; per: string; cap: number; perks: string[]; available: boolean }
+// RSVP events are paid per event: one plan per event, benefits grow with the price.
+// Paid-ticket events don't use these; they pay the per-ticket fee instead.
+export type PlanId = "basic" | "standard" | "pro" | "premium"
+export type RsvpPlan = { id: PlanId; name: string; price: number; cap: number; questions: number; perks: string[]; popular?: boolean }
 
 export const RSVP_PLANS: RsvpPlan[] = [
-  { id: "free", name: "Free", price: "₦0", per: "per event", cap: 100, available: true,
-    perks: ["Up to 100 guests", "Name, phone and up to 4 questions", "QR code on screen for the gate", "Guest list download"] },
-  { id: "pass", name: "Event Pass", price: "₦15,000", per: "per event", cap: 1000, available: false,
-    perks: ["Up to 1,000 guests", "Up to 6 questions", "Tickets and reminders on WhatsApp", "Branded guest list PDF"] },
-  { id: "org", name: "Organisation", price: "₦150,000", per: "per year", cap: 100000, available: false,
-    perks: ["Unlimited free events and guests", "Everything in Event Pass", "Gate team for every event", "Priority support"] },
+  { id: "basic", name: "Basic", price: 50_000, cap: 200, questions: 4,
+    perks: ["Up to 200 guests", "Name, phone and 4 questions", "QR code for every guest", "Guest list download (CSV)"] },
+  { id: "standard", name: "Standard", price: 100_000, cap: 500, questions: 6, popular: true,
+    perks: ["Up to 500 guests", "6 questions", "Branded guest list PDF", "Gate team with scanner logins", "Everything in Basic"] },
+  { id: "pro", name: "Pro", price: 175_000, cap: 1_500, questions: 6,
+    perks: ["Up to 1,500 guests", "Tickets and reminders on WhatsApp", "Check-in by the hour report", "Everything in Standard"] },
+  { id: "premium", name: "Premium", price: 250_000, cap: 5_000, questions: 6,
+    perks: ["Up to 5,000 guests", "Featured on Find events", "Priority support on event day", "Everything in Pro"] },
 ]
-export const FREE_RSVP_CAP = 100
-export const questionLimit = (plan: string) => (plan === "free" ? 4 : 6)
+export const planById = (id: string | null | undefined) => RSVP_PLANS.find((p) => p.id === id) ?? RSVP_PLANS[0]
+export const questionLimit = (plan: string) => planById(plan).questions
+export const naira = (n: number) => `₦${n.toLocaleString("en-NG")}`

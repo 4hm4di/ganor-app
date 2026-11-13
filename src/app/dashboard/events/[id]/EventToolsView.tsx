@@ -15,7 +15,9 @@ import { ShareButtons } from "@/components/ShareButtons"
 import { GanorSymbol } from "@/components/Loader"
 import { Icon } from "@/components/Icon"
 import { BarChart } from "@/components/widgets/BarChart"
-import { RSVP_PLANS, questionLimit } from "@/lib/plans"
+import { SalesTrend } from "@/components/widgets/SalesTrend"
+import { CountUp } from "@/components/widgets/CountUp"
+import { planById, questionLimit, naira as nairaWhole } from "@/lib/plans"
 import { PhasePill } from "@/components/PhasePill"
 import { BackLink } from "@/components/BackLink"
 import { eventPhase, PHASE_LABEL, feeKobo, formatDate, formatNaira, formatTime, isoToLagosLocal } from "@/lib/ganor"
@@ -23,6 +25,7 @@ import { eventPhase, PHASE_LABEL, feeKobo, formatDate, formatNaira, formatTime, 
 
 const ERRORS: Record<string, string> = {
   tickets: "Add at least one ticket type before you publish.",
+  plan: "Pay for this event's RSVP plan before you publish. Payment details are in the Plan card below.",
   past: "This event's start time has passed. Change the date before you publish.",
   notfound: "We couldn't find that event.",
 }
@@ -34,11 +37,10 @@ export type ToolsEvent = EventRow & { ticket_types: TicketTypeRow[] }
 
 export type ToolsGuest = { name: string; ticket: string; in: boolean }
 
-const PLAN_NAME: Record<string, string> = Object.fromEntries(RSVP_PLANS.map((p) => [p.id, p.name]))
 const dayLabel = (d: string) => formatDate(`${d}T12:00:00Z`, { day: "numeric", month: "short" })
 const hourLabel = (h: number) => `${((h + 11) % 12) + 1}${h < 12 ? "am" : "pm"}`
 
-export function EventToolsView({ ev, userId, publicUrl, sp, guests, daily, scanHours }: { ev: ToolsEvent; userId: string; publicUrl: string; sp: { created?: string; published?: string; error?: string }; guests: ToolsGuest[]; daily: { day: string; count: number }[]; scanHours: { hour: number; count: number }[] }) {
+export function EventToolsView({ ev, userId, publicUrl, sp, guests, daily, scanHours, daysLeft }: { ev: ToolsEvent; userId: string; publicUrl: string; sp: { created?: string; published?: string; error?: string }; guests: ToolsGuest[]; daily: { day: string; count: number }[]; scanHours: { hour: number; count: number }[]; daysLeft: number }) {
   const hasFree = ev.ticket_types.some((t) => t.price_kobo === 0)
   const publicPath = `/e/${ev.slug}`
   const tickets = ev.ticket_types ?? []
@@ -53,7 +55,6 @@ export function EventToolsView({ ev, userId, publicUrl, sp, guests, daily, scanH
   const hasPaid = tickets.some((t) => t.price_kobo > 0)
 
   const freeOnly = tickets.length > 0 && tickets.every((t) => t.price_kobo === 0)
-  const unit = freeOnly ? "RSVPs" : "tickets"
   const fortnight = daily.reduce((n, d) => n + d.count, 0)
   const checkedIn = guests.filter((g) => g.in).length
   const phase = eventPhase(ev, tickets)
@@ -93,9 +94,9 @@ export function EventToolsView({ ev, userId, publicUrl, sp, guests, daily, scanH
       <div className="bento">
         <article className="card card--sales" data-reveal>
           <header className="card__head"><h2 className="card__title"><Icon name="receipt" />{freeOnly ? "RSVPs" : "Tickets sold"}</h2><span className="card__tag">{PHASE_LABEL[phase]}</span></header>
-          <p className="card__big" style={{ fontVariantNumeric: "tabular-nums" }}><span>{sold}</span><small> of {total}</small></p>
-          <BarChart points={daily.map((d) => ({ label: dayLabel(d.day), sub: dayLabel(d.day), value: d.count }))} unit={unit} />
-          <p className="card__foot card__foot--plain"><span>{fortnight}</span>&nbsp;{unit} in these 14 days · {sold} in total</p>
+          <p className="card__big"><CountUp value={sold} /><small> of {total.toLocaleString("en-NG")}</small></p>
+          <SalesTrend days={daily.map((d) => ({ day: d.day, label: dayLabel(d.day), count: d.count }))} total={sold} capacity={total} daysLeft={daysLeft} unit={freeOnly ? "RSVPs" : "sold"} />
+          <p className="small muted" style={{ marginTop: 6 }}>{fortnight} in the last 14 days{daysLeft > 0 ? ` · ${daysLeft} day${daysLeft === 1 ? "" : "s"} to go` : ""}. The dashed line is a projection from the last 7 days.</p>
         </article>
 
         <article className="card card--types" data-reveal>
@@ -115,7 +116,7 @@ export function EventToolsView({ ev, userId, publicUrl, sp, guests, daily, scanH
           <header className="card__head"><h2 className="card__title"><Icon name="qr-code" />Gate check-in</h2><span className="card__tag">Event day</span></header>
           {scanHours.length > 0 ? (
             <>
-              <p className="card__big" style={{ fontVariantNumeric: "tabular-nums" }}><span>{checkedIn}</span><small> of {guests.length} in</small></p>
+              <p className="card__big"><CountUp value={checkedIn} /><small> of {guests.length} in</small></p>
               <BarChart points={scanHours.map((h) => ({ label: hourLabel(h.hour), sub: `${hourLabel(h.hour)}–${hourLabel((h.hour + 1) % 24)}`, value: h.count }))} unit="scanned in" color="var(--ganor-success)" />
             </>
           ) : (
@@ -134,8 +135,25 @@ export function EventToolsView({ ev, userId, publicUrl, sp, guests, daily, scanH
           <p className="card__empty">Scan on your phone, or add gate accounts so your team can scan with their own username and password.</p>
         </article>
 
+        {ev.event_kind === "rsvp" && (() => {
+          const p = planById(ev.rsvp_plan)
+          const paid = ev.plan_paid_at !== null
+          return (
+            <article className={`card planc${paid ? " planc--paid" : ""}`} data-reveal style={{ gridColumn: "1 / -1" }} id="plan">
+              <header className="card__head"><h2 className="card__title"><Icon name="wallet" />{p.name} plan</h2><span className={`badge ${paid ? "badge--ok" : "badge--warn"}`}>{paid ? "Paid" : "Payment due before publishing"}</span></header>
+              <div className="planc__row">
+                <p className="card__big">{nairaWhole(p.price)}<small> one-off for this event</small></p>
+                <ul className="planc__perks">{p.perks.map((k) => <li key={k}><Icon name="check-circle" size={16} />{k}</li>)}</ul>
+              </div>
+              {!paid && (
+                <p className="small muted">Online payment is being set up. For now, pay by bank transfer: email <a href={`mailto:support@ganor.ng?subject=${encodeURIComponent(`RSVP plan ${p.name} · ${ev.title} · ${ev.id.slice(0, 8).toUpperCase()}`)}`}>support@ganor.ng</a> with reference <b>{ev.id.slice(0, 8).toUpperCase()}</b>. Ganor confirms it and the Publish button works straight away.</p>
+              )}
+            </article>
+          )
+        })()}
+
         <article className="card" data-reveal style={{ gridColumn: "1 / -1" }} id="rsvp">
-          <header className="card__head"><h2 className="card__title"><Icon name="doc" />RSVP form</h2><span className="card__tag">{hasFree ? `${PLAN_NAME[ev.rsvp_plan] ?? "Free"} plan · up to ${(RSVP_PLANS.find((p) => p.id === ev.rsvp_plan) ?? RSVP_PLANS[0]).cap.toLocaleString("en-NG")} guests` : "For free tickets"}</span></header>
+          <header className="card__head"><h2 className="card__title"><Icon name="doc" />RSVP form</h2><span className="card__tag">{hasFree ? `${planById(ev.rsvp_plan).name} plan · up to ${planById(ev.rsvp_plan).cap.toLocaleString("en-NG")} guests` : "For free tickets"}</span></header>
           {hasFree ? <RsvpBuilder eventId={ev.id} initial={parseRsvpFields(ev.rsvp_fields)} max={questionLimit(ev.rsvp_plan)} /> : <p className="card__empty">Add a free ticket type (price ₦0) and guests can RSVP on your event page. You choose a few short questions here.</p>}
         </article>
 

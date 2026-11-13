@@ -2,32 +2,30 @@
 
 import { useEffect, useRef, useState } from "react"
 
-// Counts from 0 to the value when it scrolls into view, and eases to new values on live refresh.
+// Rolling digits, as on the Ganor landing page: each digit is a 0–9 column that slides to its value
+// when the number scrolls into view, and rolls again when a live refresh changes it.
 export function CountUp({ value, format = (n) => n.toLocaleString("en-NG") }: { value: number; format?: (n: number) => string }) {
   const ref = useRef<HTMLSpanElement>(null)
-  const from = useRef(0)
-  const [shown, setShown] = useState(0)
+  const [on, setOn] = useState(false)
   useEffect(() => {
     const el = ref.current
     if (!el) return
-    const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches
-    let raf = 0
-    const run = () => {
-      const start = performance.now()
-      const a = from.current
-      const dur = reduce ? 0 : 900
-      const step = (t: number) => {
-        const p = dur ? Math.min(1, (t - start) / dur) : 1
-        const eased = 1 - Math.pow(1 - p, 3)
-        setShown(Math.round(a + (value - a) * eased))
-        if (p < 1) raf = requestAnimationFrame(step)
-        else from.current = value
-      }
-      raf = requestAnimationFrame(step)
-    }
-    const io = new IntersectionObserver(([e]) => { if (e?.isIntersecting) { run(); io.disconnect() } }, { threshold: 0.3 })
+    const io = new IntersectionObserver(([e]) => { if (e?.isIntersecting) { setOn(true); io.disconnect() } }, { threshold: 0.3 })
     io.observe(el)
-    return () => { io.disconnect(); cancelAnimationFrame(raf) }
-  }, [value])
-  return <span ref={ref} style={{ fontVariantNumeric: "tabular-nums" }}>{format(shown)}</span>
+    return () => io.disconnect()
+  }, [])
+  const text = format(value)
+  return (
+    <span ref={ref} className="roll" aria-label={text}>
+      {[...text].map((ch, i) =>
+        /\d/.test(ch) ? (
+          <span key={`${text.length}-${i}`} className="roll__d" aria-hidden="true">
+            <span className="roll__col" style={{ "--n": on ? Number(ch) : 0, "--i": i } as React.CSSProperties}>
+              {"0123456789".split("").map((d) => <span key={d}>{d}</span>)}
+            </span>
+          </span>
+        ) : <span key={`${text.length}-${i}`} className="roll__s" aria-hidden="true">{ch}</span>,
+      )}
+    </span>
+  )
 }

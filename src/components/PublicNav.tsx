@@ -9,12 +9,14 @@ export function PublicNav() {
   const path = usePathname()
   if (path.startsWith("/hq")) {
     return (
-      <header className="topbar topbar--hq">
+      <header className="topbar">
         <div className="wrap topbar__in">
-          <span className="hqbrand">
+          <span className="topbar__logo">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/brand/ganor-lockup-white.svg" alt="Ganor" width={104} height={20} />
-            <span>HQ</span>
+            <img className="logo-light" src="/brand/ganor-lockup-indigo.svg" alt="Ganor" width={118} height={22} />
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img className="logo-dark" src="/brand/ganor-lockup-white.svg" alt="Ganor" width={118} height={22} />
+            <span className="hqtag">HQ</span>
           </span>
         </div>
       </header>
