@@ -34,7 +34,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
       const o = r.orders as unknown as { buyer_name: string; buyer_phone: string; buyer_email: string | null; answers: Record<string, string> | null }
       return {
       name: o.buyer_name,
-      phone: o.buyer_phone ? `0${o.buyer_phone.replace(/^234/, "")}` : "",
+      phone: o.buyer_phone ? `0${o.buyer_phone.replace(/^\+?234/, "")}` : "",
       email: o.buyer_email,
       answers: o.answers ?? {},
       ticketType: (r.ticket_types as unknown as { name: string } | null)?.name ?? "Ticket",
