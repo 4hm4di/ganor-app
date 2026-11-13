@@ -4,7 +4,7 @@ import { redirect } from "next/navigation"
 import { createClient } from "@/lib/supabase/server"
 import { PASSWORD_MIN, PROVIDERS, safeNext, siteOrigin, type ProviderId } from "@/lib/auth"
 
-export type AuthState = { status: "idle" | "sent" | "confirm" | "error"; message?: string; email?: string }
+export type AuthState = { status: "idle" | "sent" | "confirm" | "exists" | "error"; message?: string; email?: string }
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/
 const read = (fd: FormData, k: string) => String(fd.get(k) ?? "").trim()
@@ -26,8 +26,13 @@ export async function signInWithPassword(_prev: AuthState, fd: FormData): Promis
   if (!password) return { status: "error", message: "Enter your password.", email }
 
   const supabase = await createClient()
-  const { error } = await supabase.auth.signInWithPassword({ email, password })
+  const { data, error } = await supabase.auth.signInWithPassword({ email, password })
   if (error) return { status: "error", message: friendly(error.message), email }
+  // Host and HQ accounts are kept apart: a staff-only account can't sign in as a host.
+  if ((data.user?.app_metadata as { hq?: boolean } | undefined)?.hq) {
+    await supabase.auth.signOut({ scope: "local" })
+    return { status: "error", message: "This email isn't a host account. Use a different email to host on Ganor.", email }
+  }
   redirect(next)
 }
 
@@ -52,7 +57,9 @@ export async function signUpWithPassword(_prev: AuthState, fd: FormData): Promis
       emailRedirectTo: `${origin}/auth/callback?verified=1&next=${encodeURIComponent(next)}`,
     },
   })
-  if (error) return { status: "error", message: friendly(error.message), email }
+  if (error) return { status: /already/i.test(error.message) ? "exists" : "error", message: friendly(error.message), email }
+  // An email that's already registered comes back as a user with no identities (and no email is sent).
+  if (data.user && (data.user.identities?.length ?? 0) === 0) return { status: "exists", email }
   // With email confirmation on, there's no session until the link is opened.
   if (!data.session) return { status: "confirm", email }
   redirect(next)
@@ -114,5 +121,6 @@ export async function setNewPassword(_prev: AuthState, fd: FormData): Promise<Au
   if (!data?.claims?.sub) return { status: "error", message: "Your reset link has expired. Request a new one." }
   const { error } = await supabase.auth.updateUser({ password })
   if (error) return { status: "error", message: friendly(error.message) }
-  redirect("/dashboard?password=updated")
+  const hqOnly = Boolean((data.claims.app_metadata as { hq?: boolean } | undefined)?.hq)
+  redirect(hqOnly ? "/hq?password=updated" : "/dashboard?password=updated")
 }

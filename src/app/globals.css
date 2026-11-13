@@ -1270,3 +1270,8 @@ button.newfab { border: 0; cursor: pointer; }
 .alert { flex-wrap: wrap; }
 .alert > span { flex: 1 1 220px; }
 .alert__link { flex: none; align-self: center; font-weight: 700; color: inherit; text-decoration: underline; text-underline-offset: 3px; }
+/* Role icons always take their badge's colour, even inside a kicker or other tinted context. */
+.rolebadge .i, .kicker .rolebadge .i, .roles__ic .i { color: inherit; }
+.rolebadge .i { width: 14px; height: 14px; }
+.theme-dark .rolebadge:not(.rolebadge--owner):not(.rolebadge--finance):not(.rolebadge--support):not(.rolebadge--viewer) { background: rgba(140,132,255,.16); color: #C9C5FF; }
+.theme-dark .roles__r:not(.roles__r--owner):not(.roles__r--finance):not(.roles__r--support):not(.roles__r--viewer) .roles__ic { background: rgba(140,132,255,.16); color: #C9C5FF; }

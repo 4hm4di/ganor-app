@@ -31,6 +31,19 @@ export function LoginForm({ mode, next, providers, error }: { mode: Mode; next: 
       </div>
     )
   }
+  if (signup.status === "exists") {
+    return (
+      <div className="stack">
+        <div className="alert alert--warn" role="status"><Icon name="info" />
+          <span>There&rsquo;s already a Ganor account with <b>{signup.email}</b>. Sign in, or reset your password if you&rsquo;ve forgotten it.</span>
+        </div>
+        <div className="grid2">
+          <Link href={q("signin")} className="btn btn--primary btn--plain" style={{ justifyContent: "center" }}>Sign in</Link>
+          <Link href="/forgot-password" className="btn btn--ghost btn--plain" style={{ justifyContent: "center" }}>Forgot password</Link>
+        </div>
+      </div>
+    )
+  }
   if (link.status === "sent") {
     return (
       <div className="alert alert--ok" role="status"><Icon name="mail" />
