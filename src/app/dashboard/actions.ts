@@ -314,3 +314,56 @@ export async function changeEmail(_prev: FormState, fd: FormData): Promise<FormS
   }
   return { status: "ok", message: `Check ${email} for a confirmation link. Your sign-in email changes once you click it. If asked, confirm from your current inbox too.`, fields: { email } }
 }
+
+// Payout account: the details Paystack needs to pay a host (settlement bank, NUBAN, account name).
+export async function savePayout(_prev: FormState, fd: FormData): Promise<FormState> {
+  const { bankName } = await import("@/lib/banks")
+  const fields = {
+    account_type: str(fd, "account_type") === "business" ? "business" : "individual",
+    business_name: str(fd, "business_name"),
+    bank_code: str(fd, "bank_code"),
+    account_number: str(fd, "account_number").replace(/\s+/g, ""),
+    account_name: str(fd, "account_name"),
+    settlement_email: str(fd, "settlement_email").toLowerCase(),
+    settlement_phone: str(fd, "settlement_phone"),
+  }
+  const fail = (message: string) => ({ status: "error" as const, message, fields })
+  const bank = bankName(fields.bank_code)
+  if (fields.business_name.length < 2) return fail(fields.account_type === "business" ? "Enter the registered business name." : "Enter the name payouts should be made out to.")
+  if (!bank) return fail("Pick your bank.")
+  if (!/^\d{10}$/.test(fields.account_number)) return fail("Account number is the 10-digit NUBAN on your bank app or statement.")
+  if (fields.account_name.length < 2) return fail("Enter the account name exactly as your bank shows it.")
+  if (fields.settlement_email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(fields.settlement_email)) return fail("Check the payout email address.")
+  if (!fd.get("confirm")) return fail("Tick the box to confirm the account is yours or your business's.")
+  const { supabase, userId } = await getUserId()
+  if (!userId) return fail("Sign in again.")
+  const { error } = await supabase.from("payout_accounts").upsert({
+    host_id: userId, ...fields, bank_name: bank,
+    settlement_email: fields.settlement_email || null, settlement_phone: fields.settlement_phone || null,
+  })
+  if (error) return fail("We couldn't save those details. Try again in a moment.")
+  revalidatePath("/dashboard/profile")
+  return { status: "ok", message: "Saved. Ganor checks new payout details before your first payout; you'll see the status here." }
+}
+
+// RSVP questions for free tickets. Kept short on purpose: guests answer on a phone at the door.
+export async function saveRsvpFields(_prev: FormState, fd: FormData): Promise<FormState> {
+  const { parseRsvpFields } = await import("@/lib/rsvp")
+  const id = str(fd, "event_id")
+  let parsed: unknown = []
+  try { parsed = JSON.parse(String(fd.get("fields") ?? "[]")) } catch { return { status: "error", message: "Something went wrong. Try again." } }
+  const fields = parseRsvpFields(parsed)
+  const keys = new Set<string>()
+  for (const f of fields) {
+    if (keys.has(f.key)) return { status: "error", message: "Two questions are the same. Remove one." }
+    keys.add(f.key)
+    if (f.label.trim().length < 2) return { status: "error", message: "Give every custom question a label." }
+    if (f.type === "select" && (f.options?.length ?? 0) < 2) return { status: "error", message: `Add at least two choices for “${f.label}”.` }
+  }
+  const { supabase, userId } = await getUserId()
+  if (!userId) return { status: "error", message: "Sign in again." }
+  const { error } = await supabase.from("events").update({ rsvp_fields: fields }).eq("id", id).eq("host_id", userId)
+  if (error) return { status: "error", message: "We couldn't save the questions. Try again." }
+  revalidatePath(`/dashboard/events/${id}`)
+  return { status: "ok", message: fields.length ? "Saved. Guests answer these when they RSVP." : "Saved. Guests only give their name and phone." }
+}

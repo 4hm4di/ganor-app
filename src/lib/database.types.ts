@@ -18,6 +18,7 @@ export type Database = {
           host_id: string
           id: string
           published_at: string | null
+          rsvp_fields: Json
           slug: string
           starts_at: string
           status: string
@@ -38,6 +39,7 @@ export type Database = {
           host_id: string
           id?: string
           published_at?: string | null
+          rsvp_fields?: Json
           slug: string
           starts_at: string
           status?: string
@@ -99,8 +101,15 @@ export type Database = {
         Update: Partial<Database["public"]["Tables"]["profiles"]["Insert"]>
         Relationships: []
       }
+      payout_accounts: {
+        Row: { host_id: string; account_type: string; business_name: string; bank_code: string; bank_name: string; account_number: string; account_name: string; settlement_email: string | null; settlement_phone: string | null; status: string; status_note: string | null; paystack_subaccount_code: string | null; verified_at: string | null; created_at: string; updated_at: string }
+        Insert: { host_id: string; account_type?: string; business_name: string; bank_code: string; bank_name: string; account_number: string; account_name: string; settlement_email?: string | null; settlement_phone?: string | null }
+        Update: { account_type?: string; business_name?: string; bank_code?: string; bank_name?: string; account_number?: string; account_name?: string; settlement_email?: string | null; settlement_phone?: string | null }
+        Relationships: []
+      }
       orders: {
         Row: {
+          answers: Json
           buyer_email: string | null
           buyer_name: string
           buyer_phone: string
@@ -117,6 +126,7 @@ export type Database = {
           user_id: string | null
         }
         Insert: {
+          answers?: Json
           buyer_email?: string | null
           buyer_name: string
           buyer_phone: string
@@ -275,7 +285,17 @@ export type Database = {
       }
       admin_set_suspension: { Args: { p_host: string; p_suspend: boolean; p_reason?: string }; Returns: undefined }
       admin_set_event_status: { Args: { p_event: string; p_status: string; p_note?: string }; Returns: undefined }
-      admin_set_staff_role: { Args: { p_email: string; p_grant: boolean }; Returns: undefined }
+      admin_set_staff_role: { Args: { p_email: string; p_grant: boolean; p_role?: string }; Returns: undefined }
+      hq_me: { Args: Record<string, never>; Returns: Json }
+      hq_members: { Args: Record<string, never>; Returns: { user_id: string; display_name: string | null; username: string | null; email: string | null; role: string; active: boolean; created_at: string; last_sign_in_at: string | null; is_self: boolean; login_kind: string }[] }
+      hq_create_member: { Args: { p_username: string; p_display_name: string; p_role: string; p_password: string }; Returns: string }
+      hq_update_member: { Args: { p_user: string; p_role: string; p_active: boolean }; Returns: undefined }
+      hq_set_member_password: { Args: { p_user: string; p_password: string }; Returns: undefined }
+      hq_remove_member: { Args: { p_user: string }; Returns: undefined }
+      admin_payouts: { Args: Record<string, never>; Returns: { host_id: string; host_name: string; account_type: string | null; business_name: string | null; bank_name: string | null; account_number: string | null; account_name: string | null; settlement_email: string | null; settlement_phone: string | null; status: string; status_note: string | null; updated_at: string | null; paid_events: number; gross_kobo: number; tickets_sold: number }[] }
+      admin_set_payout_status: { Args: { p_host: string; p_status: string; p_note?: string }; Returns: undefined }
+      admin_watchlist: { Args: Record<string, never>; Returns: { kind: string; severity: string; title: string; detail: string; event_id: string | null; host_id: string | null; at: string }[] }
+      rsvp_submit: { Args: { p_event: string; p_ticket_type: string; p_name: string; p_phone: string; p_email: string; p_answers: Json; p_consent?: boolean }; Returns: Json }
       admin_recent_actions: {
         Args: { p_limit?: number }
         Returns: { created_at: string; actor_name: string; action: string; target_type: string; target_id: string | null; note: string | null }[]

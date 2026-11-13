@@ -5,19 +5,10 @@ import { createClient } from "@/lib/supabase/client"
 import type { Bucket } from "@/lib/storage"
 import { Icon } from "./Icon"
 import { Loader } from "./Loader"
+import { CropDialog } from "./CropDialog"
 
 type SaveAction = (url: string) => Promise<{ ok: boolean; message?: string }>
 
-// Shrinks the photo in the browser (max width, WebP) before upload, so pages stay fast on mobile data.
-async function shrink(file: File, maxW: number): Promise<Blob> {
-  const bmp = await createImageBitmap(file)
-  const scale = Math.min(1, maxW / bmp.width)
-  const canvas = document.createElement("canvas")
-  canvas.width = Math.round(bmp.width * scale)
-  canvas.height = Math.round(bmp.height * scale)
-  canvas.getContext("2d")!.drawImage(bmp, 0, 0, canvas.width, canvas.height)
-  return await new Promise((res, rej) => canvas.toBlob((b) => (b ? res(b) : rej(new Error("encode"))), "image/webp", 0.86))
-}
 
 export function ImageUpload({
   bucket,
@@ -41,14 +32,21 @@ export function ImageUpload({
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
   const [, startTransition] = useTransition()
+  const [picked, setPicked] = useState<File | null>(null)
 
-  async function onFile(file: File) {
+  // Picking a file opens the crop step; nothing uploads until the crop is confirmed.
+  function onFile(file: File) {
     setError(null)
+    if (input.current) input.current.value = ""
     if (!/^image\/(jpeg|png|webp)$/.test(file.type)) return setError("Use a JPG, PNG or WebP image.")
     if (file.size > 15 * 1024 * 1024) return setError("That image is over 15 MB. Choose a smaller one.")
+    setPicked(file)
+  }
+
+  async function upload(blob: Blob) {
+    setPicked(null)
     setBusy(true)
     try {
-      const blob = await shrink(file, shape === "banner" ? 1600 : 512)
       const path = `${userId}/${crypto.randomUUID()}.webp`
       const supabase = createClient()
       const { error: upErr } = await supabase.storage.from(bucket).upload(path, blob, { contentType: "image/webp", cacheControl: "31536000" })
@@ -76,6 +74,9 @@ export function ImageUpload({
 
   return (
     <div className={`upload upload--${shape}`}>
+      {picked && (
+        <CropDialog file={picked} aspect={shape === "banner" ? 2 : 1} outWidth={shape === "banner" ? 1600 : 512} round={shape === "logo"} onCancel={() => setPicked(null)} onConfirm={upload} />
+      )}
       <div className="upload__frame" aria-busy={busy}>
         {url ? (
           // eslint-disable-next-line @next/next/no-img-element

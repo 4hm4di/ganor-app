@@ -9,7 +9,7 @@ export const metadata: Metadata = { title: "Overview" }
 // what's next, and what needs attention (dashboard-designer: decisions first, F-pattern).
 export default async function HostOverview({ searchParams }: { searchParams: Promise<{ range?: string; password?: string }> }) {
   const sp = await searchParams
-  const range = (RANGES as readonly number[]).includes(Number(sp.range)) ? Number(sp.range) : 30
+  const range = (RANGES as readonly number[]).includes(Number(sp.range)) ? Number(sp.range) : 7
   const { supabase, userId } = await getUserId()
   if (!userId) redirect("/login")
 

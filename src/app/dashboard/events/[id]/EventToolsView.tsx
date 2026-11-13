@@ -1,3 +1,5 @@
+import { RsvpBuilder } from "./RsvpBuilder"
+import { parseRsvpFields } from "@/lib/rsvp"
 import type { CSSProperties } from "react"
 import type { EventRow, TicketTypeRow } from "@/lib/database.types"
 import Link from "next/link"
@@ -45,6 +47,7 @@ export type ToolsEvent = EventRow & { ticket_types: TicketTypeRow[] }
 export type ToolsGuest = { name: string; ticket: string; in: boolean }
 
 export function EventToolsView({ ev, userId, publicUrl, sp, guests }: { ev: ToolsEvent; userId: string; publicUrl: string; sp: { created?: string; published?: string; error?: string }; guests: ToolsGuest[] }) {
+  const hasFree = ev.ticket_types.some((t) => t.price_kobo === 0)
   const publicPath = `/e/${ev.slug}`
   const tickets = ev.ticket_types ?? []
   const live = ev.status === "published"
@@ -143,6 +146,11 @@ export function EventToolsView({ ev, userId, publicUrl, sp, guests }: { ev: Tool
             <Link href="/dashboard/team" className="btn btn--ghost btn--sm btn--plain">Gate team</Link>
           </div>
           <p className="card__empty">Scan on your phone, or add gate accounts so your team can scan with their own username and password.</p>
+        </article>
+
+        <article className="card" data-reveal style={{ gridColumn: "1 / -1" }} id="rsvp">
+          <header className="card__head"><h2 className="card__title"><Icon name="doc" />RSVP form</h2><span className="card__tag">{hasFree ? "Free tickets" : "For free tickets"}</span></header>
+          {hasFree ? <RsvpBuilder eventId={ev.id} initial={parseRsvpFields(ev.rsvp_fields)} /> : <p className="card__empty">Add a free ticket type (price ₦0) and guests can RSVP on your event page. You choose a few short questions here.</p>}
         </article>
 
         <article className="card card--guests" data-reveal>

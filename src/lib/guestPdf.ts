@@ -5,7 +5,7 @@ import { PDFDocument, rgb, type PDFFont, type PDFPage } from "pdf-lib"
 import fontkit from "@pdf-lib/fontkit"
 import { LOCKUP_H, LOCKUP_SYMBOL, LOCKUP_WORDMARK } from "./pdf-brand"
 
-export type Guest = { name: string; ticketType: string; code: string; checkedInAt: string | null; order: string }
+export type Guest = { name: string; ticketType: string; code: string; checkedInAt: string | null; order: string; phone?: string; email?: string | null; answers?: Record<string, string> }
 export type GuestListInput = {
   event: { title: string; date: string; time: string; venue: string; city: string }
   host: string
@@ -149,8 +149,14 @@ export async function buildGuestPdf(input: GuestListInput): Promise<Uint8Array> 
   return doc.save()
 }
 
-export function guestCsv(guests: Guest[], formatTime: (iso: string) => string) {
-  const esc = (v: string) => (/[",\n]/.test(v) ? `"${v.replace(/"/g, '""')}"` : v)
-  const rows = [["#", "Guest", "Ticket type", "Ticket code", "Order", "Checked in"], ...guests.map((g, i) => [String(i + 1), g.name, g.ticketType, g.code, g.order, g.checkedInAt ? formatTime(g.checkedInAt) : ""])]
+// RSVP answers become extra columns, one per question the host asked.
+export function guestCsv(guests: Guest[], formatTime: (iso: string) => string, questions: { key: string; label: string }[] = []) {
+  // Cells that start with = + - @ are prefixed so spreadsheet apps don't run them as formulas.
+  const esc = (raw: string) => { const v = /^[=+\-@\t\r]/.test(raw) ? `'${raw}` : raw; return /[",\n]/.test(v) ? `"${v.replace(/"/g, '""')}"` : v }
+  const qs = questions.filter((q) => q.key !== "email")
+  const rows = [
+    ["#", "Guest", "Phone", "Email", "Ticket type", "Ticket code", "Order", "Checked in", ...qs.map((q) => q.label)],
+    ...guests.map((g, i) => [String(i + 1), g.name, g.phone ?? "", g.email ?? "", g.ticketType, g.code, g.order, g.checkedInAt ? formatTime(g.checkedInAt) : "", ...qs.map((q) => g.answers?.[q.key] ?? "")]),
+  ]
   return "﻿" + rows.map((r) => r.map(esc).join(",")).join("\r\n")
 }

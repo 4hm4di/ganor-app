@@ -8,12 +8,12 @@ import { Icon } from "./Icon"
 import { IdleGuard } from "./IdleGuard"
 import { ThemeSwitch } from "./ThemeSwitch"
 
-type Props = { name: string; email: string; logo: string | null; staff: boolean }
+type Props = { name: string; email: string; logo: string | null; staff: boolean; hqOnly?: boolean }
 
 const initials = (s: string) => s.split(/[\s@.]+/).filter(Boolean).slice(0, 2).map((w) => w[0]!.toUpperCase()).join("")
 
 // Signed-in header: section links, an account menu with Sign out, and a full-screen menu on phones.
-export function AppNav({ name, email, logo, staff }: Props) {
+export function AppNav({ name, email, logo, staff, hqOnly }: Props) {
   const path = usePathname()
   const [menu, setMenu] = useState(false) // account dropdown (desktop)
   const [sheet, setSheet] = useState(false) // full menu (phone)
@@ -58,7 +58,7 @@ export function AppNav({ name, email, logo, staff }: Props) {
     </form>
   )
 
-  if (staff && path.startsWith("/hq")) {
+  if ((staff && path.startsWith("/hq")) || hqOnly) {
     return (
       <header className="topbar topbar--hq">
         <IdleGuard />
@@ -69,8 +69,8 @@ export function AppNav({ name, email, logo, staff }: Props) {
             <span>HQ</span>
           </Link>
           <div className="topbar__end">
-            <Link href="/dashboard" className="hqlink">Host dashboard</Link>
-            <form action="/auth/signout" method="post"><button type="submit" className="hqlink">Sign out</button></form>
+            {!hqOnly && <Link href="/dashboard" className="hqlink">Host dashboard</Link>}
+            <form action="/auth/signout?to=hq" method="post"><button type="submit" className="hqlink">Sign out</button></form>
           </div>
         </div>
       </header>
@@ -112,7 +112,8 @@ export function AppNav({ name, email, logo, staff }: Props) {
               <div className="acct__menu" role="menu">
                 <div className="acct__who"><b>{name}</b>{email && <small>{email}</small>}</div>
                 <Link href="/dashboard/profile" className="acct__item" role="menuitem"><Icon name="user" size={18} />Host profile</Link>
-                <Link href="/events" className="acct__item" role="menuitem"><Icon name="search" size={18} />Find events</Link>
+                <Link href="/dashboard/events" className="acct__item" role="menuitem"><Icon name="calendar" size={18} />My events</Link>
+                <Link href="/dashboard/team" className="acct__item" role="menuitem"><Icon name="users" size={18} />Gate team</Link>
                 <a href="/" className="acct__item" role="menuitem"><Icon name="home" size={18} />Ganor homepage</a>
                 <div className="acct__theme"><small>Appearance</small><ThemeSwitch /></div>
                 {signOut}
@@ -129,12 +130,21 @@ export function AppNav({ name, email, logo, staff }: Props) {
 
       {sheet && createPortal(
         <div className="appsheet" role="dialog" aria-modal="true" aria-label="Menu">
+          {/* Same height and edge as the header, so the close button sits exactly where the menu button was. */}
+          <div className="appsheet__bar">
+            <Link href="/dashboard" className="topbar__logo" aria-label="Ganor dashboard">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img className="logo-light" src="/brand/ganor-lockup-indigo.svg" alt="Ganor" width={118} height={22} />
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img className="logo-dark" src="/brand/ganor-lockup-white.svg" alt="Ganor" width={118} height={22} />
+            </Link>
+            <button type="button" className="burger burger--x" aria-label="Close menu" onClick={() => setSheet(false)} autoFocus>
+              <i /><i />
+            </button>
+          </div>
           <div className="appsheet__top">
             <span className="acct__av acct__av--lg">{avatar}</span>
             <span className="acct__who"><b>{name}</b>{email && <small>{email}</small>}</span>
-            <button type="button" className="iconbtn appsheet__close" aria-label="Close menu" onClick={() => setSheet(false)}>
-              <Icon name="close-circle" size={22} />
-            </button>
           </div>
           <nav className="appsheet__links" aria-label="Dashboard">
             {links.map((l, i) => (
@@ -143,7 +153,7 @@ export function AppNav({ name, email, logo, staff }: Props) {
               </Link>
             ))}
             <Link href="/dashboard/events/new" className="appsheet__l" style={{ "--i": links.length } as React.CSSProperties}><Icon name="add-circle" size={22} />New event</Link>
-            <Link href="/events" className="appsheet__l" style={{ "--i": links.length + 1 } as React.CSSProperties}><Icon name="search" size={22} />Find events</Link>
+            <a href="/" className="appsheet__l" style={{ "--i": links.length + 1 } as React.CSSProperties}><Icon name="home" size={22} />Ganor homepage</a>
           </nav>
           <div className="appsheet__foot">
             <div className="appsheet__theme"><small>Appearance</small><ThemeSwitch /></div>

@@ -39,6 +39,7 @@ export async function signUpWithPassword(_prev: AuthState, fd: FormData): Promis
   if (name.length < 2) return { status: "error", message: "Enter your name or your organisation's name.", email }
   if (!EMAIL_RE.test(email)) return { status: "error", message: "Enter a valid email address.", email }
   if (password.length < PASSWORD_MIN) return { status: "error", message: `Use at least ${PASSWORD_MIN} characters for your password.`, email }
+  if (!/[A-Za-z]/.test(password) || !/[0-9]/.test(password)) return { status: "error", message: "Use letters and numbers in your password.", email }
 
   const supabase = await createClient()
   const origin = await siteOrigin()

@@ -4,6 +4,8 @@ import { headers } from "next/headers"
 import { notFound } from "next/navigation"
 import { cache, type ReactNode } from "react"
 import { createClient, getUserId } from "@/lib/supabase/server"
+import { RsvpForm } from "./RsvpForm"
+import { parseRsvpFields } from "@/lib/rsvp"
 import { Icon } from "@/components/Icon"
 import { SocialIcon } from "@/components/SocialIcon"
 import { ShareButtons } from "@/components/ShareButtons"
@@ -73,6 +75,7 @@ export default async function EventPage({ params }: { params: Promise<{ slug: st
       .limit(5),
   ])
   const tickets = (ev.ticket_types ?? []).filter((t) => t.on_sale)
+  const freeOptions = tickets.filter((t) => t.price_kobo === 0).map((t) => ({ id: t.id, name: t.name, left: t.quantity - t.sold }))
   const host = ev.profiles as Host
   const phase = eventPhase(ev, ev.ticket_types)
   const ended = phase === "ended"
@@ -209,7 +212,7 @@ export default async function EventPage({ params }: { params: Promise<{ slug: st
 
         <aside className="ev-side card stack" aria-labelledby="tickets-h">
           <span className="kicker"><Icon name="ticket" size={18} />Tickets</span>
-          <h2 id="tickets-h" className="section-t">{ended ? "This event has ended" : "Get your ticket"}</h2>
+          <h2 id="tickets-h" className="section-t">{ended ? "This event has ended" : tickets.length && tickets.every((t) => t.price_kobo === 0) ? "Free entry" : "Get your ticket"}</h2>
           {tickets.length ? (
             <div className="tt">
               {tickets.map((t) => {
@@ -231,7 +234,13 @@ export default async function EventPage({ params }: { params: Promise<{ slug: st
           ) : (
             <p className="muted">Tickets will be added soon.</p>
           )}
-          {!ended && (
+          {!ended && live && freeOptions.length > 0 && (
+            <div className="stack" style={{ gap: 12 }}>
+              <h3 className="section-t" style={{ fontSize: 18 }}>RSVP</h3>
+              <RsvpForm eventId={ev.id} eventTitle={ev.title} options={freeOptions} fields={parseRsvpFields(ev.rsvp_fields)} />
+            </div>
+          )}
+          {!ended && tickets.some((t) => t.price_kobo > 0) && (
             <div className="alert alert--info"><Icon name="info" /><span>Ticket sales open soon. Pay by card, transfer or USSD, and get your ticket on WhatsApp.</span></div>
           )}
         </aside>

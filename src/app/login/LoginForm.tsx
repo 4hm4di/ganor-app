@@ -1,13 +1,14 @@
 "use client"
 
 import Link from "next/link"
-import { useActionState, useState } from "react"
+import { useActionState } from "react"
 import { sendLoginLink, signInWithPassword, signInWithProvider, signUpWithPassword, type AuthState } from "./actions"
 import { SubmitButton } from "@/components/SubmitButton"
 import { Loader } from "@/components/Loader"
 import { useFormStatus } from "react-dom"
 import { Icon } from "@/components/Icon"
 import { ProviderLogo } from "@/components/ProviderLogo"
+import { PasswordField } from "@/components/PasswordField"
 
 type Mode = "signin" | "signup" | "link"
 type Provider = { id: "google" | "azure" | "apple"; label: string }
@@ -21,7 +22,6 @@ export function LoginForm({ mode, next, providers, error }: { mode: Mode; next: 
   const [signin, signinAction] = useActionState<AuthState, FormData>(signInWithPassword, { status: "idle" })
   const [signup, signupAction] = useActionState<AuthState, FormData>(signUpWithPassword, { status: "idle" })
   const [link, linkAction] = useActionState<AuthState, FormData>(sendLoginLink, { status: "idle" })
-  const [showPw, setShowPw] = useState(false)
   const q = (m: Mode) => `/login?mode=${m}${next !== "/dashboard" ? `&next=${encodeURIComponent(next)}` : ""}`
 
   if (signup.status === "confirm") {
@@ -66,15 +66,7 @@ export function LoginForm({ mode, next, providers, error }: { mode: Mode; next: 
             <span className="field__label">Email</span>
             <input type="email" name="email" required autoComplete="email" inputMode="email" autoCapitalize="none" autoCorrect="off" defaultValue={signin.email} placeholder="you@example.com" />
           </label>
-          <label className="field">
-            <span className="field__label field__label--row">
-              Password <Link href="/forgot-password" className="small">Forgot password?</Link>
-            </span>
-            <span className="pw">
-              <input type={showPw ? "text" : "password"} name="password" required autoComplete="current-password" enterKeyHint="go" />
-              <button type="button" className="pw__toggle" onClick={() => setShowPw((s) => !s)} aria-pressed={showPw}>{showPw ? "Hide" : "Show"}</button>
-            </span>
-          </label>
+          <PasswordField enterKeyHint="go" labelExtra={<Link href="/forgot-password" className="small">Forgot password?</Link>} />
           <SubmitButton pendingText="Signing in…" block>Sign in</SubmitButton>
         </form>
       )}
@@ -91,13 +83,7 @@ export function LoginForm({ mode, next, providers, error }: { mode: Mode; next: 
             <span className="field__label">Email</span>
             <input type="email" name="email" required autoComplete="email" inputMode="email" autoCapitalize="none" autoCorrect="off" defaultValue={signup.email} placeholder="you@example.com" />
           </label>
-          <label className="field">
-            <span className="field__label">Password <small>(at least 8 characters)</small></span>
-            <span className="pw">
-              <input type={showPw ? "text" : "password"} name="password" required minLength={8} autoComplete="new-password" enterKeyHint="go" />
-              <button type="button" className="pw__toggle" onClick={() => setShowPw((s) => !s)} aria-pressed={showPw}>{showPw ? "Hide" : "Show"}</button>
-            </span>
-          </label>
+          <PasswordField autoComplete="new-password" minLength={8} meter enterKeyHint="go" />
           <SubmitButton pendingText="Creating account…" block>Create host account</SubmitButton>
           <p className="small muted">By creating an account you agree to Ganor&rsquo;s <a href="https://ganor.ng/terms.html">Terms</a> and <a href="https://ganor.ng/privacy.html">Privacy policy</a>.</p>
         </form>
@@ -115,8 +101,8 @@ export function LoginForm({ mode, next, providers, error }: { mode: Mode; next: 
         </form>
       )}
 
-      <p className="small muted authswitch">
-        {mode === "signin" && <>New to Ganor? <Link href={q("signup")}>Create a host account</Link> · <Link href={q("link")}>Email me a link instead</Link></>}
+      <p className="authswitch">
+        {mode === "signin" && <><span>New to Ganor? <Link href={q("signup")}>Create a host account</Link></span><span aria-hidden="true">·</span><Link href={q("link")}>Email me a link instead</Link></>}
         {mode === "signup" && <>Already have an account? <Link href={q("signin")}>Sign in</Link></>}
         {mode === "link" && <>Prefer a password? <Link href={q("signin")}>Sign in</Link> · <Link href={q("signup")}>Create an account</Link></>}
       </p>

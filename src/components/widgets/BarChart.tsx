@@ -12,7 +12,8 @@ export function BarChart({ points, unit, color = "var(--chart-bar)" }: { points:
   const ticks = [max, Math.round(max / 2), 0]
   const h = hover === null ? null : points[hover]
   return (
-    <div className="bars" onMouseLeave={() => setHover(null)}>
+    // Gaps shrink as the number of days grows, so 90 bars still fit a phone-width card.
+    <div className="bars" onMouseLeave={() => setHover(null)} style={{ "--gap": points.length > 60 ? "1px" : points.length > 20 ? "2px" : "4px" } as React.CSSProperties}>
       <div className="bars__grid" aria-hidden="true">
         {ticks.map((t, i) => <span key={i} style={{ top: `${(i / (ticks.length - 1)) * 100}%` }}><em>{t}</em></span>)}
       </div>
@@ -27,11 +28,11 @@ export function BarChart({ points, unit, color = "var(--chart-bar)" }: { points:
             onClick={() => setHover(i)}
             aria-label={`${p.label}: ${p.value} ${unit}`}
           >
-            <i style={{ "--h": p.value / max, "--d": `${i * 30}ms`, background: color } as React.CSSProperties} />
+            <i style={{ "--h": p.value / max, "--d": `${Math.round((i * 600) / Math.max(points.length, 20))}ms`, background: color } as React.CSSProperties} />
           </button>
         ))}
         {h && hover !== null && (
-          <div className="bars__tip" style={{ left: `${((hover + 0.5) / points.length) * 100}%` }} role="status">
+          <div className="bars__tip" style={{ left: `clamp(48px, ${((hover + 0.5) / points.length) * 100}%, calc(100% - 48px))` }} role="status">
             <b>{h.value.toLocaleString("en-NG")}</b> {unit}<small>{h.sub ?? h.label}</small>
           </div>
         )}

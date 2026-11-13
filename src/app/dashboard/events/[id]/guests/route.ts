@@ -1,6 +1,7 @@
 import { getUserId } from "@/lib/supabase/server"
 import { buildGuestPdf, guestCsv, type Guest } from "@/lib/guestPdf"
 import { formatDate, formatTime, slugify } from "@/lib/ganor"
+import { parseRsvpFields } from "@/lib/rsvp"
 
 export const runtime = "nodejs"
 export const dynamic = "force-dynamic"
@@ -14,7 +15,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
 
   const { data: ev } = await supabase
     .from("events")
-    .select("id, title, slug, starts_at, venue_name, city, host_id, profiles(display_name)")
+    .select("id, title, slug, starts_at, venue_name, city, host_id, rsvp_fields, profiles(display_name)")
     .eq("id", id)
     .maybeSingle()
   if (!ev) return new Response("Not found", { status: 404 })
@@ -23,19 +24,24 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
 
   const { data: rows } = await supabase
     .from("tickets")
-    .select("code, checked_in_at, created_at, order_id, ticket_types(name), orders!inner(buyer_name, status)")
+    .select("code, checked_in_at, created_at, order_id, ticket_types(name), orders!inner(buyer_name, buyer_phone, buyer_email, answers, status)")
     .eq("event_id", id)
     .eq("orders.status", "paid")
     .order("created_at")
 
   const guests: Guest[] = (rows ?? [])
-    .map((r) => ({
-      name: (r.orders as unknown as { buyer_name: string }).buyer_name,
+    .map((r) => {
+      const o = r.orders as unknown as { buyer_name: string; buyer_phone: string; buyer_email: string | null; answers: Record<string, string> | null }
+      return {
+      name: o.buyer_name,
+      phone: o.buyer_phone ? `0${o.buyer_phone.replace(/^234/, "")}` : "",
+      email: o.buyer_email,
+      answers: o.answers ?? {},
       ticketType: (r.ticket_types as unknown as { name: string } | null)?.name ?? "Ticket",
       code: `GNR-${r.code.slice(0, 5)}-${r.code.slice(5)}`,
       checkedInAt: r.checked_in_at,
       order: r.order_id.slice(0, 8).toUpperCase(),
-    }))
+    }})
     .sort((a, b) => a.name.localeCompare(b.name))
 
   const when = (iso: string) => `${formatDate(iso, { day: "numeric", month: "short" })}, ${formatTime(iso)}`
@@ -43,7 +49,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
   const format = new URL(request.url).searchParams.get("format")
 
   if (format === "csv") {
-    return new Response(guestCsv(guests, when), {
+    return new Response(guestCsv(guests, when, parseRsvpFields(ev.rsvp_fields)), {
       headers: {
         "Content-Type": "text/csv; charset=utf-8",
         "Content-Disposition": `attachment; filename="${file}.csv"`,
