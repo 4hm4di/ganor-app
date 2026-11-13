@@ -96,3 +96,31 @@ export async function deleteHost(fd: FormData) {
   await supabase.rpc("admin_delete_host", { p_host: String(fd.get("host_id")) })
   revalidatePath("/hq", "layout")
 }
+
+// Hand the single owner role to another member. The current owner becomes Operations.
+export async function transferOwner(fd: FormData) {
+  const supabase = await db()
+  if (!supabase) return
+  await supabase.rpc("hq_transfer_owner", { p_user: String(fd.get("user_id")) })
+  revalidatePath("/hq", "layout")
+}
+
+export async function updateMyProfile(_prev: AdminState, fd: FormData): Promise<AdminState> {
+  const supabase = await db()
+  if (!supabase) return { status: "error", message: "Sign in again." }
+  const { error } = await supabase.rpc("hq_update_me", { p_display_name: String(fd.get("display_name") ?? "") })
+  if (error) return { status: "error", message: error.message }
+  revalidatePath("/hq", "layout")
+  return { status: "ok", message: "Saved." }
+}
+
+export async function changeMyPassword(_prev: AdminState, fd: FormData): Promise<AdminState> {
+  const supabase = await db()
+  if (!supabase) return { status: "error", message: "Sign in again." }
+  const password = String(fd.get("password") ?? "")
+  if (password !== String(fd.get("confirm") ?? "")) return { status: "error", message: "The two passwords don't match." }
+  if (password.length < 10 || !/[A-Za-z]/.test(password) || !/[0-9]/.test(password)) return { status: "error", message: "Use at least 10 characters with letters and numbers." }
+  const { error } = await supabase.auth.updateUser({ password })
+  if (error) return { status: "error", message: /same|different/i.test(error.message) ? "Choose a password you haven't used here before." : /reauth|recent/i.test(error.message) ? "For safety, sign out and back in, then change it straight away." : "We couldn't change it. Try again." }
+  return { status: "ok", message: "Password changed." }
+}

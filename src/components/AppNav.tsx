@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation"
 import { useEffect, useRef, useState } from "react"
 import { createPortal } from "react-dom"
 import { Icon } from "./Icon"
+import { GanorSymbol } from "./Loader"
 import { IdleGuard } from "./IdleGuard"
 import { ThemeSwitch } from "./ThemeSwitch"
 import { NewEventChooser } from "./NewEventChooser"
@@ -58,7 +59,7 @@ export function AppNav({ name, email, logo, staff, hqOnly, hqCan }: Props) {
     }
   }, [menu, sheet])
 
-  const avatar = logo ? (
+  const avatar = hq ? <GanorSymbol size={20} /> : logo ? (
     // eslint-disable-next-line @next/next/no-img-element
     <img src={logo} alt="" width={32} height={32} />
   ) : (
@@ -101,7 +102,7 @@ export function AppNav({ name, email, logo, staff, hqOnly, hqCan }: Props) {
 
           <div className="acct" ref={menuRef}>
             <button type="button" className="acct__btn" aria-haspopup="menu" aria-expanded={menu} onClick={() => setMenu((m) => !m)}>
-              <span className="acct__av">{avatar}</span>
+              <span className={`acct__av${hq ? " acct__av--ganor" : ""}`}>{avatar}</span>
               <span className="acct__name">{name.split(/\s+/)[0]}</span>
               <Icon name="arrow-down" size={16} />
             </button>
@@ -110,6 +111,7 @@ export function AppNav({ name, email, logo, staff, hqOnly, hqCan }: Props) {
                 <div className="acct__who"><b>{name}</b>{email && <small>{email}</small>}</div>
                 {hq ? (
                   <>
+                    <Link href="/hq/profile" className="acct__item" role="menuitem"><Icon name="pen" size={18} />Edit profile</Link>
                     <Link href="/hq/staff" className="acct__item" role="menuitem"><Icon name="shield" size={18} />Team & roles</Link>
                     {!hqOnly && <Link href="/dashboard" className="acct__item" role="menuitem"><Icon name="calendar" size={18} />Host dashboard</Link>}
                   </>
@@ -150,7 +152,7 @@ export function AppNav({ name, email, logo, staff, hqOnly, hqCan }: Props) {
             </button>
           </div>
           <div className="appsheet__top">
-            <span className="acct__av acct__av--lg">{avatar}</span>
+            <span className={`acct__av acct__av--lg${hq ? " acct__av--ganor" : ""}`}>{hq ? <GanorSymbol size={28} /> : avatar}</span>
             <span className="acct__who"><b>{name}</b>{email && <small>{email}</small>}</span>
           </div>
           <nav className="appsheet__links" aria-label="Dashboard">
@@ -159,7 +161,12 @@ export function AppNav({ name, email, logo, staff, hqOnly, hqCan }: Props) {
                 <Icon name={l.icon} size={22} />{l.label}
               </Link>
             ))}
-            {hq ? (!hqOnly && <Link href="/dashboard" className="appsheet__l" style={{ "--i": links.length } as React.CSSProperties}><Icon name="calendar" size={22} />Host dashboard</Link>) : (
+            {hq ? (
+              <>
+                <Link href="/hq/profile" className={`appsheet__l${path === "/hq/profile" ? " is-on" : ""}`} style={{ "--i": links.length } as React.CSSProperties}><Icon name="pen" size={22} />Edit profile</Link>
+                {!hqOnly && <Link href="/dashboard" className="appsheet__l" style={{ "--i": links.length + 1 } as React.CSSProperties}><Icon name="calendar" size={22} />Host dashboard</Link>}
+              </>
+            ) : (
               <>
                 <button type="button" className="appsheet__l" style={{ "--i": links.length } as React.CSSProperties} onClick={() => { setSheet(false); setChooser(true) }}><Icon name="add-circle" size={22} />New event</button>
                 <a href="/" className="appsheet__l" style={{ "--i": links.length + 1 } as React.CSSProperties}><Icon name="home" size={22} />Ganor homepage</a>

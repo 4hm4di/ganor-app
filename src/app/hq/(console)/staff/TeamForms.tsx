@@ -4,7 +4,8 @@ import { useActionState, useState } from "react"
 import { createMember, resetMemberPassword, setStaffRole, updateMember, type AdminState } from "../actions"
 import { SubmitButton } from "@/components/SubmitButton"
 import { PasswordField } from "@/components/PasswordField"
-import { HQ_ROLES } from "@/lib/hq-roles"
+import { ASSIGNABLE_ROLES } from "@/lib/hq-roles"
+import { Icon } from "@/components/Icon"
 import { ShareLogin } from "@/components/ShareLogin"
 
 const hqUrl = () => (typeof window === "undefined" ? "/hq/login" : `${window.location.origin}/hq/login`)
@@ -24,7 +25,7 @@ function makePassword() {
 export function RoleSelect({ name = "role", defaultValue = "viewer", disabled }: { name?: string; defaultValue?: string; disabled?: boolean }) {
   return (
     <select name={name} defaultValue={defaultValue} disabled={disabled} aria-label="Role">
-      {HQ_ROLES.map((r) => <option key={r.value} value={r.value}>{r.label}</option>)}
+      {ASSIGNABLE_ROLES.map((r) => <option key={r.value} value={r.value}>{r.label}</option>)}
     </select>
   )
 }
@@ -36,7 +37,7 @@ export function CreateMemberForm() {
   const [made, setMade] = useState("")
   const [role, setRole] = useState("support")
   const generate = () => { const p = makePassword(); setPw(p); setConfirm(p); setMade(p) }
-  const roleInfo = HQ_ROLES.find((r) => r.value === role)
+  const roleInfo = ASSIGNABLE_ROLES.find((r) => r.value === role)
   if (state.status === "ok" && state.created) {
     return (
       <div className="stack">
@@ -58,9 +59,9 @@ export function CreateMemberForm() {
       </div>
       <label className="field"><span className="field__label">Role</span>
         <select name="role" value={role} onChange={(e) => setRole(e.target.value)}>
-          {HQ_ROLES.map((r) => <option key={r.value} value={r.value}>{r.label}</option>)}
+          {ASSIGNABLE_ROLES.map((r) => <option key={r.value} value={r.value}>{r.label}</option>)}
         </select>
-        {roleInfo && <span className="field__hint">{roleInfo.does}</span>}
+        {roleInfo && <span className="field__hint rolehint"><Icon name={roleInfo.icon} size={16} />{roleInfo.does}</span>}
       </label>
       <PasswordField label="Password" autoComplete="new-password" minLength={10} meter value={pw} onChange={(v) => { setPw(v); setMade("") }}
         labelExtra={<button type="button" className="linkbtn" onClick={generate}>Generate one</button>} />

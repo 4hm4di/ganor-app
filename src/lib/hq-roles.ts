@@ -8,12 +8,12 @@ export type HqMe = {
 }
 
 // What each HQ role can do. The database enforces the same rules (private.hq_can).
-export const HQ_ROLES: { value: HqRole; label: string; does: string }[] = [
-  { value: "owner", label: "Owner", does: "Everything, including adding HQ members, changing roles and resetting passwords." },
-  { value: "operations", label: "Operations", does: "Suspends and restores hosts, publishes or cancels events, moderates reviews, reads the HQ log." },
-  { value: "finance", label: "Finance", does: "Sees payout accounts and sales, marks payout details checked or rejected." },
-  { value: "support", label: "Support", does: "Looks up hosts and events with contact details to help people. Can't change anything." },
-  { value: "viewer", label: "Viewer", does: "Read-only numbers and lists, without contact details." },
+export const HQ_ROLES: { value: HqRole; label: string; does: string; icon: string }[] = [
+  { value: "owner", label: "Owner", icon: "verified", does: "GANOR only. Everything, including adding HQ members, changing roles and setting passwords. There is one owner." },
+  { value: "operations", label: "Operations", icon: "settings", does: "Suspends and restores hosts, publishes or cancels events, moderates reviews, reads the HQ log." },
+  { value: "finance", label: "Finance", icon: "wallet", does: "Sees payout accounts and sales, marks payout details checked or rejected." },
+  { value: "support", label: "Support", icon: "support", does: "Looks up hosts and events with contact details to help people. Can't change anything." },
+  { value: "viewer", label: "Viewer", icon: "search", does: "Read-only numbers and lists, without contact details." },
 ]
 export const roleLabel = (r: string) => HQ_ROLES.find((x) => x.value === r)?.label ?? r
 
@@ -21,3 +21,7 @@ export const roleLabel = (r: string) => HQ_ROLES.find((x) => x.value === r)?.lab
 export const HQ_LOGIN_DOMAIN = "staff.ganor.ng"
 export const hqLoginEmail = (id: string) => (id.includes("@") ? id.trim().toLowerCase() : `${id.trim().toLowerCase()}@${HQ_LOGIN_DOMAIN}`)
 
+
+export const roleIcon = (r: string) => HQ_ROLES.find((x) => x.value === r)?.icon ?? "user"
+// Roles an owner can hand out: everything except owner (Ganor HQ has exactly one).
+export const ASSIGNABLE_ROLES = HQ_ROLES.filter((r) => r.value !== "owner")
