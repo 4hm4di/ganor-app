@@ -34,13 +34,15 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
   return (
     <div className="authpage wrap">
       <aside className="authpage__brand" aria-hidden="true">
-        <span className="kicker kicker--light">Ganor for hosts</span>
-        <p className="authpage__big">Sell tickets, take RSVPs and check guests in, all from your phone.</p>
-        <ul className="authpage__list">
-          <li><Icon name="ticket" size={18} />Paid tickets and free RSVPs</li>
-          <li><Icon name="qr-code" size={18} />Gate scanner for your team</li>
-          <li><Icon name="wallet" size={18} />Payouts straight to your bank</li>
-        </ul>
+        <div className="authpage__panel">
+          <span className="kicker kicker--light">Ganor for hosts</span>
+          <p className="authpage__big">Sell tickets, take RSVPs and check guests in, all from your phone.</p>
+          <ul className="authpage__list">
+            <li><Icon name="ticket" size={18} />Paid tickets and free RSVPs</li>
+            <li><Icon name="qr-code" size={18} />Gate scanner for your team</li>
+            <li><Icon name="wallet" size={18} />Payouts straight to your bank</li>
+          </ul>
+        </div>
       </aside>
       <div className="authpage__form">
       <a href="/" className="authback"><Icon name="arrow-right" size={16} />Back to homepage</a>

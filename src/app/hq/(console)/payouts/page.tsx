@@ -4,6 +4,7 @@ import { getHq } from "@/lib/hq"
 import { formatDate, formatNaira } from "@/lib/ganor"
 import { maskAccount } from "@/lib/banks"
 import { setPayoutStatus } from "../actions"
+import { Icon } from "@/components/Icon"
 
 export const metadata: Metadata = { title: { absolute: "Ganor" }, robots: { index: false } }
 
@@ -20,7 +21,7 @@ export default async function Payouts({ searchParams }: { searchParams: Promise<
   const sum = (k: "gross_kobo" | "tickets_sold") => (data ?? []).reduce((n, r) => n + Number(r[k] ?? 0), 0)
   return (
     <div className="stack">
-      <h1>Payouts</h1>
+      <h1 className="hq__h1"><Icon name="wallet" size={26} />Payouts</h1>
       <p className="muted">Hosts who sell paid tickets, their settlement accounts and sales. Check each new account name against the bank before marking it verified.</p>
       <div className="astats" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))", display: "grid", gap: 10 }}>
         <div className="card"><small className="muted">Paid sales</small><b style={{ display: "block", font: "800 24px/30px var(--ganor-font-display)" }}>{formatNaira(sum("gross_kobo"))}</b></div>
@@ -40,6 +41,7 @@ export default async function Payouts({ searchParams }: { searchParams: Promise<
           const [label, cls] = LABEL[r.status] ?? LABEL.missing
           return (
             <article key={r.host_id} className="card arow">
+              <span className={`arow__ic${r.status === "verified" ? " arow__ic--info" : r.status === "pending" ? " arow__ic--medium" : " arow__ic--bad"}`} aria-hidden="true"><Icon name={r.status === "verified" ? "verified" : "wallet"} size={20} /></span>
               <div className="arow__main">
                 <b>{r.host_name} <span className={`badge ${cls}`}>{label}</span></b>
                 {r.bank_name ? (

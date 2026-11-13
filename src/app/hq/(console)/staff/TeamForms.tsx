@@ -78,7 +78,7 @@ export function MemberRow({ m }: { m: { user_id: string; role: string; active: b
           <option value="0">Switched off</option>
         </select>
         {!m.is_self && <SubmitButton size="xs" variant="ghost" arrow={false} pendingText="Saving…">Save</SubmitButton>}
-        {m.login_kind === "username" && !m.is_self && <button type="button" className="btn btn--ghost btn--xs btn--plain" onClick={() => setReset((r) => !r)}>Reset password</button>}
+        {m.login_kind !== "email" && !m.is_self && <button type="button" className="btn btn--ghost btn--xs btn--plain" onClick={() => setReset((r) => !r)}>{m.login_kind === "hq" ? "Set password" : "Reset password"}</button>}
       </form>
       <Msg s={state} />
       {reset && (

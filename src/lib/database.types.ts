@@ -18,6 +18,8 @@ export type Database = {
           host_id: string
           id: string
           published_at: string | null
+          event_kind: string
+          rsvp_plan: string
           rsvp_fields: Json
           slug: string
           starts_at: string
@@ -39,6 +41,8 @@ export type Database = {
           host_id: string
           id?: string
           published_at?: string | null
+          event_kind?: string
+          rsvp_plan?: string
           rsvp_fields?: Json
           slug: string
           starts_at: string

@@ -3,6 +3,7 @@ import { getHq, HQ_ROLES, roleLabel } from "@/lib/hq"
 import { formatDate, formatTime } from "@/lib/ganor"
 import { ConfirmButton } from "@/components/ConfirmButton"
 import { removeMember } from "../actions"
+import { Icon } from "@/components/Icon"
 import { AddEmailMemberForm, CreateMemberForm, MemberRow } from "./TeamForms"
 
 export const metadata: Metadata = { title: { absolute: "Ganor" }, robots: { index: false } }
@@ -16,7 +17,7 @@ export default async function HqTeam() {
   const owner = me?.role === "owner"
   return (
     <div className="stack">
-      <h1>{owner ? "Team & roles" : "Team"}</h1>
+      <h1 className="hq__h1"><Icon name="shield" size={26} />{owner ? "Team & roles" : "Team"}</h1>
 
       <section className="card stack" data-reveal>
         <h2 className="admin__h2">Roles</h2>
@@ -39,7 +40,7 @@ export default async function HqTeam() {
                 <div className="memlist__who">
                   <b>{m.display_name || m.username || "Unnamed"} <span className="badge">{roleLabel(m.role)}</span>{!m.active && <span className="badge badge--bad">Switched off</span>}</b>
                   <small>
-                    {m.username ? <>Username <code>{m.username}</code></> : m.email ?? "Email login"}
+                    {m.username ? <>Username <code>{m.username}</code></> : <>{m.email ?? "Email login"}{m.login_kind === "hq" ? " · HQ only" : " · also a host"}</>}
                     {" · "}{m.last_sign_in_at ? `last in ${formatDate(m.last_sign_in_at, { day: "numeric", month: "short" })} ${formatTime(m.last_sign_in_at)}` : "never signed in"}
                   </small>
                 </div>
@@ -47,7 +48,7 @@ export default async function HqTeam() {
                 {owner && !m.is_self && (
                   <form action={removeMember}>
                     <input type="hidden" name="user_id" value={m.user_id} />
-                    <ConfirmButton className="btn btn--ghost btn--xs btn--plain txt-bad" confirmText={m.login_kind === "username" ? "Tap again to delete this login" : "Tap again to remove access"} pendingText="Removing…">Remove</ConfirmButton>
+                    <ConfirmButton className="btn btn--ghost btn--xs btn--plain txt-bad" confirmText={m.login_kind !== "email" ? "Tap again to delete this login" : "Tap again to remove access"} pendingText="Removing…">Remove</ConfirmButton>
                   </form>
                 )}
               </li>

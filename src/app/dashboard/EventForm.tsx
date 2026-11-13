@@ -5,6 +5,7 @@ import { createEvent, updateEvent, type FormState } from "./actions"
 import { SubmitButton } from "@/components/SubmitButton"
 import { Icon } from "@/components/Icon"
 import { CATEGORIES, CITIES } from "@/lib/ganor"
+import { FREE_RSVP_CAP } from "@/lib/plans"
 
 type Values = {
   id?: string
@@ -19,7 +20,7 @@ type Values = {
   halal_friendly: boolean
 }
 
-export function EventForm({ initial, mode }: { initial?: Values; mode: "create" | "edit" }) {
+export function EventForm({ initial, mode, kind }: { initial?: Values; mode: "create" | "edit"; kind?: "rsvp" | "paid" }) {
   const [state, action] = useActionState<FormState, FormData>(mode === "create" ? createEvent : updateEvent, { status: "idle" })
   const v = { ...initial, ...(state.fields ?? {}) } as Partial<Record<keyof Values, string | boolean>>
   const halal = state.fields ? state.fields.halal_friendly === "on" : Boolean(initial?.halal_friendly)
@@ -29,6 +30,7 @@ export function EventForm({ initial, mode }: { initial?: Values; mode: "create" 
   return (
     <form action={action} className="stack" key={key} noValidate>
       {initial?.id && <input type="hidden" name="id" value={initial.id} />}
+      {kind && <input type="hidden" name="kind" value={kind} />}
       {state.status === "error" && (
         <div className="alert alert--error" role="alert"><Icon name="warning" /><span>{state.message}</span></div>
       )}
@@ -79,6 +81,14 @@ export function EventForm({ initial, mode }: { initial?: Values; mode: "create" 
       </div>
       <p className="field__hint" style={{ marginTop: -8 }}>Times are Nigeria time (WAT).</p>
 
+      {kind === "rsvp" && (
+        <label className="field">
+          <span className="field__label">How many guests can come?</span>
+          <input type="number" name="capacity" required min={1} max={FREE_RSVP_CAP} inputMode="numeric" defaultValue={String((v as Record<string, unknown>).capacity ?? 100)} />
+          <span className="field__hint">Up to {FREE_RSVP_CAP} on the Free plan. RSVPs close when it&rsquo;s full.</span>
+        </label>
+      )}
+
       <label className="field">
         <span className="field__label">About the event <small>(optional)</small></span>
         <textarea autoComplete="off" name="description" maxLength={5000} defaultValue={String(v.description ?? "")} placeholder="What guests can expect, who it’s for, what to bring…" />
@@ -93,7 +103,7 @@ export function EventForm({ initial, mode }: { initial?: Values; mode: "create" 
       </label>
 
       <div className="actions">
-        <SubmitButton pendingText={mode === "create" ? "Creating…" : "Saving…"}>{mode === "create" ? "Create event" : "Save changes"}</SubmitButton>
+        <SubmitButton pendingText={mode === "create" ? "Creating…" : "Saving…"}>{mode === "create" ? (kind === "rsvp" ? "Create and set up RSVP" : "Create event") : "Save changes"}</SubmitButton>
       </div>
     </form>
   )

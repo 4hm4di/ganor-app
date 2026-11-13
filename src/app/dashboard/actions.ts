@@ -59,7 +59,14 @@ function readEvent(fd: FormData) {
 
 export async function createEvent(_prev: FormState, fd: FormData): Promise<FormState> {
   const { supabase, userId } = await requireHost()
-  const { fields, errors, row } = readEvent(fd)
+  const { fields: base0, errors, row } = readEvent(fd)
+  const fields: Record<string, string> = { ...base0 }
+  const kind = str(fd, "kind") === "rsvp" ? "rsvp" : "paid"
+  const capacity = Number(str(fd, "capacity") || 0)
+  if (kind === "rsvp") {
+    fields.capacity = str(fd, "capacity")
+    if (!Number.isInteger(capacity) || capacity < 1 || capacity > 100) errors.push("Guests: between 1 and 100 on the Free plan.")
+  }
   if (errors.length) return { status: "error", message: errors.join(" "), fields }
 
   const base = slugify(row.title) || "event"
@@ -68,7 +75,7 @@ export async function createEvent(_prev: FormState, fd: FormData): Promise<FormS
     const suffix = Math.random().toString(36).slice(2, 6)
     const { data, error } = await supabase
       .from("events")
-      .insert({ ...row, host_id: userId, slug: `${base}-${suffix}` })
+      .insert({ ...row, host_id: userId, slug: `${base}-${suffix}`, event_kind: kind })
       .select("id")
       .single()
     if (data) id = data.id
@@ -76,6 +83,12 @@ export async function createEvent(_prev: FormState, fd: FormData): Promise<FormS
   }
   if (!id) return { status: "error", message: "We couldn't save the event. Try again.", fields }
 
+  // Free RSVP: one free ticket type sized to the guest limit, then straight to the RSVP questions.
+  if (kind === "rsvp") {
+    await supabase.from("ticket_types").insert({ event_id: id, name: "Free entry", price_kobo: 0, quantity: capacity })
+    revalidatePath("/dashboard", "layout")
+    redirect(`/dashboard/events/${id}?created=rsvp#rsvp`)
+  }
   revalidatePath("/dashboard", "layout")
   redirect(`/dashboard/events/${id}?created=1`)
 }
@@ -362,6 +375,10 @@ export async function saveRsvpFields(_prev: FormState, fd: FormData): Promise<Fo
   }
   const { supabase, userId } = await getUserId()
   if (!userId) return { status: "error", message: "Sign in again." }
+  const { questionLimit } = await import("@/lib/plans")
+  const { data: ev } = await supabase.from("events").select("rsvp_plan").eq("id", id).eq("host_id", userId).maybeSingle()
+  if (!ev) return { status: "error", message: "We couldn't find that event." }
+  if (fields.length > questionLimit(ev.rsvp_plan)) return { status: "error", message: `The ${ev.rsvp_plan === "free" ? "Free" : "current"} plan allows up to ${questionLimit(ev.rsvp_plan)} questions.` }
   const { error } = await supabase.from("events").update({ rsvp_fields: fields }).eq("id", id).eq("host_id", userId)
   if (error) return { status: "error", message: "We couldn't save the questions. Try again." }
   revalidatePath(`/dashboard/events/${id}`)

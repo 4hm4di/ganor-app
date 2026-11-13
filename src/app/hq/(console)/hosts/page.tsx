@@ -1,5 +1,6 @@
 import type { Metadata } from "next"
 import { getHq } from "@/lib/hq"
+import { Icon } from "@/components/Icon"
 import { formatDate } from "@/lib/ganor"
 import { SuspendForm } from "../AdminForms"
 
@@ -16,7 +17,7 @@ export default async function AdminHosts({ searchParams }: { searchParams: Promi
   )
   return (
     <div className="stack">
-      <h1>Hosts</h1>
+      <h1 className="hq__h1"><Icon name="users" size={26} />Hosts</h1>
       <form className="afilter" role="search">
         <input name="q" defaultValue={q} placeholder={me?.can.contacts ? "Search name or email…" : "Search name…"} aria-label="Search hosts" autoComplete="off" />
         <select name="show" defaultValue={show} aria-label="Show">
@@ -30,6 +31,7 @@ export default async function AdminHosts({ searchParams }: { searchParams: Promi
       <div className="alist">
         {hosts.map((h) => (
           <article key={h.id} className={`card arow${h.suspended ? " is-suspended" : ""}`}>
+            <span className={`arow__ic${h.suspended ? " arow__ic--bad" : ""}`} aria-hidden="true"><Icon name={h.suspended ? "shield" : "user"} size={20} /></span>
             <div className="arow__main">
               <b>{h.display_name || "Unnamed host"} {h.is_staff && <span className="badge badge--ok">Ganor staff</span>} {h.suspended && <span className="badge badge--bad">Suspended</span>}</b>
               <small>{h.email ? `${h.email} · ` : ""}joined {formatDate(h.joined_at, { day: "numeric", month: "short", year: "numeric" })}{h.last_sign_in_at ? ` · last in ${formatDate(h.last_sign_in_at, { day: "numeric", month: "short" })}` : ""}</small>

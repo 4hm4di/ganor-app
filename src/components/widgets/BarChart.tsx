@@ -2,6 +2,9 @@
 
 import { useState } from "react"
 
+// Axis labels stay short: 49500 → 49.5k, 1200000 → 1.2m.
+const compact = (n: number) => (n >= 1_000_000 ? `${+(n / 1_000_000).toFixed(1)}m` : n >= 1000 ? `${+(n / 1000).toFixed(1)}k` : String(n))
+
 type Point = { label: string; value: number; sub?: string }
 
 // One-series bar chart: thin rounded bars on a recessive grid, a hover/tap tooltip per bar,
@@ -15,7 +18,7 @@ export function BarChart({ points, unit, color = "var(--chart-bar)" }: { points:
     // Gaps shrink as the number of days grows, so 90 bars still fit a phone-width card.
     <div className="bars" onMouseLeave={() => setHover(null)} style={{ "--gap": points.length > 60 ? "1px" : points.length > 20 ? "2px" : "4px" } as React.CSSProperties}>
       <div className="bars__grid" aria-hidden="true">
-        {ticks.map((t, i) => <span key={i} style={{ top: `${(i / (ticks.length - 1)) * 100}%` }}><em>{t}</em></span>)}
+        {ticks.map((t, i) => <span key={i} style={{ top: `${(i / (ticks.length - 1)) * 100}%` }}><em>{compact(t)}</em></span>)}
       </div>
       <div className="bars__plot" role="img" aria-label={`${unit} per day: ${points.map((p) => `${p.label} ${p.value}`).join(", ")}`}>
         {points.map((p, i) => (

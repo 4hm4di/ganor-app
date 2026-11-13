@@ -56,12 +56,22 @@ export function OverviewView({ range, first, stats, events, suspended, passwordU
     label: formatDate(`${d.day}T12:00:00Z`, { day: "numeric", month: "short" }),
     sub: formatDate(`${d.day}T12:00:00Z`, { weekday: "long", day: "numeric", month: "short" }),
     tickets: d.tickets,
+    checkins: d.checkins,
+    take_home: d.take_home,
   }))
+  // Per event, from the same counters My events uses, so the numbers always match.
+  const byEvent = phased
+    .map(({ e, phase }) => ({ e, phase, sold: e.ticket_types.reduce((n, t) => n + t.sold, 0), cap: e.ticket_types.reduce((n, t) => n + t.quantity, 0), free: e.ticket_types.length > 0 && e.ticket_types.every((t) => t.price_kobo === 0) }))
+    .filter((x) => x.sold > 0 || x.phase === "upcoming" || x.phase === "live")
+    .sort((a, b) => b.sold - a.sold)
+    .slice(0, 6)
+  const topSold = Math.max(1, ...byEvent.map((x) => x.sold))
+  const allSold = phased.reduce((n, { e }) => n + e.ticket_types.reduce((m, t) => m + t.sold, 0), 0)
   const ticketsChange = change(cur.tickets, prev.tickets)
   const period = `last ${range} days`
 
   const kpis = [
-    { label: "Tickets sold", value: cur.tickets, ch: ticketsChange, sub: `${cur.orders} orders`, icon: "ticket", tone: "indigo" },
+    { label: "Tickets and RSVPs", value: cur.tickets, ch: ticketsChange, sub: `${allSold} across all your events`, icon: "ticket", tone: "indigo" },
     { label: "Your take-home", value: Math.round(cur.take_home / 100), naira: true, ch: change(cur.take_home, prev.take_home), sub: "After the Ganor fee", icon: "wallet", tone: "green" },
     { label: "Checked in", value: cur.checkins, ch: change(cur.checkins, prev.checkins), sub: "Guests scanned at the gate", icon: "scan", tone: "marigold" },
     { label: "Upcoming events", value: coming.length + live.length, ch: null, sub: `${counts.draft} drafts`, icon: "calendar", tone: "ink" },
@@ -103,19 +113,19 @@ export function OverviewView({ range, first, stats, events, suspended, passwordU
         ))}
       </div>
 
-      <div className="hov__main">
-        <article className="card awidget" data-reveal>
+      <div className="dash">
+        <article className="card awidget s-8" data-reveal>
           <header className="awidget__head">
             <span className="awidget__ic"><Icon name="receipt" size={18} /></span>
             <div>
-              <h2>{cur.tickets === 0 ? `No tickets sold in the ${period}` : `${cur.tickets} tickets sold in the ${period}`}</h2>
-              <p>{ticketsChange ? `${ticketsChange.text} vs the ${range} days before` : "Sales show here day by day"} · {formatNaira(cur.take_home) === "Free" ? "₦0" : formatNaira(cur.take_home)} take-home</p>
+              <h2>{cur.tickets === 0 ? `No tickets in the ${period}` : `${cur.tickets} tickets and RSVPs in the ${period}`}</h2>
+              <p>{ticketsChange ? `${ticketsChange.text} vs the ${range} days before` : "Each bar is one day"} · {formatNaira(cur.take_home) === "Free" ? "₦0" : formatNaira(cur.take_home)} take-home</p>
             </div>
           </header>
           <BarChart points={series.map((d) => ({ label: d.label, sub: d.sub, value: d.tickets }))} unit="tickets" />
         </article>
 
-        <article className="card awidget hov__next" data-reveal>
+        <article className="card awidget hov__next s-4" data-reveal>
           <header className="awidget__head">
             <span className={`awidget__ic${nextUp?.phase === "live" ? " awidget__ic--live" : ""}`}><Icon name="clock" size={18} /></span>
             <div><h2>{nextUp?.phase === "live" ? "Happening now" : "Next up"}</h2><p>{coming.length + live.length} upcoming</p></div>
@@ -132,7 +142,7 @@ export function OverviewView({ range, first, stats, events, suspended, passwordU
                 <PhasePill phase={nextUp.phase} />
                 <b>{nextUp.e.title}</b>
                 <small>{formatDate(nextUp.e.starts_at)} · {formatTime(nextUp.e.starts_at)} · {nextUp.e.venue_name}, {nextUp.e.city}</small>
-                <small>{nextUp.e.ticket_types.reduce((n, t) => n + t.sold, 0)} of {nextUp.e.ticket_types.reduce((n, t) => n + t.quantity, 0)} tickets sold</small>
+                <small>{nextUp.e.ticket_types.reduce((n, t) => n + t.sold, 0)} of {nextUp.e.ticket_types.reduce((n, t) => n + t.quantity, 0)} taken</small>
               </div>
               <div className="nextup__actions">
                 <Link href={`/dashboard/events/${nextUp.e.id}`} className="btn btn--primary btn--sm"><span>Manage</span><span className="btn__arrow" aria-hidden="true"><Icon name="arrow" /></span></Link>
@@ -146,10 +156,59 @@ export function OverviewView({ range, first, stats, events, suspended, passwordU
             </div>
           )}
         </article>
-      </div>
 
-      <div className="hov__lower">
-        <article className="card awidget" data-reveal>
+        <article className="card awidget s-5" data-reveal>
+          <header className="awidget__head">
+            <span className="awidget__ic"><Icon name="ticket" size={18} /></span>
+            <div><h2>Tickets by event</h2><p>{allSold} in total · same counts as <Link href="/dashboard/events">My events</Link></p></div>
+          </header>
+          {byEvent.length ? (
+            <ul className="rank">
+              {byEvent.map((x, i) => (
+                <li key={x.e.id}>
+                  <Link href={`/dashboard/events/${x.e.id}`}>
+                    <span className="rank__t">{x.e.title}</span>
+                    <span className="rank__n">{x.sold}<small>/{x.cap}</small></span>
+                    <span className="rank__bar" aria-hidden="true"><i style={{ "--w": x.sold / topSold, "--d": `${i * 60}ms`, background: x.free ? "var(--ganor-success)" : "var(--chart-bar)" } as React.CSSProperties} /></span>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          ) : <p className="muted">No tickets yet.</p>}
+        </article>
+
+        <article className="card awidget s-4" data-reveal>
+          <header className="awidget__head">
+            <span className="awidget__ic awidget__ic--green"><Icon name="scan" size={18} /></span>
+            <div><h2>{cur.checkins} checked in</h2><p>Gate scans per day, {period}</p></div>
+          </header>
+          <BarChart points={series.map((d) => ({ label: d.label, sub: d.sub, value: d.checkins }))} unit="scanned in" color="var(--ganor-success)" />
+        </article>
+
+        <article className="card awidget s-3" data-reveal>
+          <header className="awidget__head">
+            <span className="awidget__ic"><Icon name="calendar" size={18} /></span>
+            <div><h2>By stage</h2><p>{phased.length} event{phased.length === 1 ? "" : "s"}</p></div>
+          </header>
+          <div className="stagebar" role="img" aria-label={STAGES.map((s) => `${PHASE_LABEL[s.key]} ${counts[s.key]}`).join(", ")}>
+            {STAGES.filter((s) => counts[s.key] > 0).map((s, i) => (
+              <i key={s.key} style={{ flexGrow: counts[s.key] / Math.max(1, phased.length), background: s.color, "--d": `${i * 60}ms` } as React.CSSProperties} />
+            ))}
+          </div>
+          <ul className="stagekey">
+            {STAGES.map((s) => <li key={s.key}><i style={{ background: s.color }} aria-hidden="true" />{PHASE_LABEL[s.key]}<b>{counts[s.key]}</b></li>)}
+          </ul>
+        </article>
+
+        <article className="card awidget s-7" data-reveal>
+          <header className="awidget__head">
+            <span className="awidget__ic awidget__ic--green"><Icon name="wallet" size={18} /></span>
+            <div><h2>{formatNaira(cur.take_home) === "Free" ? "₦0" : formatNaira(cur.take_home)} take-home</h2><p>Per day after the Ganor fee, {period}</p></div>
+          </header>
+          <BarChart points={series.map((d) => ({ label: d.label, sub: d.sub, value: Math.round(d.take_home / 100) }))} unit="naira" color="var(--ganor-indigo)" />
+        </article>
+
+        <article className="card awidget s-5" data-reveal>
           <header className="awidget__head">
             <span className="awidget__ic awidget__ic--marigold"><Icon name="warning" size={18} /></span>
             <div><h2>{todo.length ? `${todo.length} thing${todo.length === 1 ? "" : "s"} to do` : "All set"}</h2><p>Quick fixes for your events</p></div>
@@ -161,21 +220,6 @@ export function OverviewView({ range, first, stats, events, suspended, passwordU
               ))}
             </ul>
           ) : <p className="muted">Nothing needs your attention right now.</p>}
-        </article>
-
-        <article className="card awidget" data-reveal>
-          <header className="awidget__head">
-            <span className="awidget__ic"><Icon name="calendar" size={18} /></span>
-            <div><h2>Your events by stage</h2><p>{phased.length} event{phased.length === 1 ? "" : "s"} · <Link href="/dashboard/events">See all</Link></p></div>
-          </header>
-          <div className="stagebar" role="img" aria-label={STAGES.map((s) => `${PHASE_LABEL[s.key]} ${counts[s.key]}`).join(", ")}>
-            {STAGES.filter((s) => counts[s.key] > 0).map((s, i) => (
-              <i key={s.key} style={{ flexGrow: counts[s.key] / Math.max(1, phased.length), background: s.color, "--d": `${i * 60}ms` } as React.CSSProperties} />
-            ))}
-          </div>
-          <ul className="stagekey">
-            {STAGES.map((s) => <li key={s.key}><i style={{ background: s.color }} aria-hidden="true" />{PHASE_LABEL[s.key]}<b>{counts[s.key]}</b></li>)}
-          </ul>
         </article>
       </div>
 

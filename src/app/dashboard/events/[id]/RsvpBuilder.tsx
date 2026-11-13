@@ -7,16 +7,16 @@ import { SubmitButton } from "@/components/SubmitButton"
 import { Icon } from "@/components/Icon"
 
 // Pick up to six short questions. Name and phone are always asked, so the guest list and the gate work.
-export function RsvpBuilder({ eventId, initial }: { eventId: string; initial: RsvpField[] }) {
+export function RsvpBuilder({ eventId, initial, max = RSVP_MAX }: { eventId: string; initial: RsvpField[]; max?: number }) {
   const [state, action] = useActionState<FormState, FormData>(saveRsvpFields, { status: "idle" })
   const [fields, setFields] = useState<RsvpField[]>(initial)
   const [custom, setCustom] = useState("")
   const [customChoices, setCustomChoices] = useState("")
   const has = (k: string) => fields.some((f) => f.key === k)
-  const full = fields.length >= RSVP_MAX
+  const full = fields.length >= max
 
   const toggle = (p: (typeof RSVP_PRESETS)[number]) =>
-    setFields((fs) => (fs.some((f) => f.key === p.key) ? fs.filter((f) => f.key !== p.key) : fs.length >= RSVP_MAX ? fs : [...fs, { ...p, required: false }]))
+    setFields((fs) => (fs.some((f) => f.key === p.key) ? fs.filter((f) => f.key !== p.key) : fs.length >= max ? fs : [...fs, { ...p, required: false }]))
   const addCustom = () => {
     const label = custom.trim()
     if (label.length < 2 || full) return
@@ -30,7 +30,7 @@ export function RsvpBuilder({ eventId, initial }: { eventId: string; initial: Rs
     <form action={action} className="stack rsvpb" noValidate>
       <input type="hidden" name="event_id" value={eventId} />
       <input type="hidden" name="fields" value={JSON.stringify(fields)} />
-      <p className="small muted">Every guest gives their <b>name</b> and <b>phone number</b>. Add up to {RSVP_MAX} more questions. Fewer questions means more people finish.</p>
+      <p className="small muted">Every guest gives their <b>name</b> and <b>phone number</b>. Add up to {max} more questions{max < RSVP_MAX ? " on the Free plan" : ""}. Fewer questions means more people finish.</p>
 
       <div className="rsvpb__chips" role="group" aria-label="Common questions">
         {RSVP_PRESETS.map((p) => (

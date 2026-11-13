@@ -1,6 +1,7 @@
 import type { Metadata } from "next"
 import Link from "next/link"
 import { getHq } from "@/lib/hq"
+import { Icon } from "@/components/Icon"
 import { eventPhase, formatDate, formatTime } from "@/lib/ganor"
 import { PhasePill } from "@/components/PhasePill"
 import { setEventStatus } from "../actions"
@@ -31,7 +32,7 @@ export default async function AdminEvents({ searchParams }: { searchParams: Prom
     .filter((e) => status === "all" || (status === "active" ? ["live", "upcoming", "soldout"].includes(e.phase) : e.phase === status))
   return (
     <div className="stack">
-      <h1>Events</h1>
+      <h1 className="hq__h1"><Icon name="calendar" size={26} />Events</h1>
       <form className="afilter" role="search">
         <input name="q" defaultValue={q} placeholder="Search title…" aria-label="Search events" autoComplete="off" />
         <select name="status" defaultValue={status} aria-label="Status">
@@ -46,6 +47,7 @@ export default async function AdminEvents({ searchParams }: { searchParams: Prom
           const total = e.ticket_types.reduce((n, t) => n + t.quantity, 0)
           return (
             <article key={e.id} className="card arow">
+              <span className={`arow__ic${e.phase === "live" ? " arow__ic--live" : e.phase === "cancelled" ? " arow__ic--bad" : ""}`} aria-hidden="true"><Icon name={e.phase === "live" ? "scan" : e.phase === "ended" ? "check-circle" : e.phase === "cancelled" ? "close-circle" : "calendar"} size={20} /></span>
               <div className="arow__main">
                 <b>{e.title} <PhasePill phase={e.phase} /></b>
                 <small>{formatDate(e.starts_at)} · {formatTime(e.starts_at)} · {e.city} · by {(e.profiles as unknown as { display_name: string } | null)?.display_name}</small>

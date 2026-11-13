@@ -7,6 +7,7 @@ import { createPortal } from "react-dom"
 import { Icon } from "./Icon"
 import { IdleGuard } from "./IdleGuard"
 import { ThemeSwitch } from "./ThemeSwitch"
+import { NewEventChooser } from "./NewEventChooser"
 
 type Props = { name: string; email: string; logo: string | null; staff: boolean; hqOnly?: boolean }
 
@@ -17,6 +18,7 @@ export function AppNav({ name, email, logo, staff, hqOnly }: Props) {
   const path = usePathname()
   const [menu, setMenu] = useState(false) // account dropdown (desktop)
   const [sheet, setSheet] = useState(false) // full menu (phone)
+  const [chooser, setChooser] = useState(false) // "New event": RSVP or paid
   const menuRef = useRef<HTMLDivElement>(null)
 
   const links = [
@@ -97,10 +99,10 @@ export function AppNav({ name, email, logo, staff, hqOnly }: Props) {
         </nav>
 
         <div className="topbar__end">
-          <Link href="/dashboard/events/new" className="btn btn--primary btn--sm topbar__new" aria-label="New event">
+          <button type="button" className="btn btn--primary btn--sm topbar__new" onClick={() => setChooser(true)} aria-haspopup="dialog">
             <span>New event</span>
             <span className="btn__arrow" aria-hidden="true"><Icon name="add-circle" /></span>
-          </Link>
+          </button>
 
           <div className="acct" ref={menuRef}>
             <button type="button" className="acct__btn" aria-haspopup="menu" aria-expanded={menu} onClick={() => setMenu((m) => !m)}>
@@ -121,7 +123,7 @@ export function AppNav({ name, email, logo, staff, hqOnly }: Props) {
             )}
           </div>
 
-          <Link href="/dashboard/events/new" className="newfab" aria-label="New event" title="New event"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14" /></svg></Link>
+          <button type="button" className="newfab" aria-label="New event" title="New event" aria-haspopup="dialog" onClick={() => setChooser(true)}><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14" /></svg></button>
           <button type="button" className="burger" aria-label="Open menu" aria-expanded={sheet} onClick={() => setSheet(true)}>
             <i /><i />
           </button>
@@ -152,7 +154,7 @@ export function AppNav({ name, email, logo, staff, hqOnly }: Props) {
                 <Icon name={l.icon} size={22} />{l.label}
               </Link>
             ))}
-            <Link href="/dashboard/events/new" className="appsheet__l" style={{ "--i": links.length } as React.CSSProperties}><Icon name="add-circle" size={22} />New event</Link>
+            <button type="button" className="appsheet__l" style={{ "--i": links.length } as React.CSSProperties} onClick={() => { setSheet(false); setChooser(true) }}><Icon name="add-circle" size={22} />New event</button>
             <a href="/" className="appsheet__l" style={{ "--i": links.length + 1 } as React.CSSProperties}><Icon name="home" size={22} />Ganor homepage</a>
           </nav>
           <div className="appsheet__foot">
@@ -162,6 +164,7 @@ export function AppNav({ name, email, logo, staff, hqOnly }: Props) {
         </div>,
         document.body,
       )}
+      <NewEventChooser open={chooser} onClose={() => setChooser(false)} />
     </header>
   )
 }

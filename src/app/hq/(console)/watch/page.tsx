@@ -25,7 +25,7 @@ export default async function Watchlist() {
   const count = (s: string) => items.filter((i) => i.severity === s).length
   return (
     <div className="stack">
-      <h1>Watchlist</h1>
+      <h1 className="hq__h1"><Icon name="warning" size={26} />Watchlist</h1>
       <p className="muted">Things that could go wrong for hosts or guests, checked live. Clear them and this page stays empty.</p>
       <div className="evstats">
         {(["high", "medium", "low", "info"] as const).map((s) => <span key={s} className="badge" style={{ padding: "6px 10px", fontSize: 13 }}>{SEV[s].label} <b>{count(s)}</b></span>)}
@@ -39,8 +39,9 @@ export default async function Watchlist() {
             const s = i.event_id ? slug.get(i.event_id) : null
             return (
               <article key={k} className="card arow">
+                <span className={`arow__ic arow__ic--${i.severity}`} aria-hidden="true"><Icon name={sv.icon} size={20} /></span>
                 <div className="arow__main">
-                  <b><Icon name={sv.icon} size={18} /> {i.title} <span className={`badge ${sv.cls}`}>{sv.label}</span></b>
+                  <b>{i.title} <span className={`badge ${sv.cls}`}>{sv.label}</span></b>
                   <small>{i.detail}</small>
                   {i.event_id && <small>{formatDate(i.at)} · {formatTime(i.at)}</small>}
                 </div>

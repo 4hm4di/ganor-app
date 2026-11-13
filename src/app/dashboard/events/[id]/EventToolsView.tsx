@@ -14,6 +14,8 @@ import { ImageUpload } from "@/components/ImageUpload"
 import { ShareButtons } from "@/components/ShareButtons"
 import { GanorSymbol } from "@/components/Loader"
 import { Icon } from "@/components/Icon"
+import { BarChart } from "@/components/widgets/BarChart"
+import { RSVP_PLANS, questionLimit } from "@/lib/plans"
 import { PhasePill } from "@/components/PhasePill"
 import { BackLink } from "@/components/BackLink"
 import { eventPhase, PHASE_LABEL, feeKobo, formatDate, formatNaira, formatTime, isoToLagosLocal } from "@/lib/ganor"
@@ -28,25 +30,15 @@ const ERRORS: Record<string, string> = {
 const naira = (k: number) => (k > 0 ? formatNaira(k) : "₦0")
 const initials = (name: string) => name.split(/\s+/).filter(Boolean).slice(0, 2).map((w) => w[0]!.toUpperCase()).join("")
 
-// The last seven days in Lagos, oldest first, for the Tickets sold chart.
-function lastSevenDays() {
-  const day = 86_400_000
-  return Array.from({ length: 7 }, (_, i) => formatDate(new Date(Date.now() - (6 - i) * day).toISOString(), { weekday: "short" }))
-}
-
-// Chart geometry matches the landing page SVG: 600 × 180, baseline at 170, top at 22.
-function chartPath(values: number[]) {
-  const max = Math.max(1, ...values)
-  const pts = values.map((v, i) => [Math.round((i / (values.length - 1)) * 600), Math.round(170 - (v / max) * 148)] as const)
-  const line = pts.map(([x, y], i) => `${i ? "L" : "M"}${x} ${y}`).join(" ")
-  return { line, area: `${line} L600 180 L0 180Z`, last: pts[pts.length - 1]! }
-}
-
 export type ToolsEvent = EventRow & { ticket_types: TicketTypeRow[] }
 
 export type ToolsGuest = { name: string; ticket: string; in: boolean }
 
-export function EventToolsView({ ev, userId, publicUrl, sp, guests }: { ev: ToolsEvent; userId: string; publicUrl: string; sp: { created?: string; published?: string; error?: string }; guests: ToolsGuest[] }) {
+const PLAN_NAME: Record<string, string> = Object.fromEntries(RSVP_PLANS.map((p) => [p.id, p.name]))
+const dayLabel = (d: string) => formatDate(`${d}T12:00:00Z`, { day: "numeric", month: "short" })
+const hourLabel = (h: number) => `${((h + 11) % 12) + 1}${h < 12 ? "am" : "pm"}`
+
+export function EventToolsView({ ev, userId, publicUrl, sp, guests, daily, scanHours }: { ev: ToolsEvent; userId: string; publicUrl: string; sp: { created?: string; published?: string; error?: string }; guests: ToolsGuest[]; daily: { day: string; count: number }[]; scanHours: { hour: number; count: number }[] }) {
   const hasFree = ev.ticket_types.some((t) => t.price_kobo === 0)
   const publicPath = `/e/${ev.slug}`
   const tickets = ev.ticket_types ?? []
@@ -60,11 +52,9 @@ export function EventToolsView({ ev, userId, publicUrl, sp, guests }: { ev: Tool
   const earned = tickets.reduce((n, t) => n + takeHome(t.price_kobo) * t.sold, 0)
   const hasPaid = tickets.some((t) => t.price_kobo > 0)
 
-  // Daily sales arrive with checkout; until then every day is zero.
-  const days = lastSevenDays()
-  const daily = days.map(() => 0)
-  const chart = chartPath(daily)
-  const today = daily[daily.length - 1]!
+  const freeOnly = tickets.length > 0 && tickets.every((t) => t.price_kobo === 0)
+  const unit = freeOnly ? "RSVPs" : "tickets"
+  const fortnight = daily.reduce((n, d) => n + d.count, 0)
   const checkedIn = guests.filter((g) => g.in).length
   const phase = eventPhase(ev, tickets)
   const over = phase === "ended" || phase === "cancelled"
@@ -96,27 +86,16 @@ export function EventToolsView({ ev, userId, publicUrl, sp, guests }: { ev: Tool
         </div>
       </div>
 
-      {sp.created && <div className="alert alert--ok" role="status" style={{ marginBottom: 14 }}><Icon name="check-circle" /><span>Event created as a draft. Add a banner and your ticket types, then publish.</span></div>}
+      {sp.created && <div className="alert alert--ok" role="status" style={{ marginBottom: 14 }}><Icon name="check-circle" /><span>{sp.created === "rsvp" ? "Free event created as a draft. Choose your RSVP questions below, add a banner, then publish." : "Event created as a draft. Add a banner and your ticket types, then publish."}</span></div>}
       {sp.published && <div className="alert alert--ok" role="status" style={{ marginBottom: 14 }}><Icon name="check-circle" /><span>Your event is live. Share the link below.</span></div>}
       {sp.error && <div className="alert alert--error" role="alert" style={{ marginBottom: 14 }}><Icon name="warning" /><span>{ERRORS[sp.error] ?? "Something went wrong."}</span></div>}
 
       <div className="bento">
         <article className="card card--sales" data-reveal>
-          <header className="card__head"><h2 className="card__title"><Icon name="receipt" />Tickets sold</h2><span className="card__tag">{PHASE_LABEL[phase]}</span></header>
+          <header className="card__head"><h2 className="card__title"><Icon name="receipt" />{freeOnly ? "RSVPs" : "Tickets sold"}</h2><span className="card__tag">{PHASE_LABEL[phase]}</span></header>
           <p className="card__big" style={{ fontVariantNumeric: "tabular-nums" }}><span>{sold}</span><small> of {total}</small></p>
-          <div className="chart">
-            <svg viewBox="0 0 600 180" preserveAspectRatio="none" aria-hidden="true">
-              <defs><linearGradient id="fill" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stopColor="#3730B8" stopOpacity=".16" /><stop offset="1" stopColor="#3730B8" stopOpacity="0" /></linearGradient></defs>
-              <g className="chart__grid"><line x1="0" x2="600" y1="45" y2="45" /><line x1="0" x2="600" y1="90" y2="90" /><line x1="0" x2="600" y1="135" y2="135" /></g>
-              <path className="chart__area" d={chart.area} fill="url(#fill)" />
-              <path className="chart__line" pathLength={1} d={chart.line} />
-            </svg>
-            <span className="chart__dot" aria-hidden="true" style={{ left: "100%", top: `${(chart.last[1] / 180) * 100}%` }} />
-            <p className="chart__tip" style={{ left: "100%", top: `${(chart.last[1] / 180) * 100}%`, transform: "translate(-100%, calc(-100% - 14px))" }}>
-              {days[days.length - 1]} · {today} sold
-            </p>
-          </div>
-          <p className="card__foot">{days.map((d, i) => <span key={i}>{d}</span>)}</p>
+          <BarChart points={daily.map((d) => ({ label: dayLabel(d.day), sub: dayLabel(d.day), value: d.count }))} unit={unit} />
+          <p className="card__foot card__foot--plain"><span>{fortnight}</span>&nbsp;{unit} in these 14 days · {sold} in total</p>
         </article>
 
         <article className="card card--types" data-reveal>
@@ -134,10 +113,17 @@ export function EventToolsView({ ev, userId, publicUrl, sp, guests }: { ev: Tool
 
         <article className="card card--gate" data-reveal>
           <header className="card__head"><h2 className="card__title"><Icon name="qr-code" />Gate check-in</h2><span className="card__tag">Event day</span></header>
-          <div className="gatebox">
-            <div className="gatebox__finder" aria-hidden="true"><i /><i /><i /><i /><Icon name="qr-code" size={44} /></div>
-            <p><b>Scan tickets with any phone.</b> Each code works once, so no copies get in.</p>
-          </div>
+          {scanHours.length > 0 ? (
+            <>
+              <p className="card__big" style={{ fontVariantNumeric: "tabular-nums" }}><span>{checkedIn}</span><small> of {guests.length} in</small></p>
+              <BarChart points={scanHours.map((h) => ({ label: hourLabel(h.hour), sub: `${hourLabel(h.hour)}–${hourLabel((h.hour + 1) % 24)}`, value: h.count }))} unit="scanned in" color="var(--ganor-success)" />
+            </>
+          ) : (
+            <div className="gatebox">
+              <div className="gatebox__finder" aria-hidden="true"><i /><i /><i /><i /><Icon name="qr-code" size={44} /></div>
+              <p><b>Scan tickets with any phone.</b> Each code works once, so no copies get in.</p>
+            </div>
+          )}
           <div className="actions" style={{ gap: 8 }}>
             <Link href={`/gate/${ev.id}`} className="btn btn--primary btn--sm">
               <span>Open scanner</span>
@@ -149,8 +135,8 @@ export function EventToolsView({ ev, userId, publicUrl, sp, guests }: { ev: Tool
         </article>
 
         <article className="card" data-reveal style={{ gridColumn: "1 / -1" }} id="rsvp">
-          <header className="card__head"><h2 className="card__title"><Icon name="doc" />RSVP form</h2><span className="card__tag">{hasFree ? "Free tickets" : "For free tickets"}</span></header>
-          {hasFree ? <RsvpBuilder eventId={ev.id} initial={parseRsvpFields(ev.rsvp_fields)} /> : <p className="card__empty">Add a free ticket type (price ₦0) and guests can RSVP on your event page. You choose a few short questions here.</p>}
+          <header className="card__head"><h2 className="card__title"><Icon name="doc" />RSVP form</h2><span className="card__tag">{hasFree ? `${PLAN_NAME[ev.rsvp_plan] ?? "Free"} plan · up to ${(RSVP_PLANS.find((p) => p.id === ev.rsvp_plan) ?? RSVP_PLANS[0]).cap.toLocaleString("en-NG")} guests` : "For free tickets"}</span></header>
+          {hasFree ? <RsvpBuilder eventId={ev.id} initial={parseRsvpFields(ev.rsvp_fields)} max={questionLimit(ev.rsvp_plan)} /> : <p className="card__empty">Add a free ticket type (price ₦0) and guests can RSVP on your event page. You choose a few short questions here.</p>}
         </article>
 
         <article className="card card--guests" data-reveal>
