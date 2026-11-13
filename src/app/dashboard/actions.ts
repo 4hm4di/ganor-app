@@ -1,6 +1,7 @@
 "use server"
 
 import { revalidatePath } from "next/cache"
+import { flash, report, dbMessage } from "@/lib/flash"
 import { redirect } from "next/navigation"
 import { headers } from "next/headers"
 import { getUserId } from "@/lib/supabase/server"
@@ -69,7 +70,7 @@ export async function createEvent(_prev: FormState, fd: FormData): Promise<FormS
     fields.capacity = str(fd, "capacity")
     if (!Number.isInteger(capacity) || capacity < 1 || capacity > plan.cap) errors.push(`Guests: between 1 and ${plan.cap.toLocaleString("en-NG")} on the ${plan.name} plan.`)
   }
-  if (errors.length) return { status: "error", message: errors.join(" "), fields }
+  if (errors.length) return report({ status: "error", message: errors.join(" "), fields })
 
   const base = slugify(row.title) || "event"
   let id: string | null = null
@@ -81,17 +82,19 @@ export async function createEvent(_prev: FormState, fd: FormData): Promise<FormS
       .select("id")
       .single()
     if (data) id = data.id
-    else if (error && error.code !== "23505") return { status: "error", message: "We couldn't save the event. Try again.", fields }
+    else if (error && error.code !== "23505") return report({ status: "error", message: "We couldn't save the event. Try again.", fields })
   }
-  if (!id) return { status: "error", message: "We couldn't save the event. Try again.", fields }
+  if (!id) return report({ status: "error", message: "We couldn't save the event. Try again.", fields })
 
   // Free RSVP: one free ticket type sized to the guest limit, then straight to the RSVP questions.
   if (kind === "rsvp") {
     await supabase.from("ticket_types").insert({ event_id: id, name: "Free entry", price_kobo: 0, quantity: capacity })
     revalidatePath("/dashboard", "layout")
+    await flash("ok", "Free RSVP event created as a draft.")
     redirect(`/dashboard/events/${id}?created=rsvp#rsvp`)
   }
   revalidatePath("/dashboard", "layout")
+  await flash("ok", "Event created as a draft.")
   redirect(`/dashboard/events/${id}?created=1`)
 }
 
@@ -99,12 +102,12 @@ export async function updateEvent(_prev: FormState, fd: FormData): Promise<FormS
   const { supabase } = await requireHost()
   const id = str(fd, "id")
   const { fields, errors, row } = readEvent(fd)
-  if (errors.length) return { status: "error", message: errors.join(" "), fields }
+  if (errors.length) return report({ status: "error", message: errors.join(" "), fields })
   const { data, error } = await supabase.from("events").update(row).eq("id", id).select("slug").single()
-  if (error || !data) return { status: "error", message: "We couldn't save your changes. Try again.", fields }
+  if (error || !data) return report({ status: "error", message: "We couldn't save your changes. Try again.", fields })
   revalidatePath(`/dashboard/events/${id}`)
   revalidatePath(`/e/${data.slug}`)
-  return { status: "ok", message: "Saved." }
+  return report({ status: "ok", message: "Saved." })
 }
 
 export async function setEventStatus(fd: FormData) {
@@ -115,18 +118,23 @@ export async function setEventStatus(fd: FormData) {
 
   if (to === "published") {
     const { data: ev } = await supabase.from("events").select("*, ticket_types(id)").eq("id", id).single()
-    if (!ev) redirect(`/dashboard/events/${id}?error=notfound`)
-    if (!ev.ticket_types?.length) redirect(`/dashboard/events/${id}?error=tickets`)
-    if (new Date(ev.starts_at) < new Date()) redirect(`/dashboard/events/${id}?error=past`)
+    if (!ev) { await flash("error", "We couldn't find that event."); redirect(`/dashboard/events/${id}?error=notfound`) }
+    if (!ev.ticket_types?.length) { await flash("error", "Add at least one ticket type before you publish."); redirect(`/dashboard/events/${id}?error=tickets`) }
+    if (new Date(ev.starts_at) < new Date()) { await flash("error", "This event's start time has passed. Change the date first."); redirect(`/dashboard/events/${id}?error=past`) }
     // RSVP events publish once their plan is paid (HQ finance confirms the payment).
     const paidAt = (ev as { plan_paid_at?: string | null }).plan_paid_at
-    if (ev.event_kind === "rsvp" && ev.rsvp_plan !== "free" && paidAt === null) redirect(`/dashboard/events/${id}?error=plan`)
+    if (ev.event_kind === "rsvp" && ev.rsvp_plan !== "free" && paidAt === null) { await flash("error", "Pay for the RSVP plan before you publish."); redirect(`/dashboard/events/${id}?error=plan`) }
     // Guests must be able to reach the host: a WhatsApp or call number is required to go live.
     const { data: prof } = await supabase.from("profiles").select("contact_whatsapp, contact_phone").eq("id", userId).single()
-    if (!prof?.contact_whatsapp && !prof?.contact_phone) redirect(`/dashboard/events/${id}?error=contact`)
+    if (!prof?.contact_whatsapp && !prof?.contact_phone) { await flash("error", "Add a WhatsApp or call number to your profile before you publish."); redirect(`/dashboard/events/${id}?error=contact`) }
   }
 
-  const { data } = await supabase.from("events").update({ status: to }).eq("id", id).select("slug").single()
+  const { data, error } = await supabase.from("events").update({ status: to }).eq("id", id).select("slug").single()
+  if (error || !data) {
+    await flash("error", dbMessage(error, "We couldn't change the event. Try again."))
+    redirect(`/dashboard/events/${id}`)
+  }
+  await flash("ok", to === "published" ? "Your event is live." : to === "cancelled" ? "Event cancelled." : "Event unpublished. It's a draft again.")
   revalidatePath("/dashboard", "layout")
   revalidatePath(`/dashboard/events/${id}`)
   if (data) revalidatePath(`/e/${data.slug}`)
@@ -136,7 +144,8 @@ export async function setEventStatus(fd: FormData) {
 export async function deleteDraft(fd: FormData) {
   const { supabase } = await requireHost()
   const id = str(fd, "id")
-  await supabase.from("events").delete().eq("id", id).eq("status", "draft")
+  const { error, count } = await supabase.from("events").delete({ count: "exact" }).eq("id", id).eq("status", "draft")
+  await flash(error || !count ? "error" : "ok", error || !count ? "We couldn't delete that draft." : "Draft deleted.")
   revalidatePath("/dashboard", "layout")
   redirect("/dashboard/events")
 }
@@ -145,7 +154,7 @@ export async function addTicketType(_prev: FormState, fd: FormData): Promise<For
   const { supabase } = await requireHost()
   const event_id = str(fd, "event_id")
   const { fields, errors, price_kobo, quantity, maxPer } = readTicket(fd)
-  if (errors.length) return { status: "error", message: errors.join(" "), fields }
+  if (errors.length) return report({ status: "error", message: errors.join(" "), fields })
 
   const { count } = await supabase.from("ticket_types").select("id", { count: "exact", head: true }).eq("event_id", event_id)
   const { error } = await supabase.from("ticket_types").insert({
@@ -157,9 +166,9 @@ export async function addTicketType(_prev: FormState, fd: FormData): Promise<For
     max_per_order: maxPer,
     sort_order: count ?? 0,
   })
-  if (error) return { status: "error", message: "We couldn't add the ticket. Try again.", fields }
+  if (error) return report({ status: "error", message: "We couldn't add the ticket. Try again.", fields })
   await revalidateEvent(supabase, event_id)
-  return { status: "ok", message: `${fields.name} added.` }
+  return report({ status: "ok", message: `${fields.name} added.` })
 }
 
 function readTicket(fd: FormData) {
@@ -186,20 +195,26 @@ export async function updateTicketType(_prev: FormState, fd: FormData): Promise<
   const id = str(fd, "id")
   const event_id = str(fd, "event_id")
   const { fields, errors, price_kobo, quantity, maxPer } = readTicket(fd)
-  if (errors.length) return { status: "error", message: errors.join(" "), fields }
+  if (errors.length) return report({ status: "error", message: errors.join(" "), fields })
 
   const { data: current } = await supabase.from("ticket_types").select("sold, price_kobo").eq("id", id).single()
-  if (!current) return { status: "error", message: "We couldn't find that ticket.", fields }
-  if (quantity < current.sold) return { status: "error", message: `You've already sold ${current.sold}. The total can't go below that.`, fields }
-  if (current.sold > 0 && price_kobo !== current.price_kobo) return { status: "error", message: "The price is locked once tickets have sold. Add a new ticket type instead.", fields }
+  if (!current) return report({ status: "error", message: "We couldn't find that ticket.", fields })
+  if (quantity < current.sold) return report({ status: "error", message: `You've already sold ${current.sold}. The total can't go below that.`, fields })
+  if (current.sold > 0 && price_kobo !== current.price_kobo) return report({ status: "error", message: "The price is locked once tickets have sold. Add a new ticket type instead.", fields })
 
   const { error } = await supabase
     .from("ticket_types")
     .update({ name: fields.name, description: fields.description, price_kobo, quantity, max_per_order: maxPer })
     .eq("id", id)
-  if (error) return { status: "error", message: "We couldn't save the ticket. Try again.", fields }
+  if (error) return report({ status: "error", message: "We couldn't save the ticket. Try again.", fields })
   await revalidateEvent(supabase, event_id)
-  return { status: "ok", message: `${fields.name} saved.` }
+  return report({ status: "ok", message: `${fields.name} saved.` })
+}
+
+// Show the outcome of a switch or upload as a banner, then hand the result back.
+async function done<T extends { ok: boolean; message?: string }>(r: T, okText: string): Promise<T> {
+  await flash(r.ok ? "ok" : "error", r.ok ? okText : r.message ?? "That didn't save. Try again.")
+  return r
 }
 
 async function revalidateEvent(supabase: Awaited<ReturnType<typeof requireHost>>["supabase"], eventId: string) {
@@ -214,7 +229,8 @@ export async function setFeeMode(fd: FormData) {
   const id = str(fd, "id")
   const mode = str(fd, "fee_mode")
   if (mode !== "buyer" && mode !== "absorb") return
-  await supabase.from("events").update({ fee_mode: mode }).eq("id", id)
+  const { error } = await supabase.from("events").update({ fee_mode: mode }).eq("id", id)
+  await flash(error ? "error" : "ok", error ? "We couldn't save the fee setting." : "Fee setting saved.")
   await revalidateEvent(supabase, id)
 }
 
@@ -228,30 +244,31 @@ async function replaceImage(bucket: Bucket, url: string, oldUrl: string | null, 
 export async function saveEventBanner(eventId: string, url: string): Promise<{ ok: boolean; message?: string }> {
   const { supabase, userId } = await requireHost()
   const { data: ev } = await supabase.from("events").select("cover_url").eq("id", eventId).eq("host_id", userId).single()
-  if (!ev) return { ok: false, message: "We couldn't find that event." }
-  if (!(await replaceImage("event-banners", url, ev.cover_url, userId, supabase))) return { ok: false, message: "That image couldn't be used." }
+  if (!ev) return done({ ok: false, message: "We couldn't find that event." }, "Banner saved.")
+  if (!(await replaceImage("event-banners", url, ev.cover_url, userId, supabase))) return done({ ok: false, message: "That image couldn't be used." }, "Banner saved.")
   const { error } = await supabase.from("events").update({ cover_url: url || null }).eq("id", eventId)
-  if (error) return { ok: false, message: "We couldn't save the banner. Try again." }
+  if (error) return done({ ok: false, message: "We couldn't save the banner. Try again." }, "Banner saved.")
   await revalidateEvent(supabase, eventId)
-  return { ok: true }
+  return done({ ok: true }, "Banner saved.")
 }
 
 export async function saveHostLogo(url: string): Promise<{ ok: boolean; message?: string }> {
   const { supabase, userId } = await requireHost()
   const { data: p } = await supabase.from("profiles").select("logo_url").eq("id", userId).single()
-  if (!(await replaceImage("host-logos", url, p?.logo_url ?? null, userId, supabase))) return { ok: false, message: "That image couldn't be used." }
+  if (!(await replaceImage("host-logos", url, p?.logo_url ?? null, userId, supabase))) return done({ ok: false, message: "That image couldn't be used." }, "Logo saved.")
   const { error } = await supabase.from("profiles").update({ logo_url: url || null }).eq("id", userId)
-  if (error) return { ok: false, message: "We couldn't save the logo. Try again." }
+  if (error) return done({ ok: false, message: "We couldn't save the logo. Try again." }, "Logo saved.")
   revalidatePath("/dashboard", "layout")
   revalidatePath("/e/[slug]", "page")
-  return { ok: true }
+  return done({ ok: true }, "Logo saved.")
 }
 
 export async function deleteTicketType(fd: FormData) {
   const { supabase } = await requireHost()
   const id = str(fd, "id")
   const event_id = str(fd, "event_id")
-  await supabase.from("ticket_types").delete().eq("id", id).eq("sold", 0)
+  const { error, count } = await supabase.from("ticket_types").delete({ count: "exact" }).eq("id", id).eq("sold", 0)
+  await flash(error || !count ? "error" : "ok", error || !count ? "That ticket type has sales, so it can't be removed." : "Ticket type removed.")
   await revalidateEvent(supabase, event_id)
 }
 
@@ -267,7 +284,7 @@ export async function updateProfile(_prev: FormState, fd: FormData): Promise<For
     instagram: str(fd, "instagram").replace(/^@/, "").replace(/^https?:\/\/(www\.)?instagram\.com\//i, "").replace(/\/$/, ""),
     phone: str(fd, "phone"),
   }
-  const fail = (message: string) => ({ status: "error" as const, message, fields })
+  const fail = (message: string) => report({ status: "error" as const, message, fields })
   if (fields.display_name.length < 2 || fields.display_name.length > 80) return fail("Enter the name guests will see (2 to 80 characters).")
   if (fields.bio.length > 280) return fail("Keep the short description under 280 characters.")
 
@@ -303,42 +320,42 @@ export async function updateProfile(_prev: FormState, fd: FormData): Promise<For
   if (e1 || e2) return fail("We couldn't save your profile. Try again.")
   revalidatePath("/dashboard", "layout")
   revalidatePath("/e/[slug]", "page")
-  return { status: "ok", message: "Profile saved." }
+  return report({ status: "ok", message: "Profile saved." })
 }
 
 // Called from the switches in the host tools. Row Level Security limits both to the event's host.
 export async function setTicketOnSale(ticketId: string, eventId: string, onSale: boolean): Promise<{ ok: boolean }> {
   const { supabase } = await requireHost()
   const { error } = await supabase.from("ticket_types").update({ on_sale: onSale }).eq("id", ticketId).eq("event_id", eventId)
-  if (error) return { ok: false }
+  if (error) return done({ ok: false }, "")
   await revalidateEvent(supabase, eventId)
-  return { ok: true }
+  return done({ ok: true }, onSale ? "Ticket type is on sale." : "Ticket type paused. Guests can't buy it for now.")
 }
 
 export async function saveFeeMode(eventId: string, mode: "buyer" | "absorb"): Promise<{ ok: boolean }> {
-  if (mode !== "buyer" && mode !== "absorb") return { ok: false }
+  if (mode !== "buyer" && mode !== "absorb") return done({ ok: false }, "Fee setting saved.")
   const { supabase } = await requireHost()
   const { error } = await supabase.from("events").update({ fee_mode: mode }).eq("id", eventId)
-  if (error) return { ok: false }
+  if (error) return done({ ok: false }, "Fee setting saved.")
   await revalidateEvent(supabase, eventId)
-  return { ok: true }
+  return done({ ok: true }, "Fee setting saved.")
 }
 
 // Move the sign-in email to a new address. Supabase emails a confirmation link; the change only
 // takes effect once it's clicked (with "secure email change" on, both addresses must confirm).
 export async function changeEmail(_prev: FormState, fd: FormData): Promise<FormState> {
   const email = str(fd, "email").toLowerCase()
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return { status: "error", message: "Enter a valid email address.", fields: { email } }
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return report({ status: "error", message: "Enter a valid email address.", fields: { email } })
   const { supabase, email: current } = await getUserId()
-  if (email === (current ?? "").toLowerCase()) return { status: "error", message: "That's already your sign-in email.", fields: { email } }
+  if (email === (current ?? "").toLowerCase()) return report({ status: "error", message: "That's already your sign-in email.", fields: { email } })
   const h = await headers()
   const origin = `${h.get("x-forwarded-proto") ?? "https"}://${h.get("host")}`
   const { error } = await supabase.auth.updateUser({ email }, { emailRedirectTo: `${origin}/auth/callback?next=/dashboard/profile` })
   if (error) {
     const msg = /already|registered|exists/i.test(error.message) ? "Another Ganor account already uses that email." : /rate|seconds/i.test(error.message) ? "Too many tries. Wait a minute and try again." : "We couldn't start the change. Try again in a moment."
-    return { status: "error", message: msg, fields: { email } }
+    return report({ status: "error", message: msg, fields: { email } })
   }
-  return { status: "ok", message: `Check ${email} for a confirmation link. Your sign-in email changes once you click it. If asked, confirm from your current inbox too.`, fields: { email } }
+  return report({ status: "ok", message: `Check ${email} for a confirmation link. Your sign-in email changes once you click it. If asked, confirm from your current inbox too.`, fields: { email } })
 }
 
 // Payout account: the details Paystack needs to pay a host (settlement bank, NUBAN, account name).
@@ -353,7 +370,7 @@ export async function savePayout(_prev: FormState, fd: FormData): Promise<FormSt
     settlement_email: str(fd, "settlement_email").toLowerCase(),
     settlement_phone: str(fd, "settlement_phone"),
   }
-  const fail = (message: string) => ({ status: "error" as const, message, fields })
+  const fail = (message: string) => report({ status: "error" as const, message, fields })
   const bank = bankName(fields.bank_code)
   if (fields.business_name.length < 2) return fail(fields.account_type === "business" ? "Enter the registered business name." : "Enter the name payouts should be made out to.")
   if (!bank) return fail("Pick your bank.")
@@ -369,7 +386,7 @@ export async function savePayout(_prev: FormState, fd: FormData): Promise<FormSt
   })
   if (error) return fail("We couldn't save those details. Try again in a moment.")
   revalidatePath("/dashboard/profile")
-  return { status: "ok", message: "Saved. Ganor checks new payout details before your first payout; you'll see the status here." }
+  return report({ status: "ok", message: "Saved. Ganor checks new payout details before your first payout; you'll see the status here." })
 }
 
 // RSVP questions for free tickets. Kept short on purpose: guests answer on a phone at the door.
@@ -381,21 +398,21 @@ export async function saveRsvpFields(_prev: FormState, fd: FormData): Promise<Fo
   const fields = parseRsvpFields(parsed)
   const keys = new Set<string>()
   for (const f of fields) {
-    if (keys.has(f.key)) return { status: "error", message: "Two questions are the same. Remove one." }
+    if (keys.has(f.key)) return report({ status: "error", message: "Two questions are the same. Remove one." })
     keys.add(f.key)
-    if (f.label.trim().length < 2) return { status: "error", message: "Give every custom question a label." }
-    if (f.type === "select" && (f.options?.length ?? 0) < 2) return { status: "error", message: `Add at least two choices for “${f.label}”.` }
+    if (f.label.trim().length < 2) return report({ status: "error", message: "Give every custom question a label." })
+    if (f.type === "select" && (f.options?.length ?? 0) < 2) return report({ status: "error", message: `Add at least two choices for “${f.label}”.` })
   }
   const { supabase, userId } = await getUserId()
-  if (!userId) return { status: "error", message: "Sign in again." }
+  if (!userId) return report({ status: "error", message: "Sign in again." })
   const { questionLimit } = await import("@/lib/plans")
   const { data: ev } = await supabase.from("events").select("rsvp_plan").eq("id", id).eq("host_id", userId).maybeSingle()
-  if (!ev) return { status: "error", message: "We couldn't find that event." }
-  if (fields.length > questionLimit(ev.rsvp_plan)) return { status: "error", message: `Your plan allows up to ${questionLimit(ev.rsvp_plan)} questions.` }
+  if (!ev) return report({ status: "error", message: "We couldn't find that event." })
+  if (fields.length > questionLimit(ev.rsvp_plan)) return report({ status: "error", message: `Your plan allows up to ${questionLimit(ev.rsvp_plan)} questions.` })
   const { error } = await supabase.from("events").update({ rsvp_fields: fields }).eq("id", id).eq("host_id", userId)
-  if (error) return { status: "error", message: "We couldn't save the questions. Try again." }
+  if (error) return report({ status: "error", message: "We couldn't save the questions. Try again." })
   revalidatePath(`/dashboard/events/${id}`)
-  return { status: "ok", message: fields.length ? "Saved. Guests answer these when they RSVP." : "Saved. Guests only give their name and phone." }
+  return report({ status: "ok", message: fields.length ? "Saved. Guests answer these when they RSVP." : "Saved. Guests only give their name and phone." })
 }
 
 // Free RSVP event outgrowing 30 guests: pick a paid plan. The higher limit applies once Ganor confirms payment.
@@ -405,7 +422,8 @@ export async function upgradePlan(fd: FormData) {
   const plan = planById(str(fd, "plan"))
   const { supabase, userId } = await getUserId()
   if (!userId || plan.price === 0) return
-  await supabase.from("events").update({ rsvp_plan: plan.id }).eq("id", id).eq("host_id", userId).is("plan_paid_at", null)
+  const { error } = await supabase.from("events").update({ rsvp_plan: plan.id }).eq("id", id).eq("host_id", userId).is("plan_paid_at", null)
+  await flash(error ? "error" : "ok", error ? "We couldn't change the plan. Try again." : `${plan.name} plan chosen. Pay with the reference in the Plan card.`)
   revalidatePath(`/dashboard/events/${id}`)
   redirect(`/dashboard/events/${id}?upgraded=${plan.id}#plan`)
 }

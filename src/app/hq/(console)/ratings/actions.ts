@@ -1,6 +1,7 @@
 "use server"
 
 import { revalidatePath } from "next/cache"
+import { flash, report, dbMessage } from "@/lib/flash"
 import { getUserId } from "@/lib/supabase/server"
 import { siteOrigin } from "@/lib/auth"
 import { ratingMessage } from "@/lib/consent"
@@ -40,40 +41,40 @@ async function buildLinks(rows: Row[], ev: { title: string; starts_at: string })
 
 export async function createRatingLinks(_prev: SendState, fd: FormData): Promise<SendState> {
   const supabase = await staff()
-  if (!supabase) return { status: "error", message: "Only Ganor staff can do this." }
+  if (!supabase) return report({ status: "error", message: "Only Ganor staff can do this." })
   const eventId = String(fd.get("event_id") ?? "")
   const { data: ev } = await supabase.from("events").select("title, starts_at").eq("id", eventId).single()
-  if (!ev) return { status: "error", message: "Event not found." }
+  if (!ev) return report({ status: "error", message: "Event not found." })
   const { data, error } = await supabase.rpc("admin_create_rating_invites", { p_event: eventId })
-  if (error) return { status: "error", message: error.message }
+  if (error) return report({ status: "error", message: error.message })
   const links = await buildLinks(data ?? [], ev)
   revalidatePath("/hq/ratings")
-  return links.length
-    ? { status: "ok", links }
-    : { status: "ok", links: [], message: "No new buyers to invite. Everyone eligible already has a link, or no paid orders agreed to rating messages." }
+  return report(links.length
+    ? { status: "ok", links, message: `${links.length} rating link${links.length === 1 ? "" : "s"} ready.` }
+    : { status: "ok", links: [], message: "No new buyers to invite. Everyone eligible already has a link, or no paid orders agreed to rating messages." })
 }
 
 export async function reissueRatingLink(_prev: SendState, fd: FormData): Promise<SendState> {
   const supabase = await staff()
-  if (!supabase) return { status: "error", message: "Only Ganor staff can do this." }
+  if (!supabase) return report({ status: "error", message: "Only Ganor staff can do this." })
   const inviteId = String(fd.get("invite_id") ?? "")
   const { data: inv } = await supabase.from("review_invites").select("order_id, attended, events(title, starts_at)").eq("id", inviteId).single()
   const { data, error } = await supabase.rpc("admin_reissue_rating_invite", { p_invite: inviteId })
-  if (error || !inv || !data?.length) return { status: "error", message: error?.message ?? "Couldn't make a new link." }
+  if (error || !inv || !data?.length) return report({ status: "error", message: error?.message ?? "Couldn't make a new link." })
   const ev = inv.events as unknown as { title: string; starts_at: string }
   const links = await buildLinks(data.map((r) => ({ ...r, order_id: inv.order_id, attended: inv.attended })), ev)
-  return { status: "ok", links }
+  return report({ status: "ok", links }, "New link ready.")
 }
 
 export async function suppressPhone(_prev: SendState, fd: FormData): Promise<SendState> {
   const supabase = await staff()
-  if (!supabase) return { status: "error", message: "Only Ganor staff can do this." }
+  if (!supabase) return report({ status: "error", message: "Only Ganor staff can do this." })
   const phone = String(fd.get("phone") ?? "")
   const scope = fd.get("scope") === "all" ? "all" : "rating_request"
   const { data, error } = await supabase.rpc("admin_suppress_phone", { p_phone: phone, p_scope: scope })
-  if (error) return { status: "error", message: error.message }
+  if (error) return report({ status: "error", message: error.message })
   revalidatePath("/hq/ratings")
-  return { status: "ok", message: `Done. This number won't get ${scope === "all" ? "any more messages" : "rating requests"}${data ? `; ${data} open link${data === 1 ? "" : "s"} switched off` : ""}.` }
+  return report({ status: "ok", message: `Done. This number won't get ${scope === "all" ? "any more messages" : "rating requests"}${data ? `; ${data} open link${data === 1 ? "" : "s"} switched off` : ""}.` })
 }
 
 export async function moderateReview(fd: FormData) {
@@ -81,6 +82,7 @@ export async function moderateReview(fd: FormData) {
   if (!supabase) return
   const reviewId = String(fd.get("review_id") ?? "")
   const status = fd.get("status") === "hidden" ? "hidden" : "published"
-  await supabase.rpc("admin_set_review_status", { p_review: reviewId, p_status: status, p_note: status === "hidden" ? "hidden after report" : "kept after report" })
+  const { error } = await supabase.rpc("admin_set_review_status", { p_review: reviewId, p_status: status, p_note: status === "hidden" ? "hidden after report" : "kept after report" })
+  await flash(error ? "error" : "ok", error ? "We couldn't update that review." : status === "hidden" ? "Review hidden." : "Review kept.")
   revalidatePath("/hq/ratings")
 }

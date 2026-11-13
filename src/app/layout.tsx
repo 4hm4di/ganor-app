@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next"
 import localFont from "next/font/local"
 import { Header } from "@/components/Header"
 import { Motion } from "@/components/Motion"
+import { Toaster } from "@/components/Toaster"
 import "./globals.css"
 
 const inter = localFont({
@@ -51,6 +52,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
         <a className="skip" href="#main">Skip to content</a>
         <Header />
         <Motion />
+        <Toaster />
         <main id="main">{children}</main>
         <footer className="foot">
           <div className="wrap foot__in">

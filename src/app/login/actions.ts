@@ -1,6 +1,7 @@
 "use server"
 
 import { redirect } from "next/navigation"
+import { flash } from "@/lib/flash"
 import { createClient } from "@/lib/supabase/server"
 import { PASSWORD_MIN, PROVIDERS, safeNext, siteOrigin, type ProviderId } from "@/lib/auth"
 
@@ -121,6 +122,7 @@ export async function setNewPassword(_prev: AuthState, fd: FormData): Promise<Au
   if (!data?.claims?.sub) return { status: "error", message: "Your reset link has expired. Request a new one." }
   const { error } = await supabase.auth.updateUser({ password })
   if (error) return { status: "error", message: friendly(error.message) }
+  await flash("ok", "Password updated.")
   const hqOnly = Boolean((data.claims.app_metadata as { hq?: boolean } | undefined)?.hq)
   redirect(hqOnly ? "/hq?password=updated" : "/dashboard?password=updated")
 }
