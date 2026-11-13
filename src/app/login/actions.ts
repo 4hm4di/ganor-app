@@ -34,6 +34,8 @@ export async function signInWithPassword(_prev: AuthState, fd: FormData): Promis
     await supabase.auth.signOut({ scope: "local" })
     return { status: "error", message: "This email isn't a host account. Use a different email to host on Ganor.", email }
   }
+  // One active device per host account: this sign-in ends the others.
+  await supabase.auth.signOut({ scope: "others" })
   redirect(next)
 }
 

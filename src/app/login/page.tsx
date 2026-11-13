@@ -20,7 +20,7 @@ const TITLES = {
   link: ["Sign in with an email link", "No password needed. We'll email you a one-time link."],
 } as const
 
-export default async function LoginPage({ searchParams }: { searchParams: Promise<{ next?: string; error?: string; mode?: string; expired?: string; signed_out?: string }> }) {
+export default async function LoginPage({ searchParams }: { searchParams: Promise<{ next?: string; error?: string; mode?: string; expired?: string; signed_out?: string; elsewhere?: string }> }) {
   const sp = await searchParams
   const next = safeNext(sp.next)
   const { userId } = await getUserId()
@@ -53,6 +53,7 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
           <p className="muted" data-rise>{lede}</p>
         </div>
       </div>
+      {sp.elsewhere && <div className="alert alert--warn" role="status" style={{ marginBottom: 14 }}><Icon name="lock" /><span>You were signed out because this account signed in on another device. A host account can be used on one device at a time.</span></div>}
       {sp.expired && <div className="alert alert--ok" role="status" style={{ marginBottom: 14 }}><Icon name="clock" /><span>You were signed out after {IDLE_MINUTES} minutes without activity. Sign in again to continue.</span></div>}
       {sp.signed_out && <div className="alert alert--ok" role="status" style={{ marginBottom: 14 }}><Icon name="check-circle" /><span>You&rsquo;re signed out.</span></div>}
       <div className="card" data-reveal>

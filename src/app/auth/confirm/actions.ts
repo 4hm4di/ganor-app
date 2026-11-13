@@ -17,6 +17,10 @@ export async function confirmEmailLink(fd: FormData) {
   const supabase = await createClient()
   const { data, error } = await supabase.auth.verifyOtp({ token_hash: tokenHash, type })
   if (error) redirect(type === "email_change" ? "/login?error=email" : "/login?error=link")
+  // A link sign-in (or password reset) on this device ends the host's other sessions: one active device.
+  if (type !== "signup" && type !== "email_change" && !(data.user?.app_metadata as { hq?: boolean } | undefined)?.hq) {
+    await supabase.auth.signOut({ scope: "others" })
+  }
   if (type === "recovery") redirect("/reset-password")
   if (type === "signup") {
     // Confirmed. They sign in themselves, so the first visit to the dashboard is a deliberate one.

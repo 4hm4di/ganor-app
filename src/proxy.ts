@@ -3,6 +3,8 @@ import { NextResponse, type NextRequest } from "next/server"
 import { ACTIVE_COOKIE, IDLE_MINUTES, sessionOnly } from "@/lib/session"
 import { isAiBot } from "@/lib/bots"
 
+const LIVE_COOKIE = "ganor_live"
+
 // Refreshes the Supabase session cookie on each request and keeps signed-out visitors
 // out of the dashboard. Real access control is in the database (Row Level Security).
 export async function proxy(request: NextRequest) {
@@ -53,6 +55,25 @@ export async function proxy(request: NextRequest) {
       return response
     }
     response.cookies.set(ACTIVE_COOKIE, "1", { httpOnly: true, sameSite: "lax", secure: request.nextUrl.protocol === "https:", path: "/", maxAge: IDLE_MINUTES * 60 })
+  }
+
+  // One active device per host account: signing in elsewhere ends this session. Checked at most
+  // every 20 seconds per browser (cached in a short cookie) to keep the dashboard fast.
+  const hqOnly = Boolean((data?.claims?.app_metadata as { hq?: boolean } | undefined)?.hq)
+  const sid = String(data?.claims?.session_id ?? "")
+  if (signedIn && !hqOnly && sid && path.startsWith("/dashboard") && request.cookies.get(LIVE_COOKIE)?.value !== sid) {
+    const { data: alive, error } = await supabase.rpc("session_active")
+    if (!error && alive === false) {
+      await supabase.auth.signOut({ scope: "local" })
+      const url = request.nextUrl.clone()
+      url.pathname = "/login"
+      url.search = "?elsewhere=1"
+      const redirect = NextResponse.redirect(url)
+      response.cookies.getAll().forEach((c) => redirect.cookies.set(c))
+      redirect.cookies.delete(LIVE_COOKIE)
+      return redirect
+    }
+    response.cookies.set(LIVE_COOKIE, sid, { httpOnly: true, sameSite: "lax", secure: request.nextUrl.protocol === "https:", path: "/", maxAge: 20 })
   }
 
   // HQ-only logins (created in HQ, no host account) belong in HQ, not the host dashboard.

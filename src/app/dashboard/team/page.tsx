@@ -16,14 +16,23 @@ export default async function Team() {
   const [{ data: staff }, { data: links }, { data: events }] = await Promise.all([
     supabase.from("host_staff").select("id, username, display_name, active, locked_until, last_login_at, created_at").eq("host_id", userId).order("created_at"),
     supabase.from("host_staff_events").select("staff_id, event_id"),
-    supabase.from("events").select("id, title, starts_at, ends_at, status, venue_name").eq("host_id", userId).neq("status", "cancelled").order("starts_at"),
+    supabase.from("events").select("id, title, starts_at, ends_at, status, venue_name, event_kind, rsvp_plan, plan_paid_at").eq("host_id", userId).neq("status", "cancelled").order("starts_at"),
   ])
   const gateUrl = `${await siteOrigin()}/gate`
   // Only events that can still be checked in: not ended (no end time means 6 hours after the start).
   const now = clock()
   const evs = (events ?? [])
     .filter((e) => new Date(e.ends_at ?? new Date(new Date(e.starts_at).getTime() + 6 * 3_600_000).toISOString()).getTime() > now)
-    .map((e) => ({ id: e.id, label: e.title, hint: `${formatDate(e.starts_at, { weekday: "short", day: "numeric", month: "short" })} · ${e.venue_name}${e.status === "draft" ? " · draft" : ""}` }))
+    .map((e) => {
+      // Free RSVP events (free plan or not yet paid) get one gate account.
+      const free = e.event_kind === "rsvp" && (e.rsvp_plan === "free" || !e.plan_paid_at)
+      return {
+        id: e.id,
+        label: e.title,
+        hint: `${formatDate(e.starts_at, { weekday: "short", day: "numeric", month: "short" })} · ${e.venue_name}${e.status === "draft" ? " · draft" : ""}${free ? " · free plan: 1 gate account" : ""}`,
+        heldBy: free ? (links ?? []).find((l) => l.event_id === e.id)?.staff_id ?? null : null,
+      }
+    })
 
   return (
     <div className="wrap">

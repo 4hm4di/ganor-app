@@ -123,7 +123,7 @@ img { max-width: 100%; display: block; }
 .field__label { font: 600 13px/18px var(--ganor-font-body); }
 .field__label small { font-weight: 500; color: var(--ganor-muted); font-size: 13px; }
 .field__hint { font: 500 13px/18px var(--ganor-font-body); color: var(--ganor-muted); }
-.field input, .field select, .field textarea {
+.field input:not([type="checkbox"]):not([type="radio"]), .field select, .field textarea {
   width: 100%; min-height: 52px; padding: 14px;
   border: 0; border-radius: 12px; background: var(--ganor-sand);
   font: 400 16px/22px var(--ganor-font-body); color: var(--text);
@@ -137,7 +137,7 @@ img { max-width: 100%; display: block; }
   background: var(--ganor-sand) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='none'%3E%3Cpath d='m4 6 4 4 4-4' stroke='%2315132A' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") right 14px center no-repeat;
 }
 .field input::placeholder, .field textarea::placeholder { color: #8A8799; }
-.field input:focus, .field select:focus, .field textarea:focus { background-color: var(--surface); box-shadow: inset 0 0 0 2px var(--ganor-indigo); }
+.field input:not([type="checkbox"]):not([type="radio"]):focus, .field select:focus, .field textarea:focus { background-color: var(--surface); box-shadow: inset 0 0 0 2px var(--ganor-indigo); }
 .check { display: flex; gap: 12px; align-items: flex-start; padding: 14px; border-radius: 12px; background: var(--ganor-sand); cursor: pointer; }
 .check input { width: 20px; height: 20px; margin: 2px 0 0; accent-color: var(--ganor-indigo); flex: none; }
 .check b { display: block; font-weight: 600; }
@@ -1190,7 +1190,7 @@ button.newfab { border: 0; cursor: pointer; }
 /* Side-by-side fields line up: labels stay on one line so inputs start at the same height. */
 .grid2 { align-items: start; }
 .grid2 > .field > .field__label { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.field input, .field select, .field textarea { width: 100%; box-sizing: border-box; }
+.field input:not([type="checkbox"]):not([type="radio"]), .field select, .field textarea { width: 100%; box-sizing: border-box; }
 .field__label { min-height: 20px; }
 .bank__acct a { color: #fff; text-decoration: underline; text-underline-offset: 3px; }
 .fee-row--top { margin-bottom: 16px; }
@@ -1315,3 +1315,9 @@ html { scroll-padding-top: calc(76px + env(safe-area-inset-top)); }
 .toast:focus-within .toast__bar { animation-play-state: paused; }
 @media (hover: hover) and (pointer: fine) { .toast:hover .toast__bar { animation-play-state: paused; } }
 @keyframes toast-time { from { transform: scaleX(1); } to { transform: scaleX(0); } }
+
+/* Checkboxes inside a field (event picker, plan options) keep their checkbox look. */
+.field input[type="checkbox"], .field input[type="radio"] { width: 20px; height: 20px; min-height: 0; padding: 0; margin: 0; flex: none; accent-color: var(--ganor-indigo); }
+.msel__opt b { overflow-wrap: anywhere; }
+.msel__opt.is-off { opacity: .55; cursor: not-allowed; }
+@media (hover: hover) and (pointer: fine) { .msel__opt.is-off:hover { background: transparent; } }

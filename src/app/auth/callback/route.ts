@@ -20,8 +20,12 @@ export async function GET(request: NextRequest) {
     // A sign-up code only arrives after Supabase has confirmed the email, so even if the
     // link was opened on another device (no PKCE verifier here) the account is verified.
     if (searchParams.get("verified") === "1") return verified()
-    const { error } = await supabase.auth.exchangeCodeForSession(code)
-    if (!error) return NextResponse.redirect(`${origin}${next}`)
+    const { data: ex, error } = await supabase.auth.exchangeCodeForSession(code)
+    if (!error) {
+      // Host sign-ins keep one active device: end the account's other sessions.
+      if (!(ex.user?.app_metadata as { hq?: boolean } | undefined)?.hq) await supabase.auth.signOut({ scope: "others" })
+      return NextResponse.redirect(`${origin}${next}`)
+    }
   }
 
   // Email templates that send token_hash links (works across devices)

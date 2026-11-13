@@ -3,7 +3,7 @@
 import { useEffect, useId, useRef, useState } from "react"
 import { Icon } from "./Icon"
 
-type Opt = { id: string; label: string; hint?: string }
+type Opt = { id: string; label: string; hint?: string; disabled?: boolean }
 
 // Dropdown with checkboxes. Submits one hidden input per chosen value, under `name`.
 export function MultiSelect({ name, label, options, defaultValue = [], placeholder = "Choose…", empty }: { name: string; label: string; options: Opt[]; defaultValue?: string[]; placeholder?: string; empty?: string }) {
@@ -35,12 +35,12 @@ export function MultiSelect({ name, label, options, defaultValue = [], placehold
           {open && (
             <div className="msel__menu" role="listbox" aria-multiselectable="true" aria-labelledby={`${id}-l`}>
               <div className="msel__tools">
-                <button type="button" className="linkbtn" onClick={() => setSel(options.map((o) => o.id))}>Select all</button>
+                <button type="button" className="linkbtn" onClick={() => setSel(options.filter((o) => !o.disabled || sel.includes(o.id)).map((o) => o.id))}>Select all</button>
                 <button type="button" className="linkbtn" onClick={() => setSel([])}>Clear</button>
               </div>
               {options.map((o) => (
-                <label key={o.id} className="msel__opt" role="option" aria-selected={sel.includes(o.id)}>
-                  <input type="checkbox" checked={sel.includes(o.id)} onChange={() => toggle(o.id)} />
+                <label key={o.id} className={`msel__opt${o.disabled && !sel.includes(o.id) ? " is-off" : ""}`} role="option" aria-selected={sel.includes(o.id)} aria-disabled={o.disabled && !sel.includes(o.id) ? true : undefined}>
+                  <input type="checkbox" checked={sel.includes(o.id)} disabled={o.disabled && !sel.includes(o.id)} onChange={() => toggle(o.id)} />
                   <span><b>{o.label}</b>{o.hint && <small>{o.hint}</small>}</span>
                 </label>
               ))}

@@ -8,7 +8,7 @@ import { Icon } from "@/components/Icon"
 import { MultiSelect } from "@/components/MultiSelect"
 import { ShareLogin } from "@/components/ShareLogin"
 
-type Ev = { id: string; label: string; hint?: string }
+type Ev = { id: string; label: string; hint?: string; heldBy?: string | null }
 type Staff = { id: string; username: string; display_name: string; active: boolean; locked_until: string | null; last_login_at: string | null }
 
 // Easy to read aloud, no look-alike characters.
@@ -19,9 +19,11 @@ function makePassword() {
   return `${words[a[0] % words.length]}-${words[a[1] % words.length]}-${String(1000 + (a[2] % 9000))}`
 }
 
-function EventPicker({ events, selected = [] }: { events: Ev[]; selected?: string[] }) {
+function EventPicker({ events, selected = [], staffId }: { events: Ev[]; selected?: string[]; staffId?: string }) {
+  // A free RSVP event that already has its one gate account can't be picked for anyone else.
+  const taken = (e: Ev) => !!e.heldBy && e.heldBy !== staffId
   return (
-    <MultiSelect name="event_ids" label="Events they can check in" options={events.map((e) => ({ id: e.id, label: e.label, hint: e.hint }))}
+    <MultiSelect name="event_ids" label="Events they can check in" options={events.map((e) => ({ id: e.id, label: e.label, hint: taken(e) ? `${e.hint} · already taken. Upgrade for more` : e.hint, disabled: taken(e) }))}
       defaultValue={selected} placeholder="Choose events…" empty="No events open for check-in. Publish an upcoming event first." />
   )
 }
@@ -83,7 +85,7 @@ export function StaffCard({ staff, assigned, events, gateUrl }: { staff: Staff; 
         <form action={action} className="stack" style={{ marginTop: 12 }} noValidate>
           <input type="hidden" name="id" value={staff.id} />
           <label className="field"><span className="field__label">Name</span><input name="display_name" defaultValue={staff.display_name} maxLength={60} autoComplete="off" /></label>
-          <EventPicker events={events} selected={assigned} />
+          <EventPicker events={events} selected={assigned} staffId={staff.id} />
           <label className="checkrow"><input type="checkbox" name="active" defaultChecked={staff.active} /> Account is on (switching it off signs them out straight away)</label>
           {state.message && <p className="small" role="status">{state.message}</p>}
           <SubmitButton size="sm" arrow={false} pendingText="Saving…">Save</SubmitButton>
