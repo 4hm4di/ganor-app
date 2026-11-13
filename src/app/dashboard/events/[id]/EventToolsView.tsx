@@ -7,7 +7,7 @@ import { EventForm } from "../../EventForm"
 import { TicketForm } from "../../TicketForm"
 import { TicketRow } from "../../TicketRow"
 import { FeeSeg } from "../../FeeSeg"
-import { deleteDraft, saveEventBanner, setEventStatus } from "../../actions"
+import { deleteDraft, saveEventBanner, setEventStatus, upgradePlan } from "../../actions"
 import { SubmitButton } from "@/components/SubmitButton"
 import { ConfirmButton } from "@/components/ConfirmButton"
 import { ImageUpload } from "@/components/ImageUpload"
@@ -17,7 +17,7 @@ import { Icon } from "@/components/Icon"
 import { BarChart } from "@/components/widgets/BarChart"
 import { SalesTrend } from "@/components/widgets/SalesTrend"
 import { CountUp } from "@/components/widgets/CountUp"
-import { planById, questionLimit, naira as nairaWhole } from "@/lib/plans"
+import { RSVP_PLANS, planById, questionLimit, naira as nairaWhole } from "@/lib/plans"
 import { PhasePill } from "@/components/PhasePill"
 import { BackLink } from "@/components/BackLink"
 import { eventPhase, PHASE_LABEL, feeKobo, formatDate, formatNaira, formatTime, isoToLagosLocal } from "@/lib/ganor"
@@ -40,7 +40,7 @@ export type ToolsGuest = { name: string; ticket: string; in: boolean }
 const dayLabel = (d: string) => formatDate(`${d}T12:00:00Z`, { day: "numeric", month: "short" })
 const hourLabel = (h: number) => `${((h + 11) % 12) + 1}${h < 12 ? "am" : "pm"}`
 
-export function EventToolsView({ ev, userId, publicUrl, sp, guests, daily, scanHours, daysLeft }: { ev: ToolsEvent; userId: string; publicUrl: string; sp: { created?: string; published?: string; error?: string }; guests: ToolsGuest[]; daily: { day: string; count: number }[]; scanHours: { hour: number; count: number }[]; daysLeft: number }) {
+export function EventToolsView({ ev, userId, publicUrl, sp, guests, daily, scanHours, daysLeft }: { ev: ToolsEvent; userId: string; publicUrl: string; sp: { created?: string; published?: string; error?: string; upgraded?: string }; guests: ToolsGuest[]; daily: { day: string; count: number }[]; scanHours: { hour: number; count: number }[]; daysLeft: number }) {
   const hasFree = ev.ticket_types.some((t) => t.price_kobo === 0)
   const publicPath = `/e/${ev.slug}`
   const tickets = ev.ticket_types ?? []
@@ -88,6 +88,7 @@ export function EventToolsView({ ev, userId, publicUrl, sp, guests, daily, scanH
       </div>
 
       {sp.created && <div className="alert alert--ok" role="status" style={{ marginBottom: 14 }}><Icon name="check-circle" /><span>{sp.created === "rsvp" ? "Free event created as a draft. Choose your RSVP questions below, add a banner, then publish." : "Event created as a draft. Add a banner and your ticket types, then publish."}</span></div>}
+      {sp.upgraded && <div className="alert alert--ok" role="status" style={{ marginBottom: 14 }}><Icon name="check-circle" /><span>Plan chosen. Pay with the reference in the Plan card; the new guest limit starts as soon as Ganor confirms it.</span></div>}
       {sp.published && <div className="alert alert--ok" role="status" style={{ marginBottom: 14 }}><Icon name="check-circle" /><span>Your event is live. Share the link below.</span></div>}
       {sp.error && <div className="alert alert--error" role="alert" style={{ marginBottom: 14 }}><Icon name="warning" /><span>{ERRORS[sp.error] ?? "Something went wrong."}</span></div>}
 
@@ -141,12 +142,26 @@ export function EventToolsView({ ev, userId, publicUrl, sp, guests, daily, scanH
           const paid = free || ev.plan_paid_at !== null
           return (
             <article className={`card planc${paid ? " planc--paid" : ""}`} data-reveal style={{ gridColumn: "1 / -1" }} id="plan">
-              <header className="card__head"><h2 className="card__title"><Icon name="wallet" />{p.name} plan</h2><span className={`badge ${paid ? "badge--ok" : "badge--warn"}`}>{free ? "No payment needed" : paid ? "Paid" : "Payment due before publishing"}</span></header>
+              <header className="card__head"><h2 className="card__title"><Icon name="wallet" />{p.name} plan</h2><span className={`badge ${paid ? "badge--ok" : "badge--warn"}`}>{free ? "No payment needed" : paid ? "Paid" : live ? "Payment due" : "Payment due before publishing"}</span></header>
               <div className="planc__row">
                 <p className="card__big">{nairaWhole(p.price)}<small>{free ? " up to 30 guests" : " one-off for this event"}</small></p>
                 <ul className="planc__perks">{p.perks.map((k) => <li key={k}><Icon name="check-circle" size={16} />{k}</li>)}</ul>
               </div>
-              {free && <p className="small muted">Need more than 30 guests? Plans start at ₦50,000 per event (Basic, 200 guests). Email <a href={`mailto:support@ganor.ng?subject=${encodeURIComponent(`Upgrade RSVP plan · ${ev.title} · ${ev.id.slice(0, 8).toUpperCase()}`)}`}>support@ganor.ng</a> to upgrade before your list fills up.</p>}
+              {free && (
+                <div className="upg">
+                  <p className={sold >= p.cap ? "upg__full" : "small muted"}>
+                    {sold >= p.cap ? <><Icon name="warning" size={18} /><b>Your free event is full ({sold} of {p.cap}).</b> New guests can&rsquo;t RSVP until you upgrade.</> : <>{sold} of {p.cap} free places taken. Upgrade any time for more guests and questions.</>}
+                  </p>
+                  <form action={upgradePlan} className="upg__plans">
+                    <input type="hidden" name="event_id" value={ev.id} />
+                    {RSVP_PLANS.filter((x) => x.price > 0).map((x) => (
+                      <button key={x.id} name="plan" value={x.id} className={`upg__opt${sold >= p.cap && x.popular ? " is-hot" : ""}`}>
+                        <b>{x.name}</b><span>{nairaWhole(x.price)}</span><small>Up to {x.cap.toLocaleString("en-NG")} guests</small>
+                      </button>
+                    ))}
+                  </form>
+                </div>
+              )}
               {!paid && (
                 <p className="small muted">Online payment is being set up. For now, pay by bank transfer: email <a href={`mailto:support@ganor.ng?subject=${encodeURIComponent(`RSVP plan ${p.name} · ${ev.title} · ${ev.id.slice(0, 8).toUpperCase()}`)}`}>support@ganor.ng</a> with reference <b>{ev.id.slice(0, 8).toUpperCase()}</b>. Ganor confirms it and the Publish button works straight away.</p>
               )}

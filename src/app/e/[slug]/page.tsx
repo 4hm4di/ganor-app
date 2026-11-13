@@ -6,6 +6,7 @@ import { cache, type ReactNode } from "react"
 import { createClient, getUserId } from "@/lib/supabase/server"
 import { RsvpForm } from "./RsvpForm"
 import { parseRsvpFields } from "@/lib/rsvp"
+import { planById } from "@/lib/plans"
 import { Icon } from "@/components/Icon"
 import { SocialIcon } from "@/components/SocialIcon"
 import { ShareButtons } from "@/components/ShareButtons"
@@ -75,7 +76,10 @@ export default async function EventPage({ params }: { params: Promise<{ slug: st
       .limit(5),
   ])
   const tickets = (ev.ticket_types ?? []).filter((t) => t.on_sale)
-  const freeOptions = tickets.filter((t) => t.price_kobo === 0).map((t) => ({ id: t.id, name: t.name, left: t.quantity - t.sold }))
+  // Guest limit = the plan actually paid for (an unpaid upgrade still counts as Free).
+  const capPlan = ev.plan_paid_at ? ev.rsvp_plan : "free"
+  const capLeft = ev.event_kind === "rsvp" ? Math.max(0, planById(capPlan).cap - tickets.filter((t) => t.price_kobo === 0).reduce((n, t) => n + t.sold, 0)) : Infinity
+  const freeOptions = tickets.filter((t) => t.price_kobo === 0).map((t) => ({ id: t.id, name: t.name, left: Math.min(t.quantity - t.sold, capLeft) }))
   const host = ev.profiles as Host
   const phase = eventPhase(ev, ev.ticket_types)
   const ended = phase === "ended"

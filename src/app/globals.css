@@ -1209,3 +1209,14 @@ button.newfab { border: 0; cursor: pointer; }
 .creds__list dt { font: 600 12px/16px var(--ganor-font-body); color: var(--ganor-muted); }
 .creds__list dd { margin: 0; display: flex; align-items: center; gap: 10px; min-width: 0; }
 .creds__list code { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font: 600 14px/20px ui-monospace, SFMono-Regular, Menlo, monospace; padding: 6px 10px; border-radius: 8px; background: var(--surface); box-shadow: inset 0 0 0 1px var(--ganor-line); }
+.upg { display: grid; gap: 12px; margin-top: 4px; }
+.upg__full { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; padding: 12px 14px; border-radius: 12px; background: #FFF1D2; color: #6B4600; font: 500 14px/20px var(--ganor-font-body); }
+.theme-dark .upg__full { background: rgba(255,178,30,.14); color: #FFCB66; }
+.upg__plans { display: grid; gap: 8px; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); }
+.upg__opt { display: grid; gap: 2px; text-align: left; padding: 12px 14px; border: 0; border-radius: 14px; background: var(--ganor-sand); color: var(--text); cursor: pointer; font: inherit; box-shadow: inset 0 0 0 1px transparent; transition: box-shadow 150ms ease, transform 120ms var(--ganor-ease-out); }
+.upg__opt:active { transform: scale(.98); }
+@media (hover: hover) and (pointer: fine) { .upg__opt:hover { box-shadow: inset 0 0 0 2px var(--ganor-indigo); } }
+.upg__opt.is-hot { box-shadow: inset 0 0 0 2px var(--ganor-indigo); }
+.upg__opt b { font: 700 15px/20px var(--ganor-font-body); }
+.upg__opt span { font: 800 18px/22px var(--ganor-font-display); font-variant-numeric: tabular-nums; }
+.upg__opt small { font: 500 12px/16px var(--ganor-font-body); color: var(--ganor-muted); }

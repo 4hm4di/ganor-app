@@ -13,7 +13,7 @@ export default async function EventTools({
   searchParams,
 }: {
   params: Promise<{ id: string }>
-  searchParams: Promise<{ created?: string; published?: string; error?: string }>
+  searchParams: Promise<{ created?: string; published?: string; error?: string; upgraded?: string }>
 }) {
   const { id } = await params
   const sp = await searchParams

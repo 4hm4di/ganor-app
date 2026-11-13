@@ -389,3 +389,15 @@ export async function saveRsvpFields(_prev: FormState, fd: FormData): Promise<Fo
   revalidatePath(`/dashboard/events/${id}`)
   return { status: "ok", message: fields.length ? "Saved. Guests answer these when they RSVP." : "Saved. Guests only give their name and phone." }
 }
+
+// Free RSVP event outgrowing 30 guests: pick a paid plan. The higher limit applies once Ganor confirms payment.
+export async function upgradePlan(fd: FormData) {
+  const { planById } = await import("@/lib/plans")
+  const id = str(fd, "event_id")
+  const plan = planById(str(fd, "plan"))
+  const { supabase, userId } = await getUserId()
+  if (!userId || plan.price === 0) return
+  await supabase.from("events").update({ rsvp_plan: plan.id }).eq("id", id).eq("host_id", userId).is("plan_paid_at", null)
+  revalidatePath(`/dashboard/events/${id}`)
+  redirect(`/dashboard/events/${id}?upgraded=${plan.id}#plan`)
+}
