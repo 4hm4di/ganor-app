@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react"
 
 // Rolling digits, as on the Ganor landing page: each digit is a 0–9 column that slides to its value
 // when the number scrolls into view, and rolls again when a live refresh changes it.
-export function CountUp({ value, format = (n) => n.toLocaleString("en-NG") }: { value: number; format?: (n: number) => string }) {
+export function CountUp({ value, format = (n) => n.toLocaleString("en-NG"), prefix = "" }: { value: number; format?: (n: number) => string; prefix?: string }) {
   const ref = useRef<HTMLSpanElement>(null)
   const [on, setOn] = useState(false)
   useEffect(() => {
@@ -14,7 +14,7 @@ export function CountUp({ value, format = (n) => n.toLocaleString("en-NG") }: { 
     io.observe(el)
     return () => io.disconnect()
   }, [])
-  const text = format(value)
+  const text = prefix + format(value)
   return (
     <span ref={ref} className="roll" aria-label={text}>
       {[...text].map((ch, i) =>

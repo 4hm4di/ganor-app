@@ -55,8 +55,9 @@ export function SalesTrend({ days, total, capacity, daysLeft, unit = "sold", end
           <path className="strend__area" d={area} />
           <path className="chart__line" pathLength={1} d={line} />
           {proj && <path className="strend__proj" d={proj} />}
-          {projSteps > 0 && <circle className="strend__pdot" cx={x(slots)} cy={y(projected)} r="5" />}
         </svg>
+        {/* HTML dots keep their round shape at any card width (the SVG itself stretches). */}
+        {projSteps > 0 && <span className="strend__pdot" style={{ left: `${(x(slots) / W) * 100}%`, top: `${(y(projected) / H) * 100}%` }} aria-hidden="true" />}
         <span className="chart__dot" style={{ left: `${tipX * 100}%`, top: `${tipY * 100}%` }} aria-hidden="true" />
         <p className="chart__tip" style={{ left: `clamp(70px, ${tipX * 100}%, calc(100% - 70px))`, top: `${tipY * 100}%` }}>{tip}</p>
       </div>

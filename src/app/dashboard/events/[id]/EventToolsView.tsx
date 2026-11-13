@@ -192,11 +192,17 @@ export function EventToolsView({ ev, userId, publicUrl, sp, guests, daily, scanH
         {/* Free RSVP events take no money, so no payout card and no bank details. */}
         {ev.event_kind !== "rsvp" && <article className="card card--payout" data-reveal>
           <header className="card__head"><h2 className="card__title"><Icon name="wallet" />Payouts</h2><span className="card__tag">{hasPaid ? "5% + ₦100" : "Free"}</span></header>
+          {hasPaid && (
+            <div className="fee-row fee-row--top">
+              <span className="field__label">Who pays the Ganor fee <small>(5% + ₦100 per paid ticket)</small></span>
+              <FeeSeg eventId={ev.id} mode={absorb ? "absorb" : "buyer"} />
+            </div>
+          )}
           <div className="payout">
             <div className="bank">
               <span className="bank__chip"><GanorSymbol /></span>
               <p className="bank__label">Paid to your bank</p>
-              <p className="bank__amount">{naira(earned)}</p>
+              <p className="bank__amount"><CountUp value={Math.round(earned / 100)} prefix="₦" /></p>
               <p className="bank__acct"><Link href="/dashboard/profile#payouts">Your payout account</Link></p>
             </div>
             <ul className="ledger">
@@ -207,12 +213,6 @@ export function EventToolsView({ ev, userId, publicUrl, sp, guests, daily, scanH
               )}
             </ul>
           </div>
-          {hasPaid && (
-            <div className="fee-row">
-              <span className="field__label">Who pays the Ganor fee <small>(5% + ₦100 per paid ticket)</small></span>
-              <FeeSeg eventId={ev.id} mode={absorb ? "absorb" : "buyer"} />
-            </div>
-          )}
         </article>}
 
         <article className="card card--share" data-reveal>
