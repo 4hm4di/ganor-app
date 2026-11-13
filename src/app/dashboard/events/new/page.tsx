@@ -16,9 +16,9 @@ export default async function NewEvent({ searchParams }: { searchParams: Promise
     <div className="wrap--narrow">
       <div className="pagehead pagehead--task">
         <div>
-          <span className="kicker"><Icon name={rsvp ? "users" : "ticket"} size={18} />{rsvp ? `RSVP · ${plan.name} plan · ${naira(plan.price)}` : "Paid tickets"}</span>
+          <span className="kicker"><Icon name={rsvp ? "users" : "ticket"} size={18} />{rsvp ? `RSVP · ${plan.name} plan${plan.price ? ` · ${naira(plan.price)}` : ""}` : "Paid tickets"}</span>
           <h1 style={{ marginTop: 10 }}>{rsvp ? "New free event" : "New ticketed event"}</h1>
-          <p className="muted">{rsvp ? `Up to ${plan.cap.toLocaleString("en-NG")} guests and ${plan.questions} questions. It stays a draft while you set it up; you pay ${naira(plan.price)} when you publish.` : "It stays a draft until you publish it. You'll add ticket types and prices next."}</p>
+          <p className="muted">{rsvp ? `Up to ${plan.cap.toLocaleString("en-NG")} guests and ${plan.questions} questions. ${plan.price ? `It stays a draft while you set it up; you pay ${naira(plan.price)} when you publish.` : "No payment needed. It stays a draft until you publish it."}` : "It stays a draft until you publish it. You'll add ticket types and prices next."}</p>
         </div>
         <CloseLink href="/dashboard/events" label="Cancel and go back to My events" />
       </div>

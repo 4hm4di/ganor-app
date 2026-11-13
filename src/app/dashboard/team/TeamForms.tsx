@@ -6,6 +6,7 @@ import { SubmitButton } from "@/components/SubmitButton"
 import { ConfirmButton } from "@/components/ConfirmButton"
 import { Icon } from "@/components/Icon"
 import { MultiSelect } from "@/components/MultiSelect"
+import { ShareLogin } from "@/components/ShareLogin"
 
 type Ev = { id: string; label: string; hint?: string }
 type Staff = { id: string; username: string; display_name: string; active: boolean; locked_until: string | null; last_login_at: string | null }
@@ -26,18 +27,7 @@ function EventPicker({ events, selected = [] }: { events: Ev[]; selected?: strin
 }
 
 function Credentials({ c, gateUrl }: { c: NonNullable<TeamState["created"]>; gateUrl: string }) {
-  const text = `Ganor gate sign-in for ${c.name}\n${gateUrl}\nUsername: ${c.username}\nPassword: ${c.password}`
-  const [copied, setCopied] = useState(false)
-  return (
-    <div className="creds" role="status">
-      <p className="small"><b>Share these with {c.name} privately.</b> You won&rsquo;t see the password again.</p>
-      <pre>{`Username  ${c.username}\nPassword  ${c.password}`}</pre>
-      <div className="actions" style={{ gap: 8 }}>
-        <button type="button" className="btn btn--ghost btn--xs btn--plain" onClick={() => { navigator.clipboard?.writeText(text); setCopied(true) }}>{copied ? "Copied" : "Copy sign-in details"}</button>
-        <a className="btn btn--primary btn--xs btn--plain" href={`https://wa.me/?text=${encodeURIComponent(text)}`} target="_blank" rel="noopener noreferrer">Send on WhatsApp</a>
-      </div>
-    </div>
-  )
+  return <ShareLogin name={c.name} username={c.username} password={c.password} url={gateUrl} what="Ganor gate" />
 }
 
 export function NewStaffForm({ events, gateUrl }: { events: Ev[]; gateUrl: string }) {

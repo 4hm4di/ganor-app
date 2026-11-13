@@ -5,6 +5,9 @@ import { createMember, resetMemberPassword, setStaffRole, updateMember, type Adm
 import { SubmitButton } from "@/components/SubmitButton"
 import { PasswordField } from "@/components/PasswordField"
 import { HQ_ROLES } from "@/lib/hq-roles"
+import { ShareLogin } from "@/components/ShareLogin"
+
+const hqUrl = () => (typeof window === "undefined" ? "/hq/login" : `${window.location.origin}/hq/login`)
 
 function Msg({ s }: { s: AdminState }) {
   if (!s.message) return null
@@ -34,8 +37,16 @@ export function CreateMemberForm() {
   const [role, setRole] = useState("support")
   const generate = () => { const p = makePassword(); setPw(p); setConfirm(p); setMade(p) }
   const roleInfo = HQ_ROLES.find((r) => r.value === role)
+  if (state.status === "ok" && state.created) {
+    return (
+      <div className="stack">
+        <ShareLogin name={state.created.name} username={state.created.username} password={state.created.password} url={hqUrl()} what="Ganor HQ" />
+        <button type="button" className="btn btn--ghost btn--sm btn--plain" style={{ justifySelf: "start" }} onClick={() => window.location.reload()}>Create another login</button>
+      </div>
+    )
+  }
   return (
-    <form action={action} className="stack" autoComplete="off" noValidate key={state.status === "ok" ? state.message : "f"}>
+    <form action={action} className="stack" autoComplete="off" noValidate>
       <div className="grid2">
         <label className="field"><span className="field__label">Full name</span>
           <input name="display_name" required maxLength={60} autoComplete="off" placeholder="Aisha Bello" />
@@ -62,7 +73,7 @@ export function CreateMemberForm() {
   )
 }
 
-export function MemberRow({ m }: { m: { user_id: string; role: string; active: boolean; is_self: boolean; login_kind: string } }) {
+export function MemberRow({ m }: { m: { user_id: string; role: string; active: boolean; is_self: boolean; login_kind: string; username: string | null; email: string | null; display_name: string | null } }) {
   const [state, action] = useActionState<AdminState, FormData>(updateMember, { status: "idle" })
   const [pwState, pwAction] = useActionState<AdminState, FormData>(resetMemberPassword, { status: "idle" })
   const [reset, setReset] = useState(false)
@@ -82,14 +93,20 @@ export function MemberRow({ m }: { m: { user_id: string; role: string; active: b
       </form>
       <Msg s={state} />
       {reset && (
+        pwState.status === "ok" && pwState.created ? (
+          <ShareLogin name={pwState.created.name} username={pwState.created.username} password={pwState.created.password} url={hqUrl()} what="Ganor HQ" />
+        ) : (
         <form action={pwAction} className="stack" style={{ gap: 8 }} autoComplete="off">
           <input type="hidden" name="user_id" value={m.user_id} />
+          <input type="hidden" name="name" value={m.display_name ?? m.username ?? "HQ member"} />
+          <input type="hidden" name="login" value={m.username ?? m.email ?? ""} />
           <PasswordField label="New password" autoComplete="new-password" minLength={10} meter value={pw} onChange={(v) => { setPw(v); setMade("") }}
             labelExtra={<button type="button" className="linkbtn" onClick={() => { const p = makePassword(); setPw(p); setMade(p) }}>Generate one</button>} />
           {made && <p className="genpw">Generated: <code>{made}</code> <button type="button" className="linkbtn" onClick={() => navigator.clipboard?.writeText(made)}>Copy</button></p>}
           <div><SubmitButton size="xs" arrow={false} pendingText="Saving…">Set password</SubmitButton></div>
           <Msg s={pwState} />
         </form>
+        )
       )}
     </div>
   )

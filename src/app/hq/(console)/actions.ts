@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache"
 import { getUserId } from "@/lib/supabase/server"
 
-export type AdminState = { status: "idle" | "ok" | "error"; message?: string }
+export type AdminState = { status: "idle" | "ok" | "error"; message?: string; created?: { name: string; username: string; password: string } }
 
 async function db() {
   const { supabase, userId } = await getUserId()
@@ -47,7 +47,7 @@ export async function createMember(_prev: AdminState, fd: FormData): Promise<Adm
   const { error } = await supabase.rpc("hq_create_member", { p_username: username, p_display_name: String(fd.get("display_name") ?? ""), p_role: String(fd.get("role") ?? ""), p_password: password })
   if (error) return { status: "error", message: error.message }
   revalidatePath("/hq/staff")
-  return { status: "ok", message: `Login created. They sign in with the username "${username}" and the password you set. Share the password in person or over a call, not in a group chat.` }
+  return { status: "ok", message: "Login created.", created: { name: String(fd.get("display_name") ?? "") || username, username, password } }
 }
 
 export async function updateMember(_prev: AdminState, fd: FormData): Promise<AdminState> {
@@ -62,9 +62,10 @@ export async function updateMember(_prev: AdminState, fd: FormData): Promise<Adm
 export async function resetMemberPassword(_prev: AdminState, fd: FormData): Promise<AdminState> {
   const supabase = await db()
   if (!supabase) return { status: "error", message: "Sign in again." }
-  const { error } = await supabase.rpc("hq_set_member_password", { p_user: String(fd.get("user_id")), p_password: String(fd.get("password") ?? "") })
+  const password = String(fd.get("password") ?? "")
+  const { error } = await supabase.rpc("hq_set_member_password", { p_user: String(fd.get("user_id")), p_password: password })
   if (error) return { status: "error", message: error.message }
-  return { status: "ok", message: "Password changed. They've been signed out everywhere." }
+  return { status: "ok", message: "Password set. They've been signed out everywhere.", created: { name: String(fd.get("name") ?? "HQ member"), username: String(fd.get("login") ?? ""), password } }
 }
 
 export async function removeMember(fd: FormData) {

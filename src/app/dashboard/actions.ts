@@ -120,7 +120,7 @@ export async function setEventStatus(fd: FormData) {
     if (new Date(ev.starts_at) < new Date()) redirect(`/dashboard/events/${id}?error=past`)
     // RSVP events publish once their plan is paid (HQ finance confirms the payment).
     const paidAt = (ev as { plan_paid_at?: string | null }).plan_paid_at
-    if (ev.event_kind === "rsvp" && paidAt === null) redirect(`/dashboard/events/${id}?error=plan`)
+    if (ev.event_kind === "rsvp" && ev.rsvp_plan !== "free" && paidAt === null) redirect(`/dashboard/events/${id}?error=plan`)
   }
 
   const { data } = await supabase.from("events").update({ status: to }).eq("id", id).select("slug").single()

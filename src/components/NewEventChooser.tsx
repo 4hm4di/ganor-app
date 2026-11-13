@@ -42,7 +42,7 @@ export function NewEventChooser({ open, onClose }: { open: boolean; onClose: () 
             <button type="button" className="kind" onClick={() => setStep("plans")}>
               <span className="kind__ic kind__ic--green"><Icon name="users" size={26} /></span>
               <b>Free RSVP</b>
-              <small>Guests register for free with name, phone and a few questions. You pay one plan per event, from ₦50,000.</small>
+              <small>Guests register for free with name, phone and a few questions. Free up to 30 guests; bigger events from ₦50,000.</small>
               <span className="kind__go">See plans <Icon name="arrow-right" size={16} /></span>
             </button>
             <Link href="/dashboard/events/new?kind=paid" className="kind" onClick={close}>
@@ -57,14 +57,14 @@ export function NewEventChooser({ open, onClose }: { open: boolean; onClose: () 
             {RSVP_PLANS.map((p) => (
               <div key={p.id} className={`plan${p.popular ? " plan--pick" : ""}`}>
                 <div className="plan__top"><b>{p.name}</b>{p.popular && <span className="badge badge--ok">Popular</span>}</div>
-                <p className="plan__price">{naira(p.price)}<small> per event</small></p>
+                <p className="plan__price">{naira(p.price)}<small>{p.price ? " per event" : " forever"}</small></p>
                 <ul>{p.perks.map((k) => <li key={k}><Icon name="check-circle" size={16} />{k}</li>)}</ul>
                 <button type="button" className={`btn btn--sm ${p.popular ? "btn--primary" : "btn--ghost btn--plain"}`} onClick={() => { close(); router.push(`/dashboard/events/new?kind=rsvp&plan=${p.id}`) }}>
-                  <span>Choose {p.name}</span>{p.popular && <span className="btn__arrow" aria-hidden="true"><Icon name="arrow" /></span>}
+                  <span>{p.price ? `Choose ${p.name}` : "Start free"}</span>{p.popular && <span className="btn__arrow" aria-hidden="true"><Icon name="arrow" /></span>}
                 </button>
               </div>
             ))}
-            <p className="plans__note small muted">One payment per event. Set everything up first; you pay for the plan when you publish. Guests always RSVP for free.</p>
+            <p className="plans__note small muted">Free needs no payment or bank details. Paid plans are one payment per event, made when you publish. Guests always RSVP for free.</p>
           </div>
         )}
       </div>

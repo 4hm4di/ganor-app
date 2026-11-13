@@ -137,14 +137,16 @@ export function EventToolsView({ ev, userId, publicUrl, sp, guests, daily, scanH
 
         {ev.event_kind === "rsvp" && (() => {
           const p = planById(ev.rsvp_plan)
-          const paid = ev.plan_paid_at !== null
+          const free = p.price === 0
+          const paid = free || ev.plan_paid_at !== null
           return (
             <article className={`card planc${paid ? " planc--paid" : ""}`} data-reveal style={{ gridColumn: "1 / -1" }} id="plan">
-              <header className="card__head"><h2 className="card__title"><Icon name="wallet" />{p.name} plan</h2><span className={`badge ${paid ? "badge--ok" : "badge--warn"}`}>{paid ? "Paid" : "Payment due before publishing"}</span></header>
+              <header className="card__head"><h2 className="card__title"><Icon name="wallet" />{p.name} plan</h2><span className={`badge ${paid ? "badge--ok" : "badge--warn"}`}>{free ? "No payment needed" : paid ? "Paid" : "Payment due before publishing"}</span></header>
               <div className="planc__row">
-                <p className="card__big">{nairaWhole(p.price)}<small> one-off for this event</small></p>
+                <p className="card__big">{nairaWhole(p.price)}<small>{free ? " up to 30 guests" : " one-off for this event"}</small></p>
                 <ul className="planc__perks">{p.perks.map((k) => <li key={k}><Icon name="check-circle" size={16} />{k}</li>)}</ul>
               </div>
+              {free && <p className="small muted">Need more than 30 guests? Plans start at ₦50,000 per event (Basic, 200 guests). Email <a href={`mailto:support@ganor.ng?subject=${encodeURIComponent(`Upgrade RSVP plan · ${ev.title} · ${ev.id.slice(0, 8).toUpperCase()}`)}`}>support@ganor.ng</a> to upgrade before your list fills up.</p>}
               {!paid && (
                 <p className="small muted">Online payment is being set up. For now, pay by bank transfer: email <a href={`mailto:support@ganor.ng?subject=${encodeURIComponent(`RSVP plan ${p.name} · ${ev.title} · ${ev.id.slice(0, 8).toUpperCase()}`)}`}>support@ganor.ng</a> with reference <b>{ev.id.slice(0, 8).toUpperCase()}</b>. Ganor confirms it and the Publish button works straight away.</p>
               )}
@@ -187,14 +189,15 @@ export function EventToolsView({ ev, userId, publicUrl, sp, guests, daily, scanH
           </div>
         </article>
 
-        <article className="card card--payout" data-reveal>
+        {/* Free RSVP events take no money, so no payout card and no bank details. */}
+        {ev.event_kind !== "rsvp" && <article className="card card--payout" data-reveal>
           <header className="card__head"><h2 className="card__title"><Icon name="wallet" />Payouts</h2><span className="card__tag">{hasPaid ? "5% + ₦100" : "Free"}</span></header>
           <div className="payout">
             <div className="bank">
               <span className="bank__chip"><GanorSymbol /></span>
               <p className="bank__label">Paid to your bank</p>
               <p className="bank__amount">{naira(earned)}</p>
-              <p className="bank__acct">Add your bank when payments open</p>
+              <p className="bank__acct"><Link href="/dashboard/profile#payouts">Your payout account</Link></p>
             </div>
             <ul className="ledger">
               {tickets.length > 0 ? (
@@ -204,7 +207,13 @@ export function EventToolsView({ ev, userId, publicUrl, sp, guests, daily, scanH
               )}
             </ul>
           </div>
-        </article>
+          {hasPaid && (
+            <div className="fee-row">
+              <span className="field__label">Who pays the Ganor fee <small>(5% + ₦100 per paid ticket)</small></span>
+              <FeeSeg eventId={ev.id} mode={absorb ? "absorb" : "buyer"} />
+            </div>
+          )}
+        </article>}
 
         <article className="card card--share" data-reveal>
           <header className="card__head"><h2 className="card__title"><Icon name="share" />Share</h2><span className="card__tag">{live ? "Live" : "After publish"}</span></header>
@@ -230,10 +239,6 @@ export function EventToolsView({ ev, userId, publicUrl, sp, guests, daily, scanH
 
         <article className="card card--details" data-reveal>
           <header className="card__head"><h2 className="card__title"><Icon name="pen" />Event details</h2></header>
-          <div className="fee-row">
-            <span className="field__label">Who pays the Ganor fee <small>(5% + ₦100 per paid ticket)</small></span>
-            <FeeSeg eventId={ev.id} mode={absorb ? "absorb" : "buyer"} />
-          </div>
           <EventForm
             mode="edit"
             initial={{

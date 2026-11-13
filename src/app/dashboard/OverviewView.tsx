@@ -3,6 +3,7 @@ import { Icon } from "@/components/Icon"
 import { PhasePill } from "@/components/PhasePill"
 import { CountUp } from "@/components/widgets/CountUp"
 import { BarChart } from "@/components/widgets/BarChart"
+import { SalesTrend } from "@/components/widgets/SalesTrend"
 import { eventPhase, formatDate, formatNaira, formatTime, PHASE_LABEL, type EventPhase } from "@/lib/ganor"
 
 export type Totals = { tickets: number; orders: number; take_home: number; checkins: number }
@@ -59,6 +60,7 @@ export function OverviewView({ range, first, stats, events, suspended, passwordU
     checkins: d.checkins,
     take_home: d.take_home,
   }))
+  const recentPace = series.slice(-7).reduce((n, d) => n + d.tickets, 0)
   // Per event, from the same counters My events uses, so the numbers always match.
   const byEvent = phased
     .map(({ e, phase }) => ({ e, phase, sold: e.ticket_types.reduce((n, t) => n + t.sold, 0), cap: e.ticket_types.reduce((n, t) => n + t.quantity, 0), free: e.ticket_types.length > 0 && e.ticket_types.every((t) => t.price_kobo === 0) }))
@@ -122,7 +124,7 @@ export function OverviewView({ range, first, stats, events, suspended, passwordU
               <p>{ticketsChange ? `${ticketsChange.text} vs the ${range} days before` : "Each bar is one day"} · {formatNaira(cur.take_home) === "Free" ? "₦0" : formatNaira(cur.take_home)} take-home</p>
             </div>
           </header>
-          <BarChart points={series.map((d) => ({ label: d.label, sub: d.sub, value: d.tickets }))} unit="tickets" />
+          <SalesTrend days={series.map((d) => ({ day: d.label, label: d.label, count: d.tickets }))} total={cur.tickets} capacity={0} daysLeft={recentPace > 0 ? 7 : 0} unit="tickets and RSVPs" endLabel="next 7 days" projDelta />
         </article>
 
         <article className="card awidget hov__next s-4" data-reveal>

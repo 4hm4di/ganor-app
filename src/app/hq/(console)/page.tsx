@@ -5,6 +5,7 @@ import { Icon } from "@/components/Icon"
 import { PhasePill } from "@/components/PhasePill"
 import { eventPhase, formatDate, formatTime, PHASE_LABEL, RATINGS_ENABLED, type EventPhase } from "@/lib/ganor"
 import { CountUp } from "@/components/widgets/CountUp"
+import { SalesTrend } from "@/components/widgets/SalesTrend"
 import { BarChart } from "@/components/widgets/BarChart"
 import { LiveRefresh } from "@/components/widgets/LiveRefresh"
 
@@ -79,7 +80,7 @@ export default async function AdminOverview() {
             <span className="awidget__ic"><Icon name="ticket" size={18} /></span>
             <div><h2>{sum("tickets")} tickets and RSVPs in 14 days</h2><p>Every host on Ganor, day by day</p></div>
           </header>
-          <BarChart points={days.map((d) => ({ label: d.label, sub: d.sub, value: d.tickets }))} unit="tickets" />
+          <SalesTrend days={days.map((d) => ({ day: d.label, label: d.label, count: d.tickets }))} total={sum("tickets")} capacity={0} daysLeft={days.slice(-7).some((d) => d.tickets > 0) ? 7 : 0} unit="tickets and RSVPs" endLabel="next 7 days" projDelta />
         </article>
 
         <article className="card awidget s-4" data-reveal>
