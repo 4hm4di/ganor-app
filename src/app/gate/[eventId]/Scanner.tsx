@@ -48,6 +48,8 @@ export function Scanner({ eventId, initialIn, total, scannerName }: { eventId: s
     if (typeof r.checked_in === "number" && typeof r.total === "number") setCounts({ in: r.checked_in, total: r.total })
     setView(RESULT[r.result].view)
     navigator.vibrate?.(r.result === "ok" ? 80 : [60, 60, 60])
+    // Signed out (e.g. this gate account signed in on another phone): show why, then go to sign-in.
+    if (r.result === "signed_out") { setTimeout(() => window.location.assign("/gate"), 3500); return }
     setTimeout(() => {
       setView("ready")
       busy.current = false
@@ -151,6 +153,7 @@ export function Scanner({ eventId, initialIn, total, scannerName }: { eventId: s
               <p className="gate__sub">
                 {res?.guest ? `${res.guest}${res.ticket_type ? ` · ${res.ticket_type}` : ""}` : ""}
                 {res?.result === "already" && res.at ? ` · in at ${formatTime(res.at)}` : ""}
+                {res?.result === "signed_out" ? (res.reason === "replaced" ? "This gate account signed in on another phone. Sign in again here to keep scanning." : "Sign in again to keep scanning.") : ""}
               </p>
             </>
           )}

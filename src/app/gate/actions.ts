@@ -45,5 +45,11 @@ export async function checkIn(eventId: string, code: string): Promise<CheckInRes
     ...(token && !userId ? { p_staff_token: token } : {}),
   })
   if (error || !data) return { result: "not_found" }
-  return data as CheckInResult
+  const res = data as CheckInResult
+  // Say why: this gate account signed in on another device (one active device per account).
+  if (res.result === "signed_out" && token) {
+    const { data: why } = await supabase.rpc("staff_token_status", { p_token: token })
+    if (why === "replaced") res.reason = "replaced"
+  }
+  return res
 }

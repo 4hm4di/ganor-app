@@ -17,6 +17,7 @@ export default async function Gate() {
 
   if (!session) {
     const { userId } = await getUserId()
+    const why = token ? ((await supabase.rpc("staff_token_status", { p_token: token })).data as string | null) : null
     return (
       <div className="wrap--narrow">
         <div className="pagehead" data-hero>
@@ -26,6 +27,7 @@ export default async function Gate() {
             <p className="muted" data-rise>Use the username and password your event host gave you.</p>
           </div>
         </div>
+        {why === "replaced" && <div className="alert alert--warn" role="status" style={{ marginBottom: 14 }}><Icon name="lock" /><span>You were signed out because this gate account signed in on another phone. A gate account can be used on one device at a time.</span></div>}
         <div className="card" data-reveal>
           <GateLoginForm />
         </div>
