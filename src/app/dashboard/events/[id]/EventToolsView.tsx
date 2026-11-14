@@ -208,10 +208,10 @@ export function EventToolsView({ ev, userId, publicUrl, sp, guests, daily, scanH
 
         {/* Free RSVP events take no money, so no payout card and no bank details. */}
         {ev.event_kind !== "rsvp" && <article className="card card--payout" data-reveal>
-          <header className="card__head"><h2 className="card__title"><Icon name="wallet" />Payouts</h2><span className="card__tag">{hasPaid ? "5% + ₦100" : "Free"}</span></header>
+          <header className="card__head"><h2 className="card__title"><Icon name="wallet" />Payouts</h2><span className="card__tag">{hasPaid ? "6% + ₦100" : "Free"}</span></header>
           {hasPaid && (
             <div className="fee-row fee-row--top">
-              <span className="field__label">Who pays the Ganor fee <small>(5% + ₦100 per paid ticket)</small></span>
+              <span className="field__label">Who pays the Ganor fee <small>(6% + ₦100 per paid ticket)</small></span>
               <FeeSeg eventId={ev.id} mode={absorb ? "absorb" : "buyer"} />
             </div>
           )}

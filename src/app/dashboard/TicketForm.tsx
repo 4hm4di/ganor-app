@@ -24,7 +24,7 @@ export function TicketForm({ eventId, first, kind }: { eventId: string; first: b
         </label>
         {kind === "paid" ? (
           <label className="field">
-            <span className="field__label">Price in naira <small>(at least ₦100)</small></span>
+            <span className="field__label">Price in naira <small>(at least ₦1,000)</small></span>
             <input autoComplete="off" name="price" required inputMode="decimal" defaultValue={state.fields?.price ?? ""} onChange={(e) => setPrice(e.target.value)} placeholder="5,000" />
           </label>
         ) : (
@@ -49,7 +49,7 @@ export function TicketForm({ eventId, first, kind }: { eventId: string; first: b
         {kind === "rsvp"
           ? <>Free entries cost guests nothing. To sell tickets, create a Paid tickets event.</>
           : kobo > 0
-            ? <>Ganor fee: {formatNaira(feeKobo(kobo))} per ticket (5% + ₦100). Who pays it is set when ticket sales open.</>
+            ? <>Ganor fee: {formatNaira(feeKobo(kobo))} per ticket (6% + ₦100). Who pays it is set when ticket sales open.</>
             : <>Paid-ticket events can&rsquo;t have free tickets. For a free event, create a Free RSVP event.</>}
       </p>
       <div className="actions">

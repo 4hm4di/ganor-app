@@ -7,7 +7,7 @@
   const $$ = (s, el = document) => [...el.querySelectorAll(s)];
   const reduced = matchMedia('(prefers-reduced-motion: reduce)');
   /* Ganor fee on paid tickets. Change these two numbers if the fee changes. */
-  const FEE_RATE = 0.05;
+  const FEE_RATE = 0.06;
   const FEE_FLAT = 100;
   const naira = n => '₦' + Math.round(n).toLocaleString('en-NG');
   const fee = price => (price > 0 ? price * FEE_RATE + FEE_FLAT : 0);

@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache"
 import { flash, report, dbMessage } from "@/lib/flash"
+import { MIN_TICKET_NAIRA } from "@/lib/ganor"
 import { redirect } from "next/navigation"
 import { headers } from "next/headers"
 import { getUserId } from "@/lib/supabase/server"
@@ -173,7 +174,6 @@ export async function addTicketType(_prev: FormState, fd: FormData): Promise<For
 }
 
 // Paid-ticket events sell priced tickets only; free RSVP events only have free entries.
-const MIN_TICKET_NAIRA = 100
 async function eventKind(supabase: Awaited<ReturnType<typeof requireHost>>["supabase"], id: string): Promise<"paid" | "rsvp"> {
   const { data } = await supabase.from("events").select("event_kind").eq("id", id).single()
   return data?.event_kind === "rsvp" ? "rsvp" : "paid"
@@ -192,7 +192,7 @@ function readTicket(fd: FormData, kind: "paid" | "rsvp") {
   const quantity = Number(fields.quantity)
   const maxPer = Number(fields.max_per_order)
   if (!fields.name || fields.name.length > 60) errors.push("Name the ticket, for example Regular or VIP.")
-  if (kind === "paid" && (!Number.isFinite(price) || price < MIN_TICKET_NAIRA || price > 10_000_000)) errors.push(`Enter a price of at least ₦${MIN_TICKET_NAIRA}. Paid-ticket events can't have free tickets; for a free event, create a Free RSVP event.`)
+  if (kind === "paid" && (!Number.isFinite(price) || price < MIN_TICKET_NAIRA || price > 10_000_000)) errors.push(`Enter a price of at least ₦${MIN_TICKET_NAIRA.toLocaleString("en-NG")}. Paid-ticket events can't have free tickets; for a free event, create a Free RSVP event.`)
   if (!Number.isInteger(quantity) || quantity < 1 || quantity > 100000) errors.push("Enter how many tickets (1 to 100,000).")
   if (!Number.isInteger(maxPer) || maxPer < 1 || maxPer > 50) errors.push("Tickets per order must be 1 to 50.")
   return { fields, errors, price_kobo: Math.round(price * 100), quantity, maxPer }

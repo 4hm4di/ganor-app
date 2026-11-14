@@ -59,7 +59,7 @@ export function TicketRow({ t, kind = "paid" }: { t: TicketTypeRow; kind?: "paid
         </label>
         <div className="grid2">
           {kind === "paid" ? (
-            <label className="field"><span className="field__label">Price (₦){t.sold > 0 ? <small> locked</small> : <small> at least ₦100</small>}</span>
+            <label className="field"><span className="field__label">Price (₦){t.sold > 0 ? <small> locked</small> : <small> at least ₦1,000</small>}</span>
               <input autoComplete="off" name="price" required inputMode="decimal" defaultValue={state.fields?.price ?? String(t.price_kobo / 100)} readOnly={t.sold > 0} aria-readonly={t.sold > 0} />
             </label>
           ) : (

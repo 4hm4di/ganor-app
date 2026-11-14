@@ -48,7 +48,7 @@ export function NewEventChooser({ open, onClose }: { open: boolean; onClose: () 
             <Link href="/dashboard/events/new?kind=paid" className="kind" onClick={close}>
               <span className="kind__ic"><Icon name="ticket" size={26} /></span>
               <b>Paid tickets</b>
-              <small>Sell tickets by card, transfer or USSD. Ganor takes 5% + ₦100 per paid ticket, nothing else.</small>
+              <small>Sell tickets by card, transfer or USSD. Ganor takes 6% + ₦100 per paid ticket, nothing else.</small>
               <span className="kind__go">Create event <Icon name="arrow-right" size={16} /></span>
             </Link>
           </div>

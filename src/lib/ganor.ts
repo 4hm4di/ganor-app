@@ -29,8 +29,11 @@ export const CITIES = [
   "Katsina", "Lagos", "Maiduguri", "Port Harcourt", "Sokoto", "Zaria",
 ] as const
 
-// Fee shown on the site: 5% + ₦100 per paid ticket. Free tickets cost nothing.
-export const FEE_RATE = 0.05
+// Ganor fee on paid tickets: 6% + ₦100 per ticket (same as private.ganor_fee_kobo in the database).
+// Free tickets cost nothing. Paid tickets cost at least MIN_TICKET_NAIRA.
+export const FEE_RATE = 0.06
+export const FEE_LABEL = "6% + ₦100"
+export const MIN_TICKET_NAIRA = 1000
 export const FEE_FLAT_KOBO = 100_00
 
 export function feeKobo(priceKobo: number) {
