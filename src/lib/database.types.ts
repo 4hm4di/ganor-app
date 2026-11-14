@@ -117,6 +117,9 @@ export type Database = {
       }
       orders: {
         Row: {
+          view_token: string
+          device_key: string | null
+          net_key: string | null
           answers: Json
           buyer_email: string | null
           buyer_name: string
@@ -310,7 +313,9 @@ export type Database = {
       session_active: { Args: Record<string, never>; Returns: boolean }
       hq_update_me: { Args: { p_display_name: string }; Returns: undefined }
       admin_watchlist: { Args: Record<string, never>; Returns: { kind: string; severity: string; title: string; detail: string; event_id: string | null; host_id: string | null; at: string }[] }
-      rsvp_submit: { Args: { p_event: string; p_ticket_type: string; p_name: string; p_phone: string; p_email: string; p_answers: Json; p_consent?: boolean }; Returns: Json }
+      rsvp_submit: { Args: { p_key: string; p_event: string; p_ticket_type: string; p_name: string; p_phone: string; p_email: string; p_answers: Json; p_consent: boolean; p_device: string; p_net: string }; Returns: Json }
+      ticket_view: { Args: { p_token: string }; Returns: Json }
+      host_find_guest: { Args: { p_event: string; p_phone: string }; Returns: Json }
       admin_recent_actions: {
         Args: { p_limit?: number }
         Returns: { created_at: string; actor_name: string; action: string; target_type: string; target_id: string | null; note: string | null }[]

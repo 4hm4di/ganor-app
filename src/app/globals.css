@@ -1034,6 +1034,33 @@ html.is-locked { overflow: hidden; }
 .rsvpok__qr { width: 200px; height: 200px; padding: 10px; border-radius: 16px; background: #fff; box-shadow: 0 0 0 1px var(--ganor-line); }
 .rsvpok__qr svg { width: 100%; height: 100%; display: block; }
 .rsvpok__code { font: 800 22px/28px ui-monospace, SFMono-Regular, Menlo, monospace; letter-spacing: .12em; }
+.rsvpok__save { display: grid; gap: 8px; justify-items: center; width: 100%; padding: 14px; border-radius: 16px; background: rgba(91, 75, 219, .06); box-shadow: inset 0 0 0 1px var(--ganor-line); }
+
+/* Ticket link actions (after RSVP, on the ticket page, and host resend) */
+.tlinks { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
+.tlinks .btn { gap: 8px; }
+.tlinks__wa { background: #1FAF5A; color: #fff; --fill: #178F49; --on-fill: #fff; }
+.tlinks__wa:hover { background: #178F49; }
+
+/* Private ticket page (/t/…) */
+.tpage { padding-block: 28px 56px; max-width: 560px; }
+.tcard { display: grid; gap: 14px; }
+.tcard__title { font: 800 28px/34px var(--ganor-font-display); margin: 0; overflow-wrap: anywhere; }
+.tcard .ev-facts { color: var(--text); font-size: 15px; }
+.tcard .ev-facts .i { color: var(--ganor-indigo); }
+.tcard__who { margin: 0; }
+.tcard__list { list-style: none; margin: 0; padding: 0; display: grid; gap: 18px; }
+.tcard__list li { display: grid; gap: 8px; justify-items: center; padding: 16px; border-radius: 18px; box-shadow: inset 0 0 0 1px var(--ganor-line); }
+.tcard__list li.is-void { opacity: .45; filter: grayscale(1); }
+.theme-dark .tcard .ev-facts .i { color: var(--ganor-lavender); }
+@media print { .tlinks, .tpage .actions, .site-header, header, footer { display: none !important; } .tcard { box-shadow: none; } }
+
+/* Host: resend a guest's ticket */
+.resend { display: grid; gap: 10px; padding-top: 12px; }
+.resend__row { display: flex; gap: 8px; align-items: flex-end; flex-wrap: wrap; }
+.resend__row .field { flex: 1 1 180px; margin: 0; }
+.resend__hit { display: grid; gap: 8px; padding: 12px; border-radius: 14px; box-shadow: inset 0 0 0 1px var(--ganor-line); }
+.resend__hit .tlinks { justify-content: flex-start; }
 
 /* ─── Bento dashboard grid (12 columns; everything stacks on phones) ─── */
 .dash { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 16px; align-items: stretch; }

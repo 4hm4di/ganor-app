@@ -15,6 +15,7 @@ import { HostRating } from "@/components/HostRating"
 import { ReportReview } from "@/components/ReportReview"
 import { CATEGORY_ICON, feeKobo, formatDate, formatNaira, formatTime , eventPhase, RATINGS_ENABLED } from "@/lib/ganor"
 import { PhasePill } from "@/components/PhasePill"
+import { formStamp } from "@/lib/rsvp-guard"
 
 type Host = {
   display_name: string
@@ -243,7 +244,7 @@ export default async function EventPage({ params }: { params: Promise<{ slug: st
           {!ended && live && freeOptions.length > 0 && (
             <div className="stack" style={{ gap: 12 }}>
               <h3 className="section-t" style={{ fontSize: 18 }}>RSVP</h3>
-              <RsvpForm eventId={ev.id} eventTitle={ev.title} options={freeOptions} fields={parseRsvpFields(ev.rsvp_fields)} />
+              <RsvpForm eventId={ev.id} eventTitle={ev.title} options={freeOptions} fields={parseRsvpFields(ev.rsvp_fields)} stamp={formStamp(ev.id)} full={capLeft <= 0} />
             </div>
           )}
           {!ended && tickets.some((t) => t.price_kobo > 0) && (

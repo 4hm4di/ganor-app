@@ -1,40 +1,46 @@
 "use client"
 
-import { useActionState, useEffect, useState } from "react"
-import QRCode from "qrcode"
+import { useActionState } from "react"
 import { submitRsvp, type RsvpState } from "./rsvp"
+import { TicketQr } from "@/components/TicketQr"
+import { TicketLinkActions } from "@/components/TicketLinkActions"
 import type { RsvpField } from "@/lib/rsvp"
 import { SubmitButton } from "@/components/SubmitButton"
 import { Icon } from "@/components/Icon"
 
-function Qr({ text }: { text: string }) {
-  const [svg, setSvg] = useState("")
-  useEffect(() => { QRCode.toString(text, { type: "svg", margin: 0, errorCorrectionLevel: "M", color: { dark: "#15132A", light: "#FFFFFF" } }).then(setSvg) }, [text])
-  return <div className="rsvpok__qr" aria-label={`QR code for ticket ${text}`} role="img" dangerouslySetInnerHTML={{ __html: svg }} />
-}
-
-export function RsvpForm({ eventId, eventTitle, options, fields }: { eventId: string; eventTitle: string; options: { id: string; name: string; left: number }[]; fields: RsvpField[] }) {
+export function RsvpForm({ eventId, eventTitle, options, fields, stamp, full }: { eventId: string; eventTitle: string; options: { id: string; name: string; left: number }[]; fields: RsvpField[]; stamp: string; full?: boolean }) {
   const [state, action] = useActionState<RsvpState, FormData>(submitRsvp, { status: "idle" })
   const open = options.filter((o) => o.left > 0)
 
   if (state.status === "ok") {
+    const first = state.name.split(/\s+/)[0]
     return (
       <div className="rsvpok" role="status">
         <Icon name="check-circle" size={36} />
-        <b style={{ font: "800 22px/28px var(--ganor-font-display)" }}>You&rsquo;re on the list, {state.name.split(/\s+/)[0]}</b>
+        <b style={{ font: "800 22px/28px var(--ganor-font-display)" }}>You&rsquo;re on the list, {first}</b>
         <span className="small muted">{state.ticket} · {eventTitle}</span>
-        <Qr text={state.code} />
+        <TicketQr text={state.code} />
         <span className="rsvpok__code">{state.code}</span>
-        <span className="small muted">Screenshot this. Show the QR code or read out the code at the gate.</span>
+        <div className="rsvpok__save">
+          <b>Save your ticket now</b>
+          <span className="small muted">Send the link to your own WhatsApp so it&rsquo;s there on event day.{state.emailed ? " We also emailed it to you." : ""}</span>
+          <TicketLinkActions link={state.link} phone={state.phone} message={`My ticket for ${eventTitle} (${state.code}): ${state.link}`} />
+        </div>
+        <span className="small muted">Show the QR code or read out the code at the gate. Keep the link private: anyone with it can open your ticket.</span>
       </div>
     )
   }
-  if (!open.length) return <p className="muted">RSVPs are full.</p>
+  if (full || !open.length) {
+    return (
+      <div className="alert alert--info" role="status"><Icon name="info" /><span><b>This event is full.</b> Already registered? Open the ticket link you saved, or ask the host to resend it.</span></div>
+    )
+  }
   const v = state.status === "error" ? state.values ?? {} : {}
 
   return (
     <form action={action} className="rsvpf" key={state.status === "error" ? JSON.stringify(v) : "f"} noValidate>
       <input type="hidden" name="event_id" value={eventId} />
+      <input type="hidden" name="stamp" value={stamp} />
       <input type="text" name="website" tabIndex={-1} autoComplete="off" aria-hidden="true" style={{ position: "absolute", left: "-9999px", width: 1, height: 1 }} />
       {state.status === "error" && <div className="alert alert--error" role="alert"><Icon name="warning" /><span>{state.message}</span></div>}
       {open.length > 1 ? (

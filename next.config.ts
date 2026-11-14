@@ -47,7 +47,7 @@ const nextConfig: NextConfig = {
   poweredByHeader: false,
   // Fonts read at runtime by the guest-list PDF.
   outputFileTracingIncludes: { "/dashboard/events/[id]/guests": ["./src/lib/pdf-fonts/**"] },
-  // Rating links carry a private token: never leak it in referrers, caches or search indexes.
+  // Rating (/r) and ticket (/t) links carry a private token: never leak it in referrers, caches or search indexes.
   // The homepage is the ganor.ng landing page, exported in launch mode into public/ (tools/export_app.py in the site repo).
   async rewrites() {
     return { beforeFiles: [{ source: "/", destination: "/index.html" }], afterFiles: [], fallback: [] }
@@ -61,6 +61,14 @@ const nextConfig: NextConfig = {
       { source: "/gate", headers: PRIVATE_HEADERS },
       { source: "/hq/:path*", headers: [{ key: "X-Robots-Tag", value: "noindex, nofollow, noai, noimageai" }, { key: "Referrer-Policy", value: "no-referrer" }, { key: "Cache-Control", value: "private, no-store, max-age=0" }] },
       { source: "/hq", headers: [{ key: "X-Robots-Tag", value: "noindex, nofollow, noai, noimageai" }, { key: "Referrer-Policy", value: "no-referrer" }, { key: "Cache-Control", value: "private, no-store, max-age=0" }] },
+      {
+        source: "/t/:token*",
+        headers: [
+          { key: "Referrer-Policy", value: "no-referrer" },
+          { key: "Cache-Control", value: "private, no-store, max-age=0" },
+          { key: "X-Robots-Tag", value: "noindex, nofollow, noai, noimageai" },
+        ],
+      },
       {
         source: "/r/:token*",
         headers: [

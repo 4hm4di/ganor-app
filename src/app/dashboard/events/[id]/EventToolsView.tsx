@@ -1,4 +1,5 @@
 import { RsvpBuilder } from "./RsvpBuilder"
+import { ResendTicket } from "./ResendTicket"
 import { parseRsvpFields } from "@/lib/rsvp"
 import type { CSSProperties } from "react"
 import type { EventRow, TicketTypeRow } from "@/lib/database.types"
@@ -196,6 +197,7 @@ export function EventToolsView({ ev, userId, publicUrl, sp, guests, daily, scanH
           )}
           <div className="meter"><i style={{ "--p": guests.length ? checkedIn / guests.length : 0 } as CSSProperties} /></div>
           <p className="card__foot card__foot--plain"><span>{checkedIn}</span>&nbsp;of {guests.length} checked in</p>
+          {guests.length > 0 && <ResendTicket eventId={ev.id} eventTitle={ev.title} />}
           <div className="dl">
             <a className="dl__btn" href={`/dashboard/events/${ev.id}/guests?format=pdf`} download>
               <Icon name="doc" size={18} /><span><b>Guest list PDF</b><small>Ganor branded, ready to print</small></span>
