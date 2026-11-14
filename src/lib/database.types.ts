@@ -306,6 +306,7 @@ export type Database = {
       admin_set_plan_paid: { Args: { p_event: string; p_paid: boolean }; Returns: undefined }
       admin_delete_host: { Args: { p_host: string }; Returns: undefined }
       staff_token_status: { Args: { p_token: string }; Returns: string | null }
+      discard_new_google_account: { Args: Record<string, never>; Returns: boolean }
       session_active: { Args: Record<string, never>; Returns: boolean }
       hq_update_me: { Args: { p_display_name: string }; Returns: undefined }
       admin_watchlist: { Args: Record<string, never>; Returns: { kind: string; severity: string; title: string; detail: string; event_id: string | null; host_id: string | null; at: string }[] }

@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from "next/server"
 import type { EmailOtpType } from "@supabase/supabase-js"
 import { createClient } from "@/lib/supabase/server"
 import { safeNext } from "@/lib/auth"
+import { importGooglePhoto, justCreatedByGoogle, landingFor } from "@/lib/onboarding"
 
 // Every sign-in that leaves the site comes back here: email links, sign-up confirmation,
 // password reset, and Google / Microsoft / Apple. The one-time code becomes a session cookie.
@@ -27,9 +28,20 @@ export async function GET(request: NextRequest) {
         await supabase.auth.signOut({ scope: "local" })
         return NextResponse.redirect(`${origin}/login?error=hq`)
       }
+      const intent = searchParams.get("intent")
+      const fresh = justCreatedByGoogle(ex.user)
+      // "Continue with Google" on the sign-in page with no Ganor account: don't create one
+      // quietly. Remove what Google sign-in just made and send them to sign up instead.
+      if (fresh && intent === "signin") {
+        await supabase.rpc("discard_new_google_account")
+        await supabase.auth.signOut({ scope: "local" }).catch(() => null)
+        return NextResponse.redirect(`${origin}/login?mode=signup&error=no-account`)
+      }
+      // New account from Google sign-up: bring over their Google photo as the host logo.
+      if (fresh) await importGooglePhoto(supabase, ex.user)
       // Host sign-ins keep one active device: end the account's other sessions.
       await supabase.auth.signOut({ scope: "others" })
-      return NextResponse.redirect(`${origin}${next}`)
+      return NextResponse.redirect(`${origin}${await landingFor(supabase, ex.user.id, next)}`)
     }
   }
 

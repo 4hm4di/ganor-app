@@ -63,6 +63,7 @@ export function LoginForm({ mode, next, providers, error }: { mode: Mode; next: 
               <form action={signInWithProvider} key={p.id}>
                 <input type="hidden" name="provider" value={p.id} />
                 <input type="hidden" name="next" value={next} />
+                <input type="hidden" name="intent" value={mode === "signup" ? "signup" : "signin"} />
                 <ProviderButton id={p.id} label={p.label} />
               </form>
             ))}

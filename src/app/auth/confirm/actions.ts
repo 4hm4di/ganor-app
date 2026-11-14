@@ -4,6 +4,7 @@ import { redirect } from "next/navigation"
 import type { EmailOtpType } from "@supabase/supabase-js"
 import { createClient } from "@/lib/supabase/server"
 import { safeNext } from "@/lib/auth"
+import { landingFor } from "@/lib/onboarding"
 
 const TYPES: EmailOtpType[] = ["signup", "invite", "magiclink", "recovery", "email_change", "email"]
 
@@ -37,5 +38,5 @@ export async function confirmEmailLink(fd: FormData) {
     const waiting = Boolean(data.user?.new_email)
     redirect(`/dashboard/profile?email=${waiting ? "one-more" : "changed"}`)
   }
-  redirect(next)
+  redirect(data.user ? await landingFor(supabase, data.user.id, next) : next)
 }

@@ -12,6 +12,7 @@ const ERRORS: Record<string, string> = {
   link: "That link has expired or was already used. Sign in again, or send yourself a new link.",
   email: "That email-change link has expired or was already used. Sign in and start the change again from your profile.",
   provider: "We couldn't connect to that sign-in provider. Try again, or use your email.",
+  "no-account": "There's no Ganor account for that Google account yet. Create one below: tap Continue with Google again to sign up with it.",
   hq: "That's a Ganor staff account, so it can't host events. Use a different account to host on Ganor.",
 }
 

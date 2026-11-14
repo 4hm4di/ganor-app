@@ -2,6 +2,7 @@
 
 import { redirect } from "next/navigation"
 import { flash } from "@/lib/flash"
+import { landingFor } from "@/lib/onboarding"
 import { createClient } from "@/lib/supabase/server"
 import { PASSWORD_MIN, PROVIDERS, safeNext, siteOrigin, type ProviderId } from "@/lib/auth"
 
@@ -36,7 +37,7 @@ export async function signInWithPassword(_prev: AuthState, fd: FormData): Promis
   }
   // One active device per host account: this sign-in ends the others.
   await supabase.auth.signOut({ scope: "others" })
-  redirect(next)
+  redirect(await landingFor(supabase, data.user.id, next))
 }
 
 export async function signUpWithPassword(_prev: AuthState, fd: FormData): Promise<AuthState> {
@@ -93,7 +94,7 @@ export async function signInWithProvider(fd: FormData) {
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider,
     options: {
-      redirectTo: `${origin}/auth/callback?next=${encodeURIComponent(next)}`,
+      redirectTo: `${origin}/auth/callback?next=${encodeURIComponent(next)}&intent=${read(fd, "intent") === "signup" ? "signup" : "signin"}`,
       scopes: provider === "azure" ? "email" : undefined,
     },
   })
