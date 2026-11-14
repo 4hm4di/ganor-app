@@ -17,7 +17,7 @@ import { GanorSymbol } from "@/components/Loader"
 import { Icon } from "@/components/Icon"
 import { BarChart } from "@/components/widgets/BarChart"
 import { SalesTrend } from "@/components/widgets/SalesTrend"
-import { CountUp } from "@/components/widgets/CountUp"
+import { Figure } from "@/components/widgets/Figure"
 import { RSVP_PLANS, planById, questionLimit, naira as nairaWhole } from "@/lib/plans"
 import { PhasePill } from "@/components/PhasePill"
 import { BackLink } from "@/components/BackLink"
@@ -98,9 +98,9 @@ export function EventToolsView({ ev, userId, publicUrl, sp, guests, daily, scanH
       <div className="bento">
         <article className="card card--sales" data-reveal>
           <header className="card__head"><h2 className="card__title"><Icon name="receipt" />{freeOnly ? "RSVPs" : "Tickets sold"}</h2><span className="card__tag">{PHASE_LABEL[phase]}</span></header>
-          <p className="card__big"><CountUp value={sold} /><small> of {total.toLocaleString("en-NG")}</small></p>
+          <p className="card__big"><Figure value={sold} /><small>of {total.toLocaleString("en-NG")}</small></p>
           <SalesTrend days={daily.map((d) => ({ day: d.day, label: dayLabel(d.day), count: d.count }))} total={sold} capacity={total} daysLeft={daysLeft} unit={freeOnly ? "RSVPs" : "sold"} />
-          <p className="small muted" style={{ marginTop: 6 }}>{fortnight} in the last 14 days{daysLeft > 0 ? ` · ${daysLeft} day${daysLeft === 1 ? "" : "s"} to go` : ""}. The dashed line is a projection from the last 7 days.</p>
+          <p className="small muted" style={{ marginTop: 6 }}>{fortnight.toLocaleString("en-NG")} in the last 14 days{daysLeft > 0 ? ` · ${daysLeft} day${daysLeft === 1 ? "" : "s"} to go` : ""}. The dashed line is a projection from the last 7 days.</p>
         </article>
 
         <article className="card card--types" data-reveal>
@@ -120,7 +120,7 @@ export function EventToolsView({ ev, userId, publicUrl, sp, guests, daily, scanH
           <header className="card__head"><h2 className="card__title"><Icon name="qr-code" />Gate check-in</h2><span className="card__tag">Event day</span></header>
           {scanHours.length > 0 ? (
             <>
-              <p className="card__big"><CountUp value={checkedIn} /><small> of {guests.length} in</small></p>
+              <p className="card__big"><Figure value={checkedIn} /><small>of {guests.length.toLocaleString("en-NG")} in</small></p>
               <BarChart points={scanHours.map((h) => ({ label: hourLabel(h.hour), sub: `${hourLabel(h.hour)}–${hourLabel((h.hour + 1) % 24)}`, value: h.count }))} unit="scanned in" color="var(--ganor-success)" />
             </>
           ) : (
@@ -147,7 +147,7 @@ export function EventToolsView({ ev, userId, publicUrl, sp, guests, daily, scanH
             <article className={`card planc${paid ? " planc--paid" : ""}`} data-reveal style={{ gridColumn: "1 / -1" }} id="plan">
               <header className="card__head"><h2 className="card__title"><Icon name="wallet" />{p.name} plan</h2><span className={`badge ${paid ? "badge--ok" : "badge--warn"}`}>{free ? "No payment needed" : paid ? "Paid" : live ? "Payment due" : "Payment due before publishing"}</span></header>
               <div className="planc__row">
-                <p className="card__big">{nairaWhole(p.price)}<small>{free ? " up to 30 guests" : " one-off for this event"}</small></p>
+                <p className="card__big">{free ? nairaWhole(p.price) : <Figure value={p.price} naira />}<small>{free ? " up to 30 guests" : " one-off for this event"}</small></p>
                 <ul className="planc__perks">{p.perks.map((k) => <li key={k}><Icon name="check-circle" size={16} />{k}</li>)}</ul>
               </div>
               {free && (
@@ -221,12 +221,12 @@ export function EventToolsView({ ev, userId, publicUrl, sp, guests, daily, scanH
             <div className="bank">
               <span className="bank__chip"><GanorSymbol /></span>
               <p className="bank__label">Paid to your bank</p>
-              <p className="bank__amount"><CountUp value={Math.round(earned / 100)} prefix="₦" /></p>
+              <p className="bank__amount"><Figure value={Math.round(earned / 100)} naira /></p>
               <p className="bank__acct"><Link href="/dashboard/profile#payouts">Your payout account</Link></p>
             </div>
             <ul className="ledger">
               {tickets.length > 0 ? (
-                tickets.map((t) => <li key={t.id}><span>{t.name} × {t.sold}</span><b>{naira(takeHome(t.price_kobo) * t.sold)}</b></li>)
+                tickets.map((t) => <li key={t.id}><span>{t.name} × {t.sold.toLocaleString("en-NG")}</span><b>{naira(takeHome(t.price_kobo) * t.sold)}</b></li>)
               ) : (
                 <li><span>No tickets yet</span><b>₦0</b></li>
               )}

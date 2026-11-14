@@ -175,7 +175,7 @@ export default async function MyEvents({ searchParams }: { searchParams: Promise
                       {formatDate(e.starts_at, { weekday: "short", day: "numeric", month: "short", year: "numeric" })} · {formatTime(e.starts_at)} · {e.city}
                     </span>
                     <span className="evrow__money" style={{ display: "block" }}>
-                      {e.ticket_types.length ? `${sold} of ${total} ${free ? "RSVPs" : "tickets"}${gross ? ` · ${formatNaira(gross)}` : ""}` : "No tickets yet"}
+                      {e.ticket_types.length ? `${sold.toLocaleString("en-NG")} of ${total.toLocaleString("en-NG")} ${free ? "RSVPs" : "tickets"}${gross ? ` · ${formatNaira(gross)}` : ""}` : "No tickets yet"}
                     </span>
                   </span>
                   <PhasePill phase={phase} />

@@ -51,7 +51,7 @@ export default async function AdminEvents({ searchParams }: { searchParams: Prom
               <div className="arow__main">
                 <b>{e.title} <PhasePill phase={e.phase} /></b>
                 <small>{formatDate(e.starts_at)} · {formatTime(e.starts_at)} · {e.city} · by {(e.profiles as unknown as { display_name: string } | null)?.display_name}</small>
-                <small>{sold} of {total} tickets sold · <Link href={`/e/${e.slug}`}>public page</Link></small>
+                <small>{sold.toLocaleString("en-NG")} of {total.toLocaleString("en-NG")} tickets sold · <Link href={`/e/${e.slug}`}>public page</Link></small>
               </div>
               {me?.can.moderate && <form action={setEventStatus} className="arow__side actions" style={{ gap: 6 }}>
                 <input type="hidden" name="event_id" value={e.id} />

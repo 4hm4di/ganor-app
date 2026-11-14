@@ -5,7 +5,7 @@ import { getHq, hqAllows, hqHome } from "@/lib/hq"
 import { Icon } from "@/components/Icon"
 import { PhasePill } from "@/components/PhasePill"
 import { eventPhase, formatDate, formatTime, PHASE_LABEL, RATINGS_ENABLED, type EventPhase } from "@/lib/ganor"
-import { CountUp } from "@/components/widgets/CountUp"
+import { Figure } from "@/components/widgets/Figure"
 import { SalesTrend } from "@/components/widgets/SalesTrend"
 import { BarChart } from "@/components/widgets/BarChart"
 import { LiveRefresh } from "@/components/widgets/LiveRefresh"
@@ -72,7 +72,7 @@ export default async function AdminOverview() {
           <article key={t.label} className={`card astat astat--${t.tone}`} data-reveal>
             <span className="astat__ic" aria-hidden="true"><Icon name={t.icon} size={22} /></span>
             <p className="astat__l">{t.label}</p>
-            <p className="astat__v">{"naira" in t && t.naira ? "₦" : ""}<CountUp value={t.value} /></p>
+            <p className="astat__v"><Figure value={t.value} naira={"naira" in t && Boolean(t.naira)} /></p>
             <p className="astat__s">{"href" in t && t.href ? <Link href={t.href}>{t.sub}</Link> : t.sub}</p>
           </article>
         ))}
@@ -82,7 +82,7 @@ export default async function AdminOverview() {
         <article className="card awidget s-8" data-reveal>
           <header className="awidget__head">
             <span className="awidget__ic"><Icon name="ticket" size={18} /></span>
-            <div><h2>{sum("tickets")} tickets and RSVPs in 14 days</h2><p>Every host on Ganor, day by day</p></div>
+            <div><h2>{sum("tickets").toLocaleString("en-NG")} tickets and RSVPs in 14 days</h2><p>Every host on Ganor, day by day</p></div>
           </header>
           <SalesTrend days={days.map((d) => ({ day: d.label, label: d.label, count: d.tickets }))} total={sum("tickets")} capacity={0} daysLeft={days.slice(-7).some((d) => d.tickets > 0) ? 7 : 0} unit="tickets and RSVPs" endLabel="next 7 days" projDelta />
         </article>

@@ -37,7 +37,7 @@ export default async function AdminHosts({ searchParams }: { searchParams: Promi
             <div className="arow__main">
               <b>{h.display_name || "Unnamed host"} {h.is_staff && <span className="badge badge--ok">Ganor staff</span>} {h.suspended && <span className="badge badge--bad">Suspended</span>}</b>
               <small>{h.email ? `${h.email} · ` : ""}joined {formatDate(h.joined_at, { day: "numeric", month: "short", year: "numeric" })}{h.last_sign_in_at ? ` · last in ${formatDate(h.last_sign_in_at, { day: "numeric", month: "short" })}` : ""}</small>
-              <small>{h.events} events ({h.published} live) · {h.tickets_sold} tickets sold · {h.gate_accounts} gate accounts</small>
+              <small>{h.events} events ({h.published} live) · {h.tickets_sold.toLocaleString("en-NG")} tickets sold · {h.gate_accounts} gate accounts</small>
               {h.suspended && h.suspend_reason && <small>Reason: {h.suspend_reason}</small>}
             </div>
             {me?.can.moderate && (

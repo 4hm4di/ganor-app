@@ -1,7 +1,7 @@
 import Link from "next/link"
 import { Icon } from "@/components/Icon"
 import { PhasePill } from "@/components/PhasePill"
-import { CountUp } from "@/components/widgets/CountUp"
+import { Figure } from "@/components/widgets/Figure"
 import { BarChart } from "@/components/widgets/BarChart"
 import { SalesTrend } from "@/components/widgets/SalesTrend"
 import { eventPhase, formatDate, formatNaira, formatTime, PHASE_LABEL, type EventPhase } from "@/lib/ganor"
@@ -73,7 +73,7 @@ export function OverviewView({ range, first, stats, events, suspended, passwordU
   const period = `last ${range} days`
 
   const kpis = [
-    { label: "Tickets and RSVPs", value: cur.tickets, ch: ticketsChange, sub: `${allSold} across all your events`, icon: "ticket", tone: "indigo" },
+    { label: "Tickets and RSVPs", value: cur.tickets, ch: ticketsChange, sub: `${allSold.toLocaleString("en-NG")} across all your events`, icon: "ticket", tone: "indigo" },
     { label: "Your take-home", value: Math.round(cur.take_home / 100), naira: true, ch: change(cur.take_home, prev.take_home), sub: "After the Ganor fee", icon: "wallet", tone: "green" },
     { label: "Checked in", value: cur.checkins, ch: change(cur.checkins, prev.checkins), sub: "Guests scanned at the gate", icon: "scan", tone: "marigold" },
     { label: "Upcoming events", value: coming.length + live.length, ch: null, sub: `${counts.draft} drafts`, icon: "calendar", tone: "ink" },
@@ -106,7 +106,7 @@ export function OverviewView({ range, first, stats, events, suspended, passwordU
           <article key={k.label} className={`card astat astat--${k.tone}`} data-reveal>
             <span className="astat__ic" aria-hidden="true"><Icon name={k.icon} size={22} /></span>
             <p className="astat__l">{k.label}</p>
-            <p className="astat__v">{"naira" in k && k.naira ? "₦" : ""}<CountUp value={k.value} /></p>
+            <p className="astat__v"><Figure value={k.value} naira={"naira" in k && k.naira} /></p>
             <p className="astat__s">
               {k.ch && <span className={`delta delta--${k.ch.dir}`}>{k.ch.dir === "up" ? "▲" : k.ch.dir === "down" ? "▼" : "■"} {k.ch.text}</span>}
               {k.ch ? ` vs previous ${range} days · ` : ""}{k.sub}
@@ -120,7 +120,7 @@ export function OverviewView({ range, first, stats, events, suspended, passwordU
           <header className="awidget__head">
             <span className="awidget__ic"><Icon name="receipt" size={18} /></span>
             <div>
-              <h2>{cur.tickets === 0 ? `No tickets in the ${period}` : `${cur.tickets} tickets and RSVPs in the ${period}`}</h2>
+              <h2>{cur.tickets === 0 ? `No tickets in the ${period}` : `${cur.tickets.toLocaleString("en-NG")} tickets and RSVPs in the ${period}`}</h2>
               <p>{ticketsChange ? `${ticketsChange.text} vs the ${range} days before` : "Each bar is one day"} · {formatNaira(cur.take_home) === "Free" ? "₦0" : formatNaira(cur.take_home)} take-home</p>
             </div>
           </header>
@@ -226,7 +226,7 @@ export function OverviewView({ range, first, stats, events, suspended, passwordU
       </div>
 
       <p className="hov__foot small muted">
-        All time: {stats?.all_time.tickets ?? 0} tickets · {(stats?.all_time.take_home ?? 0) > 0 ? formatNaira(stats!.all_time.take_home) : "₦0"} take-home · {stats?.all_time.checkins ?? 0} checked in. Updated {formatTime(new Date().toISOString())}.
+        All time: {(stats?.all_time.tickets ?? 0).toLocaleString("en-NG")} tickets · {(stats?.all_time.take_home ?? 0) > 0 ? formatNaira(stats!.all_time.take_home) : "₦0"} take-home · {(stats?.all_time.checkins ?? 0).toLocaleString("en-NG")} checked in. Updated {formatTime(new Date().toISOString())}.
       </p>
     </div>
   )
