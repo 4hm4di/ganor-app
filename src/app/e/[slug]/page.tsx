@@ -86,7 +86,7 @@ export default async function EventPage({ params }: { params: Promise<{ slug: st
   const ended = phase === "ended"
   const live = ev.status === "published"
   const h = await headers()
-  const hostName = h.get("x-forwarded-host") ?? h.get("host") ?? "ganor-app.vercel.app"
+  const hostName = h.get("x-forwarded-host") ?? h.get("host") ?? "app.ganor.ng"
   const url = `${hostName.startsWith("localhost") ? "http" : "https"}://${hostName}/e/${ev.slug}`
   const when = `${formatDate(ev.starts_at)} · ${formatTime(ev.starts_at)}`
   const buyerPays = ev.fee_mode !== "absorb"

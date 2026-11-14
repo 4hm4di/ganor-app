@@ -30,7 +30,7 @@ export default async function EventTools({
   if (!ev) notFound()
 
   const h = await headers()
-  const host = h.get("x-forwarded-host") ?? h.get("host") ?? "ganor-app.vercel.app"
+  const host = h.get("x-forwarded-host") ?? h.get("host") ?? "app.ganor.ng"
   const publicUrl = `${host.startsWith("localhost") ? "http" : "https"}://${host}/e/${ev.slug}`
   const { data: rows } = await supabase
     .from("tickets")

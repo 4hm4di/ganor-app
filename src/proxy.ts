@@ -4,10 +4,17 @@ import { ACTIVE_COOKIE, IDLE_MINUTES, sessionOnly } from "@/lib/session"
 import { isAiBot } from "@/lib/bots"
 
 const LIVE_COOKIE = "ganor_live"
+const OLD_HOST = "ganor-app.vercel.app"
+const APP_ORIGIN = "https://app.ganor.ng"
 
 // Refreshes the Supabase session cookie on each request and keeps signed-out visitors
 // out of the dashboard. Real access control is in the database (Row Level Security).
 export async function proxy(request: NextRequest) {
+  // The old address moves to app.ganor.ng permanently (path and query kept). Preview builds stay as they are.
+  if (request.headers.get("host") === OLD_HOST) {
+    const url = new URL(request.nextUrl.pathname + request.nextUrl.search, APP_ORIGIN)
+    return NextResponse.redirect(url, 308)
+  }
   // AI crawlers and bulk scrapers that identify themselves get nothing.
   if (isAiBot(request.headers.get("user-agent"))) return new NextResponse("Not available.", { status: 403, headers: { "X-Robots-Tag": "noai, noimageai" } })
   if (request.nextUrl.pathname === "/") return NextResponse.next()
