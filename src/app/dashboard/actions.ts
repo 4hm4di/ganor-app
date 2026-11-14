@@ -153,7 +153,8 @@ export async function deleteDraft(fd: FormData) {
 export async function addTicketType(_prev: FormState, fd: FormData): Promise<FormState> {
   const { supabase } = await requireHost()
   const event_id = str(fd, "event_id")
-  const { fields, errors, price_kobo, quantity, maxPer } = readTicket(fd)
+  const kind = await eventKind(supabase, event_id)
+  const { fields, errors, price_kobo, quantity, maxPer } = readTicket(fd, kind)
   if (errors.length) return report({ status: "error", message: errors.join(" "), fields })
 
   const { count } = await supabase.from("ticket_types").select("id", { count: "exact", head: true }).eq("event_id", event_id)
@@ -171,7 +172,14 @@ export async function addTicketType(_prev: FormState, fd: FormData): Promise<For
   return report({ status: "ok", message: `${fields.name} added.` })
 }
 
-function readTicket(fd: FormData) {
+// Paid-ticket events sell priced tickets only; free RSVP events only have free entries.
+const MIN_TICKET_NAIRA = 100
+async function eventKind(supabase: Awaited<ReturnType<typeof requireHost>>["supabase"], id: string): Promise<"paid" | "rsvp"> {
+  const { data } = await supabase.from("events").select("event_kind").eq("id", id).single()
+  return data?.event_kind === "rsvp" ? "rsvp" : "paid"
+}
+
+function readTicket(fd: FormData, kind: "paid" | "rsvp") {
   const fields = {
     name: str(fd, "name"),
     price: str(fd, "price").replace(/[,\s₦]/g, ""),
@@ -180,11 +188,11 @@ function readTicket(fd: FormData) {
     description: str(fd, "description"),
   }
   const errors: string[] = []
-  const price = fields.price === "" ? 0 : Number(fields.price)
+  const price = kind === "rsvp" ? 0 : fields.price === "" ? NaN : Number(fields.price)
   const quantity = Number(fields.quantity)
   const maxPer = Number(fields.max_per_order)
   if (!fields.name || fields.name.length > 60) errors.push("Name the ticket, for example Regular or VIP.")
-  if (!Number.isFinite(price) || price < 0 || price > 10_000_000) errors.push("Enter a price in naira, or 0 for free.")
+  if (kind === "paid" && (!Number.isFinite(price) || price < MIN_TICKET_NAIRA || price > 10_000_000)) errors.push(`Enter a price of at least ₦${MIN_TICKET_NAIRA}. Paid-ticket events can't have free tickets; for a free event, create a Free RSVP event.`)
   if (!Number.isInteger(quantity) || quantity < 1 || quantity > 100000) errors.push("Enter how many tickets (1 to 100,000).")
   if (!Number.isInteger(maxPer) || maxPer < 1 || maxPer > 50) errors.push("Tickets per order must be 1 to 50.")
   return { fields, errors, price_kobo: Math.round(price * 100), quantity, maxPer }
@@ -194,7 +202,8 @@ export async function updateTicketType(_prev: FormState, fd: FormData): Promise<
   const { supabase } = await requireHost()
   const id = str(fd, "id")
   const event_id = str(fd, "event_id")
-  const { fields, errors, price_kobo, quantity, maxPer } = readTicket(fd)
+  const kind = await eventKind(supabase, event_id)
+  const { fields, errors, price_kobo, quantity, maxPer } = readTicket(fd, kind)
   if (errors.length) return report({ status: "error", message: errors.join(" "), fields })
 
   const { data: current } = await supabase.from("ticket_types").select("sold, price_kobo").eq("id", id).single()

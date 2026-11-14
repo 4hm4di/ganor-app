@@ -18,7 +18,7 @@ export async function hqLogin(_prev: HqLoginState, fd: FormData): Promise<HqLogi
   if (error) return { error: "Those details don't work here.", email }
   const { data: staff } = await supabase.rpc("is_staff")
   if (!staff) {
-    await supabase.auth.signOut()
+    await supabase.auth.signOut({ scope: "local" })
     return { error: "Those details don't work here.", email }
   }
   redirect("/hq")

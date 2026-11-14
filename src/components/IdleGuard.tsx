@@ -5,7 +5,7 @@ import { IDLE_MINUTES } from "@/lib/session"
 
 // While a host is active on a page, ping the server every few minutes so the session stays
 // alive. After IDLE_MINUTES with no taps, keys or scrolling, sign out and go to the sign-in page.
-export function IdleGuard() {
+export function IdleGuard({ area = "host" }: { area?: "host" | "hq" }) {
   useEffect(() => {
     let lastActive = Date.now()
     let lastPing = Date.now()
@@ -16,7 +16,7 @@ export function IdleGuard() {
     const signOut = () => {
       const f = document.createElement("form")
       f.method = "post"
-      f.action = "/auth/signout?why=idle"
+      f.action = `/auth/signout?why=idle${area === "hq" ? "&to=hq" : ""}`
       document.body.appendChild(f)
       f.submit()
     }
@@ -25,7 +25,7 @@ export function IdleGuard() {
       if (now - lastActive > IDLE_MINUTES * 60_000) return signOut()
       if (lastActive > lastPing && now - lastPing > 4 * 60_000) {
         lastPing = now
-        const r = await fetch("/auth/keepalive", { cache: "no-store" }).catch(() => null)
+        const r = await fetch(`/auth/keepalive${area === "hq" ? "?to=hq" : ""}`, { cache: "no-store" }).catch(() => null)
         if (r?.status === 401) signOut()
       }
     }, 30_000)
@@ -40,6 +40,6 @@ export function IdleGuard() {
       events.forEach((e) => window.removeEventListener(e, mark))
       document.removeEventListener("visibilitychange", onVisible)
     }
-  }, [])
+  }, [area])
   return null
 }

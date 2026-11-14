@@ -9,7 +9,7 @@ import { formatNaira } from "@/lib/ganor"
 import type { TicketTypeRow } from "@/lib/database.types"
 
 // One row of the Ticket types card: same layout and switch as the landing page, plus an edit pencil.
-export function TicketRow({ t }: { t: TicketTypeRow }) {
+export function TicketRow({ t, kind = "paid" }: { t: TicketTypeRow; kind?: "paid" | "rsvp" }) {
   const [editing, setEditing] = useState(false)
   const [onSale, setOnSale] = useOptimistic(t.on_sale)
   const [, startTransition] = useTransition()
@@ -58,9 +58,13 @@ export function TicketRow({ t }: { t: TicketTypeRow }) {
           <input autoComplete="off" name="name" required maxLength={60} defaultValue={state.fields?.name ?? t.name} />
         </label>
         <div className="grid2">
-          <label className="field"><span className="field__label">Price (₦){t.sold > 0 && <small> locked</small>}</span>
-            <input autoComplete="off" name="price" inputMode="decimal" defaultValue={state.fields?.price ?? String(t.price_kobo / 100)} readOnly={t.sold > 0} aria-readonly={t.sold > 0} />
-          </label>
+          {kind === "paid" ? (
+            <label className="field"><span className="field__label">Price (₦){t.sold > 0 ? <small> locked</small> : <small> at least ₦100</small>}</span>
+              <input autoComplete="off" name="price" required inputMode="decimal" defaultValue={state.fields?.price ?? String(t.price_kobo / 100)} readOnly={t.sold > 0} aria-readonly={t.sold > 0} />
+            </label>
+          ) : (
+            <div className="field"><span className="field__label">Price</span><span className="field__static">Free (RSVP event)</span></div>
+          )}
           <label className="field"><span className="field__label">How many</span>
             <input autoComplete="off" name="quantity" required inputMode="numeric" defaultValue={state.fields?.quantity ?? String(t.quantity)} />
           </label>

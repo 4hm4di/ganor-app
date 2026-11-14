@@ -126,5 +126,9 @@ export async function setNewPassword(_prev: AuthState, fd: FormData): Promise<Au
   if (error) return { status: "error", message: friendly(error.message) }
   await flash("ok", "Password updated.")
   const hqOnly = Boolean((data.claims.app_metadata as { hq?: boolean } | undefined)?.hq)
-  redirect(hqOnly ? "/hq?password=updated" : "/dashboard?password=updated")
+  if (hqOnly) {
+    await supabase.auth.signOut({ scope: "local" })
+    redirect("/hq/login?password=updated")
+  }
+  redirect("/dashboard?password=updated")
 }

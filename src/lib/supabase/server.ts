@@ -1,16 +1,21 @@
 import { createServerClient } from "@supabase/ssr"
-import { cookies } from "next/headers"
+import { cookies, headers } from "next/headers"
+import { AREA_HEADER, cookieOptionsFor, type Area } from "./area"
 import type { Database } from "@/lib/database.types"
 import { sessionOnly } from "@/lib/session"
 
 // One client per request. Server Components can't set cookies, so writes there are skipped;
 // the proxy refreshes the session on every request instead.
-export async function createClient() {
+// The area (host or HQ) comes from the proxy, so HQ pages use the HQ sign-in and
+// everything else uses the host sign-in.
+export async function createClient(area?: Area) {
   const cookieStore = await cookies()
+  const which: Area = area ?? ((await headers()).get(AREA_HEADER) === "hq" ? "hq" : "host")
   return createServerClient<Database>(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!,
     {
+      cookieOptions: cookieOptionsFor(which),
       cookies: {
         getAll() {
           return cookieStore.getAll()

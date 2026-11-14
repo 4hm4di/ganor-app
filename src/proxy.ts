@@ -2,6 +2,7 @@ import { createServerClient } from "@supabase/ssr"
 import { NextResponse, type NextRequest } from "next/server"
 import { ACTIVE_COOKIE, IDLE_MINUTES, sessionOnly } from "@/lib/session"
 import { isAiBot } from "@/lib/bots"
+import { AREA_HEADER, HQ_COOKIE, activeCookieFor, areaFor, cookieOptionsFor } from "@/lib/supabase/area"
 
 const LIVE_COOKIE = "ganor_live"
 const OLD_HOST = "ganor-app.vercel.app"
@@ -19,12 +20,19 @@ export async function proxy(request: NextRequest) {
   if (isAiBot(request.headers.get("user-agent"))) return new NextResponse("Not available.", { status: 403, headers: { "X-Robots-Tag": "noai, noimageai" } })
   if (request.nextUrl.pathname === "/") return NextResponse.next()
 
+  // Host and HQ sign-ins live in separate cookies; tell the page which one this request uses.
+  const area = areaFor(request.nextUrl.pathname, request.nextUrl.searchParams)
+  request.headers.set(AREA_HEADER, area)
+  const ACTIVE = activeCookieFor(ACTIVE_COOKIE, area)
+  const hadHqSession = area === "hq" && request.cookies.getAll().some((c) => c.name.startsWith(HQ_COOKIE))
+
   let response = NextResponse.next({ request })
 
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!,
     {
+      cookieOptions: cookieOptionsFor(area),
       cookies: {
         getAll() {
           return request.cookies.getAll()
@@ -48,7 +56,7 @@ export async function proxy(request: NextRequest) {
     const amr = (data?.claims?.amr as { timestamp?: number }[] | undefined) ?? []
     const signedInAt = Math.max(0, ...amr.map((a) => a.timestamp ?? 0)) * 1000
     const fresh = Date.now() - signedInAt < 5 * 60_000
-    if (!request.cookies.get(ACTIVE_COOKIE) && !fresh) {
+    if (!request.cookies.get(ACTIVE) && !fresh) {
       await supabase.auth.signOut({ scope: "local" })
       signedIn = false
       if (path.startsWith("/dashboard")) {
@@ -61,7 +69,7 @@ export async function proxy(request: NextRequest) {
       }
       return response
     }
-    response.cookies.set(ACTIVE_COOKIE, "1", { httpOnly: true, sameSite: "lax", secure: request.nextUrl.protocol === "https:", path: "/", maxAge: IDLE_MINUTES * 60 })
+    response.cookies.set(ACTIVE, "1", { httpOnly: true, sameSite: "lax", secure: request.nextUrl.protocol === "https:", path: "/", maxAge: IDLE_MINUTES * 60 })
   }
 
   // One active device per host account: signing in elsewhere ends this session. Checked at most
@@ -91,7 +99,17 @@ export async function proxy(request: NextRequest) {
     return NextResponse.redirect(url)
   }
 
-  // /hq never redirects to sign-in, so its address isn't revealed: signed-out visitors get a 404 page.
+  // /hq never redirects strangers to sign-in, so its address isn't revealed: they get a 404 page.
+  // A browser that had an HQ session (it expired or timed out) goes back to the staff sign-in instead.
+  if (!signedIn && hadHqSession && area === "hq" && request.nextUrl.pathname.startsWith("/hq") && request.nextUrl.pathname !== "/hq/login") {
+    const url = request.nextUrl.clone()
+    url.pathname = "/hq/login"
+    url.search = "?expired=1"
+    const redirect = NextResponse.redirect(url)
+    response.cookies.getAll().forEach((c) => redirect.cookies.set(c))
+    return redirect
+  }
+
   if (!signedIn && path.startsWith("/dashboard")) {
     const url = request.nextUrl.clone()
     url.pathname = "/login"

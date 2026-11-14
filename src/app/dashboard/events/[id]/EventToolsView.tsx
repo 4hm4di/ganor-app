@@ -105,13 +105,13 @@ export function EventToolsView({ ev, userId, publicUrl, sp, guests, daily, scanH
         <article className="card card--types" data-reveal>
           <header className="card__head"><h2 className="card__title"><Icon name="ticket" />Ticket types</h2><span className="card__tag">{tickets.length} {tickets.length === 1 ? "type" : "types"}</span></header>
           {tickets.length > 0 ? (
-            <ul className="types">{tickets.map((t) => <TicketRow key={t.id} t={t} />)}</ul>
+            <ul className="types">{tickets.map((t) => <TicketRow key={t.id} t={t} kind={ev.event_kind === "rsvp" ? "rsvp" : "paid"} />)}</ul>
           ) : (
-            <p className="card__empty">No tickets yet. Add Regular, VIP, Student or a free RSVP.</p>
+            <p className="card__empty">{ev.event_kind === "rsvp" ? "No free entries yet. Add one so guests can RSVP." : "No tickets yet. Add Regular, VIP, Student or any priced ticket."}</p>
           )}
           <details className="adder" open={tickets.length === 0}>
             <summary><Icon name="add-circle" size={18} />Add ticket type</summary>
-            <div className="adder__body"><TicketForm eventId={ev.id} first={tickets.length === 0} /></div>
+            <div className="adder__body"><TicketForm eventId={ev.id} first={tickets.length === 0} kind={ev.event_kind === "rsvp" ? "rsvp" : "paid"} /></div>
           </details>
         </article>
 

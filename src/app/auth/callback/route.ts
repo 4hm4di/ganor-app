@@ -22,8 +22,13 @@ export async function GET(request: NextRequest) {
     if (searchParams.get("verified") === "1") return verified()
     const { data: ex, error } = await supabase.auth.exchangeCodeForSession(code)
     if (!error) {
+      // HQ staff accounts don't sign in to the host app (Google included), except to reset a password.
+      if ((ex.user?.app_metadata as { hq?: boolean } | undefined)?.hq && next !== "/reset-password") {
+        await supabase.auth.signOut({ scope: "local" })
+        return NextResponse.redirect(`${origin}/login?error=hq`)
+      }
       // Host sign-ins keep one active device: end the account's other sessions.
-      if (!(ex.user?.app_metadata as { hq?: boolean } | undefined)?.hq) await supabase.auth.signOut({ scope: "others" })
+      await supabase.auth.signOut({ scope: "others" })
       return NextResponse.redirect(`${origin}${next}`)
     }
   }

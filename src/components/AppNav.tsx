@@ -70,7 +70,7 @@ export function AppNav({ name, email, logo, staff, hqOnly, hqRole }: Props) {
 
   return (
     <header className="topbar topbar--app">
-      <IdleGuard />
+      <IdleGuard area={hq ? "hq" : "host"} />
       <div className="wrap topbar__in">
         <Link href={home} className="topbar__logo" aria-label={hq ? "Ganor HQ" : "Ganor dashboard"}>
           {/* eslint-disable-next-line @next/next/no-img-element */}

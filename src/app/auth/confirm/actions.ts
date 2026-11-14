@@ -22,6 +22,11 @@ export async function confirmEmailLink(fd: FormData) {
     await supabase.auth.signOut({ scope: "others" })
   }
   if (type === "recovery") redirect("/reset-password")
+  // HQ staff accounts don't sign in to the host app.
+  if ((data.user?.app_metadata as { hq?: boolean } | undefined)?.hq) {
+    await supabase.auth.signOut({ scope: "local" })
+    redirect("/login?error=hq")
+  }
   if (type === "signup") {
     // Confirmed. They sign in themselves, so the first visit to the dashboard is a deliberate one.
     await supabase.auth.signOut({ scope: "local" })

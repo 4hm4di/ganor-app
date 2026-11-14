@@ -6,7 +6,7 @@ import { SubmitButton } from "@/components/SubmitButton"
 import { Icon } from "@/components/Icon"
 import { feeKobo, formatNaira } from "@/lib/ganor"
 
-export function TicketForm({ eventId, first }: { eventId: string; first: boolean }) {
+export function TicketForm({ eventId, first, kind }: { eventId: string; first: boolean; kind: "paid" | "rsvp" }) {
   const [state, action] = useActionState<FormState, FormData>(addTicketType, { status: "idle" })
   const [price, setPrice] = useState(state.fields?.price ?? "")
   const kobo = Math.round((Number(price.replace(/[,\s₦]/g, "")) || 0) * 100)
@@ -22,10 +22,14 @@ export function TicketForm({ eventId, first }: { eventId: string; first: boolean
           <span className="field__label">Ticket name</span>
           <input autoComplete="off" name="name" required maxLength={60} defaultValue={state.fields?.name ?? (first ? "Regular" : "")} placeholder="Regular, VIP, Student…" />
         </label>
-        <label className="field">
-          <span className="field__label">Price in naira <small>(0 for free)</small></span>
-          <input autoComplete="off" name="price" inputMode="decimal" defaultValue={state.fields?.price ?? ""} onChange={(e) => setPrice(e.target.value)} placeholder="5,000" />
-        </label>
+        {kind === "paid" ? (
+          <label className="field">
+            <span className="field__label">Price in naira <small>(at least ₦100)</small></span>
+            <input autoComplete="off" name="price" required inputMode="decimal" defaultValue={state.fields?.price ?? ""} onChange={(e) => setPrice(e.target.value)} placeholder="5,000" />
+          </label>
+        ) : (
+          <div className="field"><span className="field__label">Price</span><span className="field__static">Free (RSVP event)</span></div>
+        )}
       </div>
       <div className="grid2">
         <label className="field">
@@ -42,9 +46,11 @@ export function TicketForm({ eventId, first }: { eventId: string; first: boolean
         <input autoComplete="off" name="description" maxLength={280} defaultValue={state.fields?.description ?? ""} placeholder="Front rows, lunch, certificate…" />
       </label>
       <p className="field__hint">
-        {kobo > 0
-          ? <>Ganor fee: {formatNaira(feeKobo(kobo))} per ticket (5% + ₦100). Who pays it is set when ticket sales open.</>
-          : <>Free tickets cost nothing.</>}
+        {kind === "rsvp"
+          ? <>Free entries cost guests nothing. To sell tickets, create a Paid tickets event.</>
+          : kobo > 0
+            ? <>Ganor fee: {formatNaira(feeKobo(kobo))} per ticket (5% + ₦100). Who pays it is set when ticket sales open.</>
+            : <>Paid-ticket events can&rsquo;t have free tickets. For a free event, create a Free RSVP event.</>}
       </p>
       <div className="actions">
         <SubmitButton variant="outline" size="sm" pendingText="Adding…">Add ticket type</SubmitButton>
