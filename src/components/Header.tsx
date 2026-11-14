@@ -1,6 +1,7 @@
 import { getUserId } from "@/lib/supabase/server"
 import { PublicNav } from "./PublicNav"
 import { AppNav } from "./AppNav"
+import { HeaderScope } from "./HeaderScope"
 import { getHq, HQ_LOGIN_DOMAIN } from "@/lib/hq"
 
 export async function Header() {
@@ -16,5 +17,9 @@ export async function Header() {
   // HQ-only accounts (username logins, or an email set up just for HQ) have no host profile.
   const hqOnly = staff && (!profile || (email ?? "").endsWith(`@${HQ_LOGIN_DOMAIN}`))
   const name = hqOnly ? me?.display_name || "GANOR" : profile?.display_name || email || "Host"
-  return <AppNav name={name} email={hqOnly && (email ?? "").endsWith(`@${HQ_LOGIN_DOMAIN}`) ? "" : email ?? ""} logo={hqOnly ? null : profile?.logo_url ?? null} staff={staff} hqOnly={hqOnly} hqRole={me?.role ?? null} />
+  return (
+    <HeaderScope staff={staff}>
+      <AppNav name={name} email={hqOnly && (email ?? "").endsWith(`@${HQ_LOGIN_DOMAIN}`) ? "" : email ?? ""} logo={hqOnly ? null : profile?.logo_url ?? null} staff={staff} hqOnly={hqOnly} hqRole={me?.role ?? null} />
+    </HeaderScope>
+  )
 }

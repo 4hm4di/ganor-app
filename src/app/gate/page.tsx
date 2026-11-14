@@ -1,6 +1,6 @@
 import type { Metadata } from "next"
 import Link from "next/link"
-import { createClient, getUserId } from "@/lib/supabase/server"
+import { createClient } from "@/lib/supabase/server"
 import { gateToken, type GateSession } from "@/lib/gate"
 import { Icon } from "@/components/Icon"
 import { SignOutButton } from "@/components/SignOutButton"
@@ -16,7 +16,6 @@ export default async function Gate() {
   const session = token ? ((await supabase.rpc("staff_session", { p_token: token })).data as GateSession | null) : null
 
   if (!session) {
-    const { userId } = await getUserId()
     const why = token ? ((await supabase.rpc("staff_token_status", { p_token: token })).data as string | null) : null
     return (
       <div className="wrap--narrow">
@@ -31,7 +30,7 @@ export default async function Gate() {
         <div className="card" data-reveal>
           <GateLoginForm />
         </div>
-        {userId && <p className="small muted" style={{ marginTop: 16 }}>Hosting? Open the scanner from your event&rsquo;s Gate check-in card in <Link href="/dashboard/events">My events</Link>.</p>}
+        <p className="small muted" style={{ marginTop: 16 }}>Hosting the event? Open the scanner from your event&rsquo;s Gate check-in card in <Link href="/dashboard/events">My events</Link>.</p>
       </div>
     )
   }

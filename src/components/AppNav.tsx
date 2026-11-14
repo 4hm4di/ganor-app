@@ -36,8 +36,9 @@ export function AppNav({ name, email, logo, staff, hqOnly, hqRole }: Props) {
     { href: "/dashboard", label: "Overview", icon: "home", match: (p: string) => p === "/dashboard" },
     { href: "/dashboard/events", label: "My events", icon: "calendar", match: (p: string) => p.startsWith("/dashboard/events") },
     { href: "/dashboard/team", label: "Gate team", icon: "users", match: (p: string) => p.startsWith("/dashboard/team") },
-    { href: "/dashboard/profile", label: "Profile", icon: "user", match: (p: string) => p.startsWith("/dashboard/profile") },
   ]
+  // Profile lives in the account menu (and the phone menu), not in the top bar.
+  const sheetLinks = hq ? links : [...links, { href: "/dashboard/profile", label: "Host profile", icon: "user", match: (p: string) => p.startsWith("/dashboard/profile") }]
 
   // Close menus on navigation, outside click and Escape.
   useEffect(() => {
@@ -150,7 +151,7 @@ export function AppNav({ name, email, logo, staff, hqOnly, hqRole }: Props) {
             <span className="acct__who"><b>{name}</b>{email && <small>{email}</small>}</span>
           </div>
           <nav className="appsheet__links" aria-label="Dashboard">
-            {links.map((l, i) => (
+            {sheetLinks.map((l, i) => (
               <Link key={l.href} href={l.href} className={`appsheet__l${l.match(path) ? " is-on" : ""}`} style={{ "--i": i } as React.CSSProperties}>
                 <Icon name={l.icon} size={22} />{l.label}
               </Link>
@@ -162,7 +163,7 @@ export function AppNav({ name, email, logo, staff, hqOnly, hqRole }: Props) {
               </>
             ) : (
               <>
-                <button type="button" className="appsheet__l" style={{ "--i": links.length } as React.CSSProperties} onClick={() => { setSheet(false); setChooser(true) }}><Icon name="add-circle" size={22} />New event</button>
+                <button type="button" className="appsheet__l" style={{ "--i": sheetLinks.length } as React.CSSProperties} onClick={() => { setSheet(false); setChooser(true) }}><Icon name="add-circle" size={22} />New event</button>
               </>
             )}
           </nav>

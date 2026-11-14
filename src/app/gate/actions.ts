@@ -35,14 +35,16 @@ export async function gateLogout() {
   redirect("/gate")
 }
 
-// Hosts (signed in) scan without a gate cookie; gate staff use their cookie.
-export async function checkIn(eventId: string, code: string): Promise<CheckInResult> {
+// The scanner page decides who is scanning (host or gate account) and says so here, so a host
+// session and a gate session in the same browser never get mixed up.
+export async function checkIn(eventId: string, code: string, mode: "host" | "gate"): Promise<CheckInResult> {
   const { supabase, userId } = await getUserId()
-  const token = await gateToken()
+  const token = mode === "gate" ? await gateToken() : null
+  if (mode === "gate" ? !token : !userId) return { result: "signed_out" }
   const { data, error } = await supabase.rpc("check_in_ticket", {
     p_event: eventId,
     p_code: code,
-    ...(token && !userId ? { p_staff_token: token } : {}),
+    ...(token ? { p_staff_token: token } : {}),
   })
   if (error || !data) return { result: "not_found" }
   const res = data as CheckInResult

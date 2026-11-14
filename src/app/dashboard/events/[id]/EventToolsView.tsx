@@ -129,7 +129,7 @@ export function EventToolsView({ ev, userId, publicUrl, sp, guests, daily, scanH
             </div>
           )}
           <div className="actions" style={{ gap: 8 }}>
-            <Link href={`/gate/${ev.id}`} className="btn btn--primary btn--sm">
+            <Link href={`/gate/${ev.id}?as=host`} className="btn btn--primary btn--sm">
               <span>Open scanner</span>
               <span className="btn__arrow" aria-hidden="true"><Icon name="qr-code" /></span>
             </Link>

@@ -148,7 +148,7 @@ export function OverviewView({ range, first, stats, events, suspended, passwordU
               </div>
               <div className="nextup__actions">
                 <Link href={`/dashboard/events/${nextUp.e.id}`} className="btn btn--primary btn--sm"><span>Manage</span><span className="btn__arrow" aria-hidden="true"><Icon name="arrow" /></span></Link>
-                <Link href={`/gate/${nextUp.e.id}`} className="btn btn--ghost btn--sm btn--plain"><Icon name="qr-code" size={18} />Scanner</Link>
+                <Link href={`/gate/${nextUp.e.id}?as=host`} className="btn btn--ghost btn--sm btn--plain"><Icon name="qr-code" size={18} />Scanner</Link>
               </div>
             </div>
           ) : (

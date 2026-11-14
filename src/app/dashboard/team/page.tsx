@@ -29,7 +29,10 @@ export default async function Team() {
       return {
         id: e.id,
         label: e.title,
-        hint: `${formatDate(e.starts_at, { weekday: "short", day: "numeric", month: "short" })} · ${e.venue_name}${e.status === "draft" ? " · draft" : ""}${free ? " · free plan: 1 gate account" : ""}`,
+        when: formatDate(e.starts_at, { weekday: "short", day: "numeric", month: "short" }),
+        venue: e.venue_name,
+        draft: e.status === "draft",
+        free,
         heldBy: free ? (links ?? []).find((l) => l.event_id === e.id)?.staff_id ?? null : null,
       }
     })
@@ -40,7 +43,7 @@ export default async function Team() {
         <div>
           <span className="kicker"><Icon name="users" size={18} />Gate team</span>
           <h1 style={{ marginTop: 10 }}>People who check guests in</h1>
-          <p className="muted">Give each person their own username and password. They can only scan tickets for the events you assign, nothing else. They sign in at <b>{gateUrl.replace(/^https?:\/\//, "")}</b>.</p>
+          <p className="muted">Give each person their own username and password. They can only scan tickets for the events you tick, nothing else, on one phone at a time. They sign in at <b>{gateUrl.replace(/^https?:\/\//, "")}</b>.</p>
         </div>
       </div>
       <div className="team">

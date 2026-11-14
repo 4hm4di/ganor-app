@@ -24,7 +24,7 @@ type BarcodeDetectorLike = { detect: (src: CanvasImageSource) => Promise<{ rawVa
 
 // Camera QR scanner with typed-code fallback. Uses the browser's BarcodeDetector where it exists
 // (Chrome on Android) and jsQR elsewhere (iPhone Safari).
-export function Scanner({ eventId, initialIn, total, scannerName }: { eventId: string; initialIn: number; total: number; scannerName: string }) {
+export function Scanner({ eventId, initialIn, total, scannerName, mode }: { eventId: string; initialIn: number; total: number; scannerName: string; mode: "host" | "gate" }) {
   const videoRef = useRef<HTMLVideoElement>(null)
   const canvasRef = useRef<HTMLCanvasElement | null>(null)
   const busy = useRef(false)
@@ -43,18 +43,18 @@ export function Scanner({ eventId, initialIn, total, scannerName }: { eventId: s
     last.current = { code: value, at: now }
     busy.current = true
     setView("checking")
-    const r = await checkIn(eventId, value)
+    const r = await checkIn(eventId, value, mode)
     setRes(r)
     if (typeof r.checked_in === "number" && typeof r.total === "number") setCounts({ in: r.checked_in, total: r.total })
     setView(RESULT[r.result].view)
     navigator.vibrate?.(r.result === "ok" ? 80 : [60, 60, 60])
     // Signed out (e.g. this gate account signed in on another phone): show why, then go to sign-in.
-    if (r.result === "signed_out") { setTimeout(() => window.location.assign("/gate"), 3500); return }
+    if (r.result === "signed_out") { setTimeout(() => window.location.assign(mode === "host" ? "/login?expired=1" : "/gate"), 3500); return }
     setTimeout(() => {
       setView("ready")
       busy.current = false
     }, r.result === "ok" ? 1600 : 2600)
-  }, [eventId])
+  }, [eventId, mode])
 
   const startCamera = useCallback(async () => {
     if (!navigator.mediaDevices?.getUserMedia) return setCamera("none")

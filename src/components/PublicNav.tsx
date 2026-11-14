@@ -4,10 +4,12 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { Icon } from "./Icon"
 
-// Header for signed-out visitors. The hidden staff sign-in (/hq/login) gets a bare HQ bar instead.
+// Header for signed-out visitors. The hidden staff sign-in (/hq/login) gets a bare HQ bar instead,
+// and the gate scanner gets a bare bar with a Gate tag (no account details, whoever is scanning).
 export function PublicNav() {
   const path = usePathname()
-  if (path.startsWith("/hq")) {
+  const scanner = path.startsWith("/gate/")
+  if (path.startsWith("/hq") || scanner) {
     return (
       <header className="topbar">
         <div className="wrap topbar__in">
@@ -16,7 +18,7 @@ export function PublicNav() {
             <img className="logo-light" src="/brand/ganor-lockup-indigo.svg" alt="Ganor" width={118} height={22} />
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img className="logo-dark" src="/brand/ganor-lockup-white.svg" alt="Ganor" width={118} height={22} />
-            <span className="hqtag">HQ</span>
+            <span className="hqtag">{scanner ? "Gate" : "HQ"}</span>
           </span>
         </div>
       </header>
