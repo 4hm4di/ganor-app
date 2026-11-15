@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useSyncExternalStore } from "react"
+import { useRef, useState, useSyncExternalStore } from "react"
 import { toast } from "@/lib/toast"
 import { Icon } from "./Icon"
 import { SocialIcon } from "./SocialIcon"
@@ -9,6 +9,7 @@ const noop = () => () => {}
 
 export function ShareButtons({ url, title, text, compact = false }: { url: string; title: string; text: string; compact?: boolean }) {
   const [copied, setCopied] = useState(false)
+  const urlRef = useRef<HTMLSpanElement>(null)
   const canShare = useSyncExternalStore(noop, () => "share" in navigator, () => false)
 
   const u = encodeURIComponent(url)
@@ -27,14 +28,18 @@ export function ShareButtons({ url, title, text, compact = false }: { url: strin
       toast("Event link copied.")
       setTimeout(() => setCopied(false), 2000)
     } catch {
-      window.prompt("Copy this link", url)
+      // Clipboard blocked (some in-app browsers): highlight the link so it can be copied by hand.
+      const el = urlRef.current
+      const sel = window.getSelection()
+      if (el && sel) { const r = document.createRange(); r.selectNodeContents(el); sel.removeAllRanges(); sel.addRange(r) }
+      toast("Couldn't copy here. The link is highlighted: press and hold it to copy.", "error")
     }
   }
 
   return (
     <div className={`share${compact ? " share--compact" : ""}`}>
       <div className="share__link">
-        <span className="share__url" title={url}>{url.replace(/^https?:\/\//, "")}</span>
+        <span ref={urlRef} className="share__url" title={url}>{url.replace(/^https?:\/\//, "")}</span>
         <button type="button" className="btn btn--primary btn--xs" onClick={copy} aria-live="polite">
           <Icon name={copied ? "check-circle" : "share"} size={16} />{copied ? "Copied" : "Copy link"}
         </button>
