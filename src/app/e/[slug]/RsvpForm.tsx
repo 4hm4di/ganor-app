@@ -71,7 +71,7 @@ export function RsvpForm({ eventId, eventTitle, options, fields, stamp, full }: 
         </label>
       ))}
       <SubmitButton block pendingText="Saving your place…">RSVP for free</SubmitButton>
-      <p className="small muted">Your details go to the host of this event. See Ganor&rsquo;s <a href="/privacy.html">privacy policy</a>.</p>
+      <p className="small muted">Your details go to the host of this event. See Ganor&rsquo;s <a href="https://ganor.ng/privacy.html">privacy policy</a>.</p>
     </form>
   )
 }

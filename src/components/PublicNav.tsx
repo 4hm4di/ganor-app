@@ -35,7 +35,7 @@ export function PublicNav() {
         </Link>
         <nav className="topbar__nav" aria-label="Main">
           <Link href="/events" className="topbar__link">Find events</Link>
-          {!path.startsWith("/login") && <Link href="/login" className="btn btn--primary btn--sm nav-cta">
+          {!path.startsWith("/login") && path !== "/" && <Link href="/login" className="btn btn--primary btn--sm nav-cta">
             <span>Host sign in</span>
             <span className="btn__arrow" aria-hidden="true"><Icon name="arrow" /></span>
           </Link>}

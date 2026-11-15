@@ -49,8 +49,15 @@ const nextConfig: NextConfig = {
   outputFileTracingIncludes: { "/dashboard/events/[id]/guests": ["./src/lib/pdf-fonts/**"] },
   // Rating (/r) and ticket (/t) links carry a private token: never leak it in referrers, caches or search indexes.
   // The homepage is the ganor.ng landing page, exported in launch mode into public/ (tools/export_app.py in the site repo).
+  // The public homepage and legal pages live on ganor.ng; app.ganor.ng is for hosts and gate teams.
+  async redirects() {
+    return [
+      { source: "/index.html", destination: "/", permanent: true },
+      ...["docs", "terms", "privacy", "refunds"].map((p) => ({ source: `/${p}.html`, destination: `https://ganor.ng/${p}.html`, permanent: true })),
+    ]
+  },
   async rewrites() {
-    return { beforeFiles: [{ source: "/", destination: "/index.html" }], afterFiles: [], fallback: [] }
+    return { beforeFiles: [], afterFiles: [], fallback: [] }
   },
   async headers() {
     return [

@@ -17,7 +17,7 @@ export default function NotFound() {
         <p className="muted">The page may have moved, the event may have been taken down, or the link has a typo.</p>
         <div className="nf__actions">
           <Link href="/events" className="btn btn--primary"><span>Find events</span><span className="btn__arrow" aria-hidden="true"><Icon name="arrow" /></span></Link>
-          <a href="/" className="btn btn--ghost btn--plain">Ganor homepage</a>
+          <a href="https://ganor.ng" className="btn btn--ghost btn--plain">Ganor homepage</a>
         </div>
       </div>
     </div>
