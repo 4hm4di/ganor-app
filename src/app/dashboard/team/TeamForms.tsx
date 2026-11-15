@@ -1,6 +1,7 @@
 "use client"
 
 import { useActionState, useState } from "react"
+import { toast } from "@/lib/toast"
 import { createStaff, deleteStaff, resetStaffPassword, updateStaff, type TeamState } from "./actions"
 import { SubmitButton } from "@/components/SubmitButton"
 import { ConfirmButton } from "@/components/ConfirmButton"
@@ -19,7 +20,6 @@ function makePassword() {
   return `${words[a[0] % words.length]}-${words[a[1] % words.length]}-${String(1000 + (a[2] % 9000))}`
 }
 
-const toast = (m: string, k: "ok" | "error" = "ok") => window.dispatchEvent(new CustomEvent("ganor:toast", { detail: { k, m } }))
 async function copyText(text: string, done: string) {
   try { await navigator.clipboard.writeText(text); toast(done) } catch { toast("Couldn't copy. Press and hold the text to copy it.", "error") }
 }

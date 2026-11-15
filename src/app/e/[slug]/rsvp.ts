@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server"
 import { checkStamp, deviceKey, netKey, rsvpKey, siteOrigin } from "@/lib/rsvp-guard"
 import { sendTicketEmail } from "@/lib/mail"
 import { formatDate, formatTime } from "@/lib/ganor"
+import { flash } from "@/lib/flash"
 
 export type RsvpState =
   | { status: "idle" | "error"; message?: string; values?: Record<string, string> }
@@ -16,7 +17,7 @@ export async function submitRsvp(_prev: RsvpState, fd: FormData): Promise<RsvpSt
   fd.forEach((v, k) => { if (typeof v === "string" && !k.startsWith("$")) values[k] = v })
   const keep = { ...values }
   delete keep.stamp
-  const fail = (message: string): RsvpState => ({ status: "error", message, values: keep })
+  const fail = async (message: string): Promise<RsvpState> => { await flash("error", message); return { status: "error", message, values: keep } }
   if (values.website) return fail("Something went wrong. Try again.") // honeypot for bots
   if (!rsvpKey()) return fail("RSVPs are paused for a moment. Try again shortly.")
   const stamp = checkStamp(values.event_id ?? "", values.stamp ?? "")
@@ -46,5 +47,6 @@ export async function submitRsvp(_prev: RsvpState, fd: FormData): Promise<RsvpSt
   const emailed = d.email
     ? await sendTicketEmail({ to: d.email, name: values.name ?? "", event: d.event, when: `${formatDate(d.starts_at, { weekday: "short", day: "numeric", month: "short", year: "numeric" })} · ${formatTime(d.starts_at)}`, venue: d.venue, ticket: d.ticket_type, code: d.code, link })
     : false
+  await flash("ok", `You're on the list for ${d.event}. Save your ticket link.`)
   return { status: "ok", code: d.code, ticket: d.ticket_type, name: values.name ?? "", link, phone: d.phone, emailed }
 }

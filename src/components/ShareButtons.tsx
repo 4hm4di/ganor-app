@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useSyncExternalStore } from "react"
+import { toast } from "@/lib/toast"
 import { Icon } from "./Icon"
 import { SocialIcon } from "./SocialIcon"
 
@@ -23,6 +24,7 @@ export function ShareButtons({ url, title, text, compact = false }: { url: strin
     try {
       await navigator.clipboard.writeText(url)
       setCopied(true)
+      toast("Event link copied.")
       setTimeout(() => setCopied(false), 2000)
     } catch {
       window.prompt("Copy this link", url)

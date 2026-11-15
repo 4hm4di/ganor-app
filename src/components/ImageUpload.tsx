@@ -1,6 +1,7 @@
 "use client"
 
 import { useRef, useState, useTransition } from "react"
+import { toast } from "@/lib/toast"
 import { createClient } from "@/lib/supabase/client"
 import type { Bucket } from "@/lib/storage"
 import { Icon } from "./Icon"
@@ -38,10 +39,12 @@ export function ImageUpload({
   function onFile(file: File) {
     setError(null)
     if (input.current) input.current.value = ""
-    if (!/^image\/(jpeg|png|webp)$/.test(file.type)) return setError("Use a JPG, PNG or WebP image.")
-    if (file.size > 15 * 1024 * 1024) return setError("That image is over 15 MB. Choose a smaller one.")
+    if (!/^image\/(jpeg|png|webp)$/.test(file.type)) return fail("Use a JPG, PNG or WebP image.")
+    if (file.size > 15 * 1024 * 1024) return fail("That image is over 15 MB. Choose a smaller one.")
     setPicked(file)
   }
+
+  function fail(message: string) { setError(message); toast(message, "error") }
 
   async function upload(blob: Blob) {
     setPicked(null)
@@ -53,11 +56,11 @@ export function ImageUpload({
       if (upErr) throw upErr
       const publicUrl = supabase.storage.from(bucket).getPublicUrl(path).data.publicUrl
       const res = await save(publicUrl)
-      if (!res.ok) throw new Error(res.message)
+      if (!res.ok) { setError(res.message ?? "Upload failed. Try again."); return }
       setUrl(publicUrl)
       startTransition(() => {})
     } catch (e) {
-      setError(e instanceof Error && e.message && !/encode/.test(e.message) ? e.message : "Upload failed. Try again.")
+      fail(e instanceof Error && e.message && !/encode/.test(e.message) ? e.message : "Upload failed. Try again.")
     } finally {
       setBusy(false)
       if (input.current) input.current.value = ""

@@ -3,6 +3,7 @@
 import { useState } from "react"
 import { Icon } from "@/components/Icon"
 import { SocialIcon } from "@/components/SocialIcon"
+import { toast } from "@/lib/toast"
 
 // Buttons for getting a private ticket link somewhere safe: a WhatsApp chat (the guest's own number,
 // or a guest's number when the host resends), copy, and open.
@@ -10,7 +11,7 @@ export function TicketLinkActions({ link, phone, message, whatsappLabel = "Save 
   const [copied, setCopied] = useState(false)
   const wa = `https://wa.me/${(phone ?? "").replace(/\D/g, "")}?text=${encodeURIComponent(message)}`
   const copy = async () => {
-    try { await navigator.clipboard.writeText(link); setCopied(true); setTimeout(() => setCopied(false), 1800) } catch { /* clipboard blocked */ }
+    try { await navigator.clipboard.writeText(link); setCopied(true); toast("Ticket link copied. Keep it private."); setTimeout(() => setCopied(false), 1800) } catch { toast("Couldn't copy. Press and hold the link to copy it.", "error") }
   }
   return (
     <div className="tlinks">

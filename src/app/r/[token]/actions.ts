@@ -1,6 +1,7 @@
 "use server"
 
 import { createClient } from "@/lib/supabase/server"
+import { report } from "@/lib/flash"
 
 export type SubmitState = {
   status: "idle" | "ok" | "error"
@@ -20,7 +21,11 @@ const ERRORS: Record<string, string> = {
 }
 
 // Only a POST (this action) writes. Opening the link, or WhatsApp's link preview, changes nothing.
-export async function submitRating(_prev: SubmitState, fd: FormData): Promise<SubmitState> {
+export async function submitRating(prev: SubmitState, fd: FormData): Promise<SubmitState> {
+  return report(await rate(prev, fd), "Thanks! Your rating was sent.")
+}
+
+async function rate(_prev: SubmitState, fd: FormData): Promise<SubmitState> {
   const token = String(fd.get("token") ?? "")
   const rating = Number(fd.get("rating"))
   const comment = String(fd.get("comment") ?? "")

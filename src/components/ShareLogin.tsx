@@ -1,12 +1,16 @@
 "use client"
 
 import { useState } from "react"
+import { toast } from "@/lib/toast"
 
 // Sign-in details for a new or reset login: copy each part, copy everything, or send on WhatsApp.
 export function ShareLogin({ name, username, password, url, what }: { name: string; username: string; password: string; url: string; what: string }) {
   const [copied, setCopied] = useState<string | null>(null)
   const text = `${what} sign-in for ${name}\nLink: ${url}\nUsername: ${username}\nPassword: ${password}`
-  const copy = (k: string, v: string) => { navigator.clipboard?.writeText(v); setCopied(k); setTimeout(() => setCopied(null), 1600) }
+  const copy = async (k: string, v: string) => {
+    try { await navigator.clipboard.writeText(v); setCopied(k); toast(k === "all" ? "Sign-in details copied." : "Copied."); setTimeout(() => setCopied(null), 1600) }
+    catch { toast("Couldn't copy. Press and hold the text to copy it.", "error") }
+  }
   const rows: [string, string, string][] = [["link", "Sign-in link", url], ["user", "Username", username], ["pass", "Password", password]]
   return (
     <div className="creds" role="status">

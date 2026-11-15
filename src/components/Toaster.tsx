@@ -1,6 +1,7 @@
 "use client"
 
 import { useCallback, useEffect, useRef, useState } from "react"
+import { usePathname } from "next/navigation"
 import { Icon } from "./Icon"
 
 type Toast = { id: number; k: "ok" | "error"; m: string; out?: boolean }
@@ -23,7 +24,12 @@ function readFlash(): Flash[] {
 // Pop-up banner for the result of any dashboard action. Server actions leave a one-shot cookie
 // (lib/flash.ts); this picks it up after the action finishes, shows it, then clears it.
 // Hover or focus pauses the countdown. Client code can also call window.dispatchEvent(new CustomEvent("ganor:toast", { detail: { k, m } })).
+// Sign-in pages show their messages inline, so banners wait (the queue keeps 30s) for the next page.
+const QUIET = /^\/(login|forgot-password|reset-password|hq\/login|gate\/?$|auth\/)/
+
 export function Toaster() {
+  const pathname = usePathname() ?? ""
+  const quiet = QUIET.test(pathname)
   const [items, setItems] = useState<Toast[]>([])
   const seen = useRef(new Set<number>())
 
@@ -40,6 +46,7 @@ export function Toaster() {
   }, [])
 
   useEffect(() => {
+    if (quiet) return
     const check = () => { for (const f of readFlash()) push(f.k === "error" ? "error" : "ok", f.m, f.t) }
     const onEvent = (e: Event) => { const d = (e as CustomEvent<{ k: "ok" | "error"; m: string }>).detail; if (d) push(d.k, d.m) }
     check()
@@ -47,8 +54,9 @@ export function Toaster() {
     window.addEventListener("focus", check)
     window.addEventListener("ganor:toast", onEvent)
     return () => { clearInterval(iv); window.removeEventListener("focus", check); window.removeEventListener("ganor:toast", onEvent) }
-  }, [push])
+  }, [push, quiet])
 
+  if (quiet) return null
   return (
     <div className="toasts" aria-live="polite" aria-atomic="false">
       {items.map((t) => (
