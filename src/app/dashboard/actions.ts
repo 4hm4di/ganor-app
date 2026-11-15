@@ -306,9 +306,9 @@ export async function updateProfile(_prev: FormState, fd: FormData): Promise<For
     return null
   }
   const whatsapp = fields.contact_whatsapp ? toIntl(fields.contact_whatsapp) : null
-  if (fields.contact_whatsapp && !whatsapp) return fail("Enter the WhatsApp number as a Nigerian number, like 0810 330 1999.")
+  if (fields.contact_whatsapp && !whatsapp) return fail("Enter the WhatsApp number as a Nigerian number, like 0803 123 4567.")
   const call = fields.contact_phone ? toIntl(fields.contact_phone) : null
-  if (fields.contact_phone && !call) return fail("Enter the call number as a Nigerian number, like 0810 330 1999.")
+  if (fields.contact_phone && !call) return fail("Enter the call number as a Nigerian number, like 0803 123 4567.")
   if (!whatsapp && !call) return fail("Add a WhatsApp or call number so guests can reach you. You need one to publish events.")
   if (fields.contact_email && !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(fields.contact_email)) return fail("Check the contact email.")
   let website = fields.website
@@ -316,7 +316,7 @@ export async function updateProfile(_prev: FormState, fd: FormData): Promise<For
   if (website && !/^https?:\/\/[^\s/]+\.[^\s]{2,}/i.test(website)) return fail("Check the website address.")
   if (fields.instagram && !/^[A-Za-z0-9._]{1,30}$/.test(fields.instagram)) return fail("Check the Instagram username.")
   const phone = fields.phone ? toIntl(fields.phone) : null
-  if (fields.phone && !phone) return fail("Enter your private number as a Nigerian number, like 0810 330 1999.")
+  if (fields.phone && !phone) return fail("Enter your private number as a Nigerian number, like 0803 123 4567.")
 
   const { error: e1 } = await supabase.from("profiles").update({
     display_name: fields.display_name,
