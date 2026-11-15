@@ -6,12 +6,23 @@ import { createPortal } from "react-dom"
 import { useRouter } from "next/navigation"
 import { Icon } from "./Icon"
 import { RSVP_PLANS, naira } from "@/lib/plans"
+import { createClient } from "@/lib/supabase/client"
+import { freeLeftLabel, resetsLabel, type FreeAllowance } from "@/lib/free-limit"
 
 // "New event" opens this: pick paid tickets or a free RSVP; RSVP shows the plans first.
 export function NewEventChooser({ open, onClose }: { open: boolean; onClose: () => void }) {
   const [step, setStep] = useState<"kind" | "plans">("kind")
   const router = useRouter()
   const panel = useRef<HTMLDivElement>(null)
+  const [allowance, setAllowance] = useState<FreeAllowance | null>(null)
+
+  // How many free RSVP events the host has left (one at a time, 2 a month).
+  useEffect(() => {
+    if (!open || step !== "plans") return
+    let live = true
+    createClient().rpc("free_rsvp_allowance").then(({ data }) => { if (live && data) setAllowance(data as FreeAllowance) })
+    return () => { live = false }
+  }, [open, step])
 
   useEffect(() => {
     if (!open) return
@@ -54,17 +65,27 @@ export function NewEventChooser({ open, onClose }: { open: boolean; onClose: () 
           </div>
         ) : (
           <div className="plans">
-            {RSVP_PLANS.map((p) => (
-              <div key={p.id} className={`plan${p.popular ? " plan--pick" : ""}`}>
+            {RSVP_PLANS.map((p) => {
+              const locked = p.price === 0 && allowance !== null && !allowance.can_create
+              return (
+              <div key={p.id} className={`plan${p.popular ? " plan--pick" : ""}${locked ? " plan--locked" : ""}`}>
                 <div className="plan__top"><b>{p.name}</b>{p.popular && <span className="badge badge--ok">Popular</span>}</div>
                 <p className="plan__price">{naira(p.price)}<small>{p.price ? " per event" : " forever"}</small></p>
                 <ul>{p.perks.map((k) => <li key={k}><Icon name="check-circle" size={16} />{k}</li>)}</ul>
+                {p.price === 0 && allowance && (
+                  <p className={`plan__note small${locked ? "" : " muted"}`}>
+                    {locked
+                      ? allowance.active ? `Used: ${allowance.active.title} is still running. Free events run one at a time.` : `Used: both free events this month. Free again from ${resetsLabel(allowance)}.`
+                      : `${freeLeftLabel(allowance)}. One at a time.`}
+                  </p>
+                )}
                 <button type="button" className={`btn btn--sm ${p.popular ? "btn--primary" : "btn--ghost btn--plain"}`} onClick={() => { close(); router.push(`/dashboard/events/new?kind=rsvp&plan=${p.id}`) }}>
-                  <span>{p.price ? `Choose ${p.name}` : "Start free"}</span>{p.popular && <span className="btn__arrow" aria-hidden="true"><Icon name="arrow" /></span>}
+                  <span>{p.price ? `Choose ${p.name}` : locked ? "Why it's locked" : "Start free"}</span>{p.popular && <span className="btn__arrow" aria-hidden="true"><Icon name="arrow" /></span>}
                 </button>
               </div>
-            ))}
-            <p className="plans__note small muted">Free needs no payment or bank details. Paid plans are one payment per event, made when you publish. Guests always RSVP for free.</p>
+              )
+            })}
+            <p className="plans__note small muted">Free needs no payment or bank details: one free event at a time, up to 2 a month. Paid plans are one payment per event, made when you publish. Guests always RSVP for free.</p>
           </div>
         )}
       </div>

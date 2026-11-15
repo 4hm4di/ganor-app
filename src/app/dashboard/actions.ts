@@ -1,6 +1,7 @@
 "use server"
 
 import { revalidatePath } from "next/cache"
+import { freeLimitText, isFreeLimitError } from "@/lib/free-limit"
 import { flash, report, dbMessage } from "@/lib/flash"
 import { MIN_TICKET_NAIRA } from "@/lib/ganor"
 import { redirect } from "next/navigation"
@@ -83,6 +84,7 @@ export async function createEvent(_prev: FormState, fd: FormData): Promise<FormS
       .select("id")
       .single()
     if (data) id = data.id
+    else if (error && isFreeLimitError(error.message)) return report({ status: "error", message: freeLimitText(error.message), fields })
     else if (error && error.code !== "23505") return report({ status: "error", message: "We couldn't save the event. Try again.", fields })
   }
   if (!id) return report({ status: "error", message: "We couldn't save the event. Try again.", fields })

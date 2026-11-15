@@ -315,6 +315,7 @@ export type Database = {
       admin_watchlist: { Args: Record<string, never>; Returns: { kind: string; severity: string; title: string; detail: string; event_id: string | null; host_id: string | null; at: string }[] }
       rsvp_submit: { Args: { p_key: string; p_event: string; p_ticket_type: string; p_name: string; p_phone: string; p_email: string; p_answers: Json; p_consent: boolean; p_device: string; p_net: string }; Returns: Json }
       ticket_view: { Args: { p_token: string }; Returns: Json }
+      free_rsvp_allowance: { Args: Record<string, never>; Returns: Json }
       host_find_guest: { Args: { p_event: string; p_phone: string }; Returns: Json }
       admin_recent_actions: {
         Args: { p_limit?: number }

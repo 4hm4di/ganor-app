@@ -1036,11 +1036,27 @@ html.is-locked { overflow: hidden; }
 .rsvpok__code { font: 800 22px/28px ui-monospace, SFMono-Regular, Menlo, monospace; letter-spacing: .12em; }
 .rsvpok__save { display: grid; gap: 8px; justify-items: center; width: 100%; padding: 14px; border-radius: 16px; background: rgba(91, 75, 219, .06); box-shadow: inset 0 0 0 1px var(--ganor-line); }
 
-/* Ticket link actions (after RSVP, on the ticket page, and host resend) */
-.tlinks { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
-.tlinks .btn { gap: 8px; }
-.tlinks__wa { background: #1FAF5A; color: #fff; --fill: #178F49; --on-fill: #fff; }
+/* Ticket link actions (after RSVP, on the ticket page, and host resend): one even group.
+   WhatsApp is full width; the rest share equal columns sized by the space the group has. */
+.tlinks-box { container-type: inline-size; width: 100%; }
+.tlinks { display: grid; grid-template-columns: minmax(0, 1fr); gap: 8px; }
+.tlinks .btn { width: 100%; min-height: 44px; justify-content: center; gap: 8px; white-space: nowrap; }
+.tlinks .btn > span { overflow: hidden; text-overflow: ellipsis; }
+.tlinks__wa { grid-column: 1 / -1; background: #1FAF5A; color: #fff; --fill: #178F49; --on-fill: #fff; }
 .tlinks__wa:hover { background: #178F49; }
+@container (min-width: 290px) {
+  .tlinks:not([data-n="4"]) { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .tlinks:not([data-n="4"]) > :last-child:nth-child(even) { grid-column: 1 / -1; }
+}
+/* The ticket page group (WhatsApp, copy, calendar, directions) needs room for "Add to calendar". */
+@container (min-width: 370px) {
+  .tlinks[data-n="4"] { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .tlinks[data-n="4"] > :last-child { grid-column: 1 / -1; }
+}
+@container (min-width: 540px) {
+  .tlinks[data-n="4"] { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .tlinks[data-n="4"] > :last-child { grid-column: auto; }
+}
 
 /* Private ticket page (/t/…) */
 .tpage { padding-block: 28px 56px; max-width: 560px; }
@@ -1053,14 +1069,14 @@ html.is-locked { overflow: hidden; }
 .tcard__list li { display: grid; gap: 8px; justify-items: center; padding: 16px; border-radius: 18px; box-shadow: inset 0 0 0 1px var(--ganor-line); }
 .tcard__list li.is-void { opacity: .45; filter: grayscale(1); }
 .theme-dark .tcard .ev-facts .i { color: var(--ganor-lavender); }
-@media print { .tlinks, .tpage .actions, .site-header, header, footer { display: none !important; } .tcard { box-shadow: none; } }
+@media print { .tlinks-box, .tpage .actions, .site-header, header, footer { display: none !important; } .tcard { box-shadow: none; } }
 
 /* Host: resend a guest's ticket */
 .resend { display: grid; gap: 10px; padding-top: 12px; }
 .resend__row { display: flex; gap: 8px; align-items: flex-end; flex-wrap: wrap; }
 .resend__row .field { flex: 1 1 180px; margin: 0; }
 .resend__hit { display: grid; gap: 8px; padding: 12px; border-radius: 14px; box-shadow: inset 0 0 0 1px var(--ganor-line); }
-.resend__hit .tlinks { justify-content: flex-start; }
+
 
 /* ─── Bento dashboard grid (12 columns; everything stacks on phones) ─── */
 .dash { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 16px; align-items: stretch; }
@@ -1413,3 +1429,12 @@ html { scroll-padding-top: calc(76px + env(safe-area-inset-top)); }
 .grid2 { grid-template-columns: minmax(0, 1fr); }
 .grid2 > * { min-width: 0; }
 @media (min-width: 720px) { .grid2 { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+
+/* Free RSVP allowance in the plan picker and the upgrade prompt */
+.plan__note { margin: 0; padding: 8px 10px; border-radius: 10px; background: rgba(91, 75, 219, .06); }
+.plan--locked { opacity: .9; }
+.plan--locked .plan__price, .plan--locked ul { opacity: .55; }
+.plan--locked .plan__note { background: rgba(229, 160, 47, .14); color: var(--text); }
+.freelimit__plans { grid-template-columns: repeat(auto-fit, minmax(min(260px, 100%), 1fr)); }
+.freelimit .plan .btn { justify-content: center; margin-top: auto; }
+.freelimit .plan { align-content: stretch; grid-template-rows: auto auto 1fr auto; }
