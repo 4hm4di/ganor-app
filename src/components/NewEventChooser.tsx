@@ -7,7 +7,7 @@ import { useRouter } from "next/navigation"
 import { Icon } from "./Icon"
 import { RSVP_PLANS, naira } from "@/lib/plans"
 import { createClient } from "@/lib/supabase/client"
-import { freeLeftLabel, resetsLabel, type FreeAllowance } from "@/lib/free-limit"
+import { freeLeftLabel, type FreeAllowance } from "@/lib/free-limit"
 
 // "New event" opens this: pick paid tickets or a free RSVP; RSVP shows the plans first.
 export function NewEventChooser({ open, onClose }: { open: boolean; onClose: () => void }) {
@@ -75,7 +75,7 @@ export function NewEventChooser({ open, onClose }: { open: boolean; onClose: () 
                 {p.price === 0 && allowance && (
                   <p className={`plan__note small${locked ? "" : " muted"}`}>
                     {locked
-                      ? allowance.active ? `Used: ${allowance.active.title} is still running. Free events run one at a time.` : `Used: both free events this month. Free again from ${resetsLabel(allowance)}.`
+                      ? allowance.active ? `${allowance.active.title} is still running. Choose a plan, or try again later.` : "Free events used for now. Choose a plan, or try again later."
                       : `${freeLeftLabel(allowance)}. One at a time.`}
                   </p>
                 )}

@@ -1,7 +1,7 @@
 import Link from "next/link"
 import { Icon } from "@/components/Icon"
 import { RSVP_PLANS, naira } from "@/lib/plans"
-import { resetsLabel, type FreeAllowance } from "@/lib/free-limit"
+import type { FreeAllowance } from "@/lib/free-limit"
 
 // Shown instead of the New free event form when the host has no free RSVP event available.
 export function FreeLimitPrompt({ allowance }: { allowance: FreeAllowance }) {
@@ -12,9 +12,9 @@ export function FreeLimitPrompt({ allowance }: { allowance: FreeAllowance }) {
         <Icon name="info" />
         <span>
           {running ? (
-            <><b>You already have a free event running: {running.title}.</b> Free RSVP events run one at a time, up to {allowance.limit} a month. Choose a plan for this one, or wait until that event ends.</>
+            <><b>You already have a free event running: {running.title}.</b> Choose a plan for this one, or try again later.</>
           ) : (
-            <><b>You&rsquo;ve used your {allowance.limit} free RSVP events this month.</b> Choose a plan for this one, or create a free event again from {resetsLabel(allowance)}.</>
+            <><b>You&rsquo;ve used your free RSVP events for now.</b> Choose a plan for this one, or try again later.</>
           )}
         </span>
       </div>
