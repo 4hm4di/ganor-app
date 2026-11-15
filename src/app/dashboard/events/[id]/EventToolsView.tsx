@@ -166,7 +166,7 @@ export function EventToolsView({ ev, userId, publicUrl, sp, guests, daily, scanH
                 </div>
               )}
               {!paid && (
-                <p className="small muted">Online payment is being set up. For now, pay by bank transfer: email <a href={`mailto:support@ganor.ng?subject=${encodeURIComponent(`RSVP plan ${p.name} · ${ev.title} · ${ev.id.slice(0, 8).toUpperCase()}`)}`}>support@ganor.ng</a> with reference <b>{ev.id.slice(0, 8).toUpperCase()}</b>. Ganor confirms it and the Publish button works straight away.</p>
+                <p className="small muted">Pay by bank transfer: email <a href={`mailto:support@ganor.ng?subject=${encodeURIComponent(`RSVP plan ${p.name} · ${ev.title} · ${ev.id.slice(0, 8).toUpperCase()}`)}`}>support@ganor.ng</a> with reference <b>{ev.id.slice(0, 8).toUpperCase()}</b> and we’ll send the bank details. Once Ganor confirms your payment, the Publish button works.</p>
               )}
             </article>
           )

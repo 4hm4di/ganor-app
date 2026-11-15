@@ -11,7 +11,7 @@ export const RSVP_PLANS: RsvpPlan[] = [
   { id: "standard", name: "Standard", price: 100_000, cap: 500, questions: 6, popular: true,
     perks: ["Up to 500 guests", "6 questions", "Branded guest list PDF", "Gate team with scanner logins", "Everything in Basic"] },
   { id: "pro", name: "Pro", price: 175_000, cap: 1_500, questions: 6,
-    perks: ["Up to 1,500 guests", "Tickets and reminders on WhatsApp", "Check-in by the hour report", "Everything in Standard"] },
+    perks: ["Up to 1,500 guests", "Check-in by the hour report", "Everything in Standard"] },
   { id: "premium", name: "Premium", price: 250_000, cap: 5_000, questions: 6,
     perks: ["Up to 5,000 guests", "Featured on Find events", "Priority support on event day", "Everything in Pro"] },
 ]
