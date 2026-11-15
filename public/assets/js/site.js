@@ -16,7 +16,7 @@
      Set data-endpoint on the join form (e.g. a Formspree or Google Apps Script URL)
      to collect sign-ups in a sheet. Until then, sign-ups open WhatsApp with the
      details filled in, sent to the Ganor number. */
-  const WHATSAPP = '2348103301999';
+  const WHATSAPP = '2348106742222';
 
   /* ---------- Intro (first visit per session) ---------- */
   function runIntro(done) {
