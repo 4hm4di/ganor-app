@@ -3,6 +3,7 @@ import localFont from "next/font/local"
 import { Header } from "@/components/Header"
 import { Motion } from "@/components/Motion"
 import { Toaster } from "@/components/Toaster"
+import { ErrorHaptics } from "@/components/ErrorHaptics"
 import "./globals.css"
 
 const inter = localFont({
@@ -53,6 +54,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
         <Header />
         <Motion />
         <Toaster />
+        <ErrorHaptics />
         <main id="main">{children}</main>
         <footer className="foot">
           <div className="wrap foot__in">

@@ -1,6 +1,7 @@
 "use client"
 
 import { useCallback, useEffect, useRef, useState } from "react"
+import { hapticError } from "@/lib/haptics"
 import { usePathname } from "next/navigation"
 import { Icon } from "./Icon"
 
@@ -41,6 +42,7 @@ export function Toaster() {
   const push = useCallback((k: "ok" | "error", m: string, t = Date.now()) => {
     if (!m || seen.current.has(t)) return
     seen.current.add(t)
+    if (k === "error") hapticError()
     const id = t + Math.random()
     setItems((list) => [...list.slice(-2), { id, k, m }])
   }, [])

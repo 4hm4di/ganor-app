@@ -1,6 +1,7 @@
 "use client"
 
 import { useCallback, useEffect, useRef, useState } from "react"
+import { hapticError } from "@/lib/haptics"
 import jsQR from "jsqr"
 import { checkIn } from "../actions"
 import type { CheckInResult } from "@/lib/gate"
@@ -47,7 +48,7 @@ export function Scanner({ eventId, initialIn, total, scannerName, mode }: { even
     setRes(r)
     if (typeof r.checked_in === "number" && typeof r.total === "number") setCounts({ in: r.checked_in, total: r.total })
     setView(RESULT[r.result].view)
-    navigator.vibrate?.(r.result === "ok" ? 80 : [60, 60, 60])
+    if (r.result !== "ok") hapticError() // errors only: a good scan is shown, not felt
     // Signed out (e.g. this gate account signed in on another phone): show why, then go to sign-in.
     if (r.result === "signed_out") { setTimeout(() => window.location.assign(mode === "host" ? "/login?expired=1" : "/gate"), 3500); return }
     setTimeout(() => {
