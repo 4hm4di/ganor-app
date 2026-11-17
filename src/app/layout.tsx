@@ -7,10 +7,9 @@ import { ErrorHaptics } from "@/components/ErrorHaptics"
 import "./globals.css"
 
 const inter = localFont({
-  src: [
-    { path: "./fonts/inter-latin.woff2", weight: "100 900", style: "normal" },
-    { path: "./fonts/inter-latin-ext.woff2", weight: "100 900", style: "normal" },
-  ],
+  // Basic Latin only; the extended set (₦, Hausa hooked letters) is in globals.css with a unicode-range,
+  // so it downloads only on pages that use those characters.
+  src: [{ path: "./fonts/inter-latin.woff2", weight: "100 900", style: "normal" }],
   variable: "--font-inter",
   display: "swap",
 })
@@ -45,7 +44,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
     <html lang="en" className={`${inter.variable} ${bricolage.variable}`} suppressHydrationWarning>
       <head>
         {/* Motion styles apply only once JS runs, so content never stays hidden without it. */}
-        <script dangerouslySetInnerHTML={{ __html: "document.documentElement.classList.add('js')" }} />
+        <script dangerouslySetInnerHTML={{ __html: "document.documentElement.classList.add('js');if(/^\\/(dashboard|hq|gate)(\\/|$)/.test(location.pathname))document.documentElement.classList.add('app-fast')" }} />
         {/* Theme before first paint: ganor_theme cookie (system by default) + the device setting. */}
         <script dangerouslySetInnerHTML={{ __html: THEME_SCRIPT }} />
       </head>

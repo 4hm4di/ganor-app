@@ -1,4 +1,5 @@
 import type { Metadata } from "next"
+import { hostEarnings } from "@/lib/earnings"
 import { redirect } from "next/navigation"
 import Link from "next/link"
 import { getUserId } from "@/lib/supabase/server"
@@ -17,10 +18,11 @@ export default async function Profile({ searchParams }: { searchParams: Promise<
   const sp = await searchParams
   const { supabase, userId, email } = await getUserId()
   if (!userId) redirect("/login")
-  const [{ data: p }, { data: contact }, { data: payout }] = await Promise.all([
+  const [{ data: p }, { data: contact }, { data: payout }, earned] = await Promise.all([
     supabase.from("profiles").select("*").eq("id", userId).single(),
     supabase.from("host_contacts").select("phone").eq("host_id", userId).maybeSingle(),
     supabase.from("payout_accounts").select("account_type, business_name, bank_code, bank_name, account_number, account_name, settlement_email, settlement_phone, status, status_note").eq("host_id", userId).maybeSingle(),
+    hostEarnings(supabase, userId),
   ])
 
   return (
@@ -70,7 +72,7 @@ export default async function Profile({ searchParams }: { searchParams: Promise<
           />
         </div>
         <div className="card" id="payouts">
-          <PayoutForm current={(payout as Payout) ?? null} defaultName={p?.display_name ?? ""} defaultEmail={email ?? ""} />
+          <PayoutForm current={(payout as Payout) ?? null} defaultName={p?.display_name ?? ""} defaultEmail={email ?? ""} earned={{ takeHome: earned.takeHome, month: earned.month }} />
         </div>
         <div className="card">
           <EmailForm current={email ?? ""} />

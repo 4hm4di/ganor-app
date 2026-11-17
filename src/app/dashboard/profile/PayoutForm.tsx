@@ -1,10 +1,12 @@
 "use client"
 
+import Link from "next/link"
 import { useActionState, useState } from "react"
 import { savePayout, type FormState } from "../actions"
 import { NG_BANKS, maskAccount } from "@/lib/banks"
 import { SubmitButton } from "@/components/SubmitButton"
 import { Icon } from "@/components/Icon"
+import { WalletCard } from "@/components/WalletCard"
 
 export type Payout = {
   account_type: string; business_name: string; bank_code: string; bank_name: string; account_number: string; account_name: string
@@ -17,7 +19,7 @@ const STATUS: Record<string, { label: string; cls: string; text: string }> = {
   rejected: { label: "Needs a fix", cls: "badge--bad", text: "These details didn't match. Update them below." },
 }
 
-export function PayoutForm({ current, defaultName, defaultEmail }: { current: Payout; defaultName: string; defaultEmail: string }) {
+export function PayoutForm({ current, defaultName, defaultEmail, earned }: { current: Payout; defaultName: string; defaultEmail: string; earned?: { takeHome: number; month: number } }) {
   const [state, action] = useActionState<FormState, FormData>(savePayout, { status: "idle" })
   const [editing, setEditing] = useState(!current)
   const v = { ...(current ?? {}), ...(state.fields ?? {}) } as Record<string, string>
@@ -32,13 +34,16 @@ export function PayoutForm({ current, defaultName, defaultEmail }: { current: Pa
       </div>
       {state.status === "ok" && <div className="alert alert--ok" role="status"><Icon name="check-circle" /><span>{state.message}</span></div>}
 
+      <WalletCard takeHome={earned?.takeHome ?? 0} month={earned?.month} account={current ? { bank_name: current.bank_name, account_number: current.account_number, account_name: current.account_name, status: current.status } : null} />
+
       {current && !editing && (
         <div className="payout">
-          <div className="payout__row"><span className="payout__bank">{current.bank_name}</span>{st && <span className={`badge ${st.cls}`}>{st.label}</span>}</div>
-          <b className="payout__num">{maskAccount(current.account_number)}</b>
-          <span className="small muted">{current.account_name} · {current.account_type === "business" ? "Business" : "Individual"} · paid as &ldquo;{current.business_name}&rdquo;</span>
-          {st && <span className="small muted">{current.status === "rejected" && current.status_note ? current.status_note : st.text}</span>}
-          <div><button type="button" className="btn btn--ghost btn--xs btn--plain" onClick={() => setEditing(true)}>Change payout details</button></div>
+          <span className="small muted">{current.account_type === "business" ? "Business" : "Individual"} account · paid as &ldquo;{current.business_name}&rdquo; · {maskAccount(current.account_number)}</span>
+          {st && <span className={`small${current.status === "rejected" ? " payout__bad" : " muted"}`}>{current.status === "rejected" && current.status_note ? `Ganor says: ${current.status_note}` : st.text}</span>}
+          <div className="actions" style={{ gap: 8 }}>
+            <button type="button" className="btn btn--ghost btn--xs btn--plain" onClick={() => setEditing(true)}><Icon name="pen" size={14} />Change payout details</button>
+            <Link href="/dashboard/wallet" className="btn btn--ghost btn--xs btn--plain"><Icon name="wallet" size={14} />Open wallet</Link>
+          </div>
         </div>
       )}
 

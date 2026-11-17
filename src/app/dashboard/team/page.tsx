@@ -3,7 +3,7 @@ import { redirect } from "next/navigation"
 import { getUserId } from "@/lib/supabase/server"
 import { siteOrigin } from "@/lib/auth"
 import { Icon } from "@/components/Icon"
-import { formatDate } from "@/lib/ganor"
+import { checkInState, formatDate } from "@/lib/ganor"
 import { NewStaffForm, StaffCard } from "./TeamForms"
 
 const clock = () => Date.now()
@@ -16,13 +16,15 @@ export default async function Team() {
   const [{ data: staff }, { data: links }, { data: events }] = await Promise.all([
     supabase.from("host_staff").select("id, username, display_name, active, locked_until, last_login_at, created_at").eq("host_id", userId).order("created_at"),
     supabase.from("host_staff_events").select("staff_id, event_id"),
-    supabase.from("events").select("id, title, starts_at, ends_at, status, venue_name, event_kind, rsvp_plan, plan_paid_at").eq("host_id", userId).neq("status", "cancelled").order("starts_at"),
+    supabase.from("events").select("id, title, starts_at, ends_at, status, venue_name, event_kind, rsvp_plan, plan_paid_at").eq("host_id", userId).order("starts_at"),
   ])
   const gateUrl = `${await siteOrigin()}/gate`
-  // Only events that can still be checked in: not ended (no end time means 6 hours after the start).
+  // The one check-in rule (lib/ganor checkInState, same as the gate app and the database):
+  // published events until 12 hours after they end; drafts can be ticked ahead and show once published.
   const now = clock()
+  const closed = new Set((events ?? []).filter((e) => checkInState(e, now) === "closed").map((e) => e.id))
   const evs = (events ?? [])
-    .filter((e) => new Date(e.ends_at ?? new Date(new Date(e.starts_at).getTime() + 6 * 3_600_000).toISOString()).getTime() > now)
+    .filter((e) => !closed.has(e.id))
     .map((e) => {
       // Free RSVP events (free plan or not yet paid) get one gate account.
       const free = e.event_kind === "rsvp" && (e.rsvp_plan === "free" || !e.plan_paid_at)
@@ -59,6 +61,7 @@ export default async function Team() {
               key={s.id}
               staff={s}
               assigned={(links ?? []).filter((l) => l.staff_id === s.id).map((l) => l.event_id)}
+              past={(links ?? []).filter((l) => l.staff_id === s.id && closed.has(l.event_id)).length}
               events={evs}
               gateUrl={gateUrl}
             />

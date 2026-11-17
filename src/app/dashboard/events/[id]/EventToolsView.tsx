@@ -22,7 +22,7 @@ import { Figure } from "@/components/widgets/Figure"
 import { RSVP_PLANS, planById, questionLimit, naira as nairaWhole } from "@/lib/plans"
 import { PhasePill } from "@/components/PhasePill"
 import { BackLink } from "@/components/BackLink"
-import { eventPhase, PHASE_LABEL, feeKobo, formatDate, formatNaira, formatTime, isoToLagosLocal } from "@/lib/ganor"
+import { eventPhase, PHASE_LABEL, feeKobo, formatDate, formatNaira, formatTime, isoToLagosLocal, checkInState, checkInClosesAt } from "@/lib/ganor"
 
 
 const ERRORS: Record<string, string> = {
@@ -43,7 +43,7 @@ export type ToolsGuest = { name: string; ticket: string; in: boolean }
 const dayLabel = (d: string) => formatDate(`${d}T12:00:00Z`, { day: "numeric", month: "short" })
 const hourLabel = (h: number) => `${((h + 11) % 12) + 1}${h < 12 ? "am" : "pm"}`
 
-export function EventToolsView({ ev, userId, publicUrl, sp, guests, daily, scanHours, daysLeft, hasContact }: { hasContact: boolean; ev: ToolsEvent; userId: string; publicUrl: string; sp: { created?: string; published?: string; error?: string; upgraded?: string }; guests: ToolsGuest[]; daily: { day: string; count: number }[]; scanHours: { hour: number; count: number }[]; daysLeft: number }) {
+export function EventToolsView({ ev, userId, publicUrl, sp, guests, daily, scanHours, daysLeft, hasContact, team = [] }: { team?: { display_name: string; active: boolean }[]; hasContact: boolean; ev: ToolsEvent; userId: string; publicUrl: string; sp: { created?: string; published?: string; error?: string; upgraded?: string }; guests: ToolsGuest[]; daily: { day: string; count: number }[]; scanHours: { hour: number; count: number }[]; daysLeft: number }) {
   const hasFree = ev.ticket_types.some((t) => t.price_kobo === 0)
   const publicPath = `/e/${ev.slug}`
   const tickets = ev.ticket_types ?? []
@@ -61,6 +61,7 @@ export function EventToolsView({ ev, userId, publicUrl, sp, guests, daily, scanH
   const fortnight = daily.reduce((n, d) => n + d.count, 0)
   const checkedIn = guests.filter((g) => g.in).length
   const phase = eventPhase(ev, tickets)
+  const gateState = checkInState(ev)
   const over = phase === "ended" || phase === "cancelled"
 
   return (
@@ -117,7 +118,7 @@ export function EventToolsView({ ev, userId, publicUrl, sp, guests, daily, scanH
         </article>
 
         <article className="card card--gate" data-reveal>
-          <header className="card__head"><h2 className="card__title"><Icon name="qr-code" />Gate check-in</h2><span className="card__tag">Event day</span></header>
+          <header className="card__head"><h2 className="card__title"><Icon name="qr-code" />Gate check-in</h2><span className={`card__tag${gateState === "open" ? " card__tag--ok" : ""}`}>{gateState === "open" ? "Open" : gateState === "draft" ? "After publish" : "Closed"}</span></header>
           {scanHours.length > 0 ? (
             <>
               <p className="card__big"><Figure value={checkedIn} /><small>of {guests.length.toLocaleString("en-NG")} in</small></p>
@@ -130,13 +131,20 @@ export function EventToolsView({ ev, userId, publicUrl, sp, guests, daily, scanH
             </div>
           )}
           <div className="actions" style={{ gap: 8 }}>
-            <Link href={`/gate/${ev.id}?as=host`} className="btn btn--primary btn--sm">
-              <span>Open scanner</span>
-              <span className="btn__arrow" aria-hidden="true"><Icon name="qr-code" /></span>
-            </Link>
-            <Link href="/dashboard/team" className="btn btn--ghost btn--sm btn--plain"><Icon name="users" size={18} />Gate team</Link>
+            {gateState === "open" && (
+              <Link href={`/gate/${ev.id}?as=host`} className="btn btn--primary btn--sm">
+                <span>Open scanner</span>
+                <span className="btn__arrow" aria-hidden="true"><Icon name="qr-code" /></span>
+              </Link>
+            )}
+            <Link href="/dashboard/team" className="btn btn--ghost btn--sm btn--plain"><Icon name="users" size={18} />{team.length ? "Manage gate team" : "Add gate team"}</Link>
           </div>
-          <p className="card__empty">Scan on your phone, or add gate accounts so your team can scan with their own username and password.</p>
+          <p className="card__empty">
+            {gateState === "draft" ? "Check-in opens when you publish. " : gateState === "closed" ? `Check-in closed ${formatDate(new Date(checkInClosesAt(ev)).toISOString(), { day: "numeric", month: "short" })}, 12 hours after the event ended. ` : "Open until 12 hours after the event ends. "}
+            {team.length > 0
+              ? <>Can check in: {team.map((s) => s.display_name + (s.active ? "" : " (switched off)")).join(", ")}.</>
+              : "No gate accounts on this event yet: you can scan yourself, or add your team."}
+          </p>
         </article>
 
         {ev.event_kind === "rsvp" && (() => {
@@ -277,7 +285,7 @@ export function EventToolsView({ ev, userId, publicUrl, sp, guests, daily, scanH
           {ev.status === "draft" && (
             <form action={deleteDraft} className="actions" style={{ justifyContent: "flex-end", borderTop: "1px solid var(--ganor-line)", paddingTop: 16 }}>
               <input type="hidden" name="id" value={ev.id} />
-              <ConfirmButton confirmText="Tap again to delete" pendingText="Deleting…"><Icon name="close-circle" size={16} />Delete draft</ConfirmButton>
+              <ConfirmButton title="Delete this draft?" body={<>&ldquo;{ev.title}&rdquo; and its ticket types are removed for good. This can&rsquo;t be undone.</>} confirmLabel="Delete draft" pendingText="Deleting…"><Icon name="close-circle" size={16} />Delete draft</ConfirmButton>
             </form>
           )}
         </article>

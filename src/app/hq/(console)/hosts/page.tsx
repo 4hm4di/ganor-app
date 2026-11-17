@@ -46,7 +46,7 @@ export default async function AdminHosts({ searchParams }: { searchParams: Promi
                 {h.suspended && (
                   <form action={deleteHost}>
                     <input type="hidden" name="host_id" value={h.id} />
-                    <ConfirmButton className="btn btn--danger btn--xs btn--plain" confirmText="Tap again: delete host and all their events" pendingText="Deleting…">Delete host</ConfirmButton>
+                    <ConfirmButton className="btn btn--danger btn--xs btn--plain" title={`Delete ${h.display_name} for good?`} body="This removes the host, all their events, tickets and gate logins. It can’t be undone." confirmLabel="Delete host" pendingText="Deleting…"><Icon name="close-circle" size={14} />Delete host</ConfirmButton>
                   </form>
                 )}
               </div>

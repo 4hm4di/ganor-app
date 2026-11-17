@@ -161,7 +161,7 @@ export default async function EventPage({ params }: { params: Promise<{ slug: st
               <div className="hostcard__who">
                 {host.logo_url ? (
                   // eslint-disable-next-line @next/next/no-img-element
-                  <img className="hostcard__logo" src={host.logo_url} alt="" width={56} height={56} />
+                  <img className="hostcard__logo" src={host.logo_url} alt="" width={56} height={56} loading="lazy" decoding="async" />
                 ) : (
                   <span className="hostcard__logo hostcard__logo--empty" aria-hidden="true">{host.display_name.slice(0, 1).toUpperCase()}</span>
                 )}

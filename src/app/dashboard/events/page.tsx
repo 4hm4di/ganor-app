@@ -167,7 +167,7 @@ export default async function MyEvents({ searchParams }: { searchParams: Promise
                   <span className={`datebox${e.cover_url ? " datebox--img" : ""}`}>
                     {e.cover_url && (
                       // eslint-disable-next-line @next/next/no-img-element
-                      <img src={e.cover_url} alt="" width={128} height={64} loading="lazy" />
+                      <img src={e.cover_url} alt="" width={128} height={64} loading="lazy" decoding="async" />
                     )}
                     <b>{formatDate(e.starts_at, { day: "numeric" })}</b>
                     <span>{formatDate(e.starts_at, { month: "short" })}</span>

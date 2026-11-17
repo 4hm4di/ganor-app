@@ -82,7 +82,7 @@ export function TicketRow({ t, kind = "paid" }: { t: TicketTypeRow; kind?: "paid
             <FormIdleButton onClick={() => setEditing(false)}>Cancel</FormIdleButton>
           </div>
           {t.sold === 0 && (
-            <ConfirmButton formAction={deleteTicketType} className="btn btn--danger btn--xs btn--plain" confirmText="Tap again to delete" pendingText="Deleting…"><Icon name="close-circle" size={14} />Delete</ConfirmButton>
+            <ConfirmButton formAction={deleteTicketType} className="btn btn--danger btn--xs btn--plain" title={`Delete “${t.name}”?`} body="No tickets have been sold for it yet, so no guest is affected. This can’t be undone." confirmLabel="Delete ticket type" pendingText="Deleting…"><Icon name="close-circle" size={14} />Delete</ConfirmButton>
           )}
         </div>
       </form>

@@ -98,6 +98,14 @@ export function eventEndsAt(ev: { starts_at: string; ends_at: string | null }) {
   return ev.ends_at ? new Date(ev.ends_at).getTime() : new Date(ev.starts_at).getTime() + 6 * 3_600_000
 }
 
+// Check-in runs from publishing until 12 hours after the event ends (same rule as private.checkin_open).
+export const CHECKIN_GRACE_MS = 12 * 3_600_000
+export const checkInClosesAt = (ev: { starts_at: string; ends_at: string | null }) => eventEndsAt(ev) + CHECKIN_GRACE_MS
+export function checkInState(ev: { status: string; starts_at: string; ends_at: string | null }, now: number = Date.now()): "open" | "draft" | "closed" {
+  if (ev.status === "cancelled" || now >= checkInClosesAt(ev)) return "closed"
+  return ev.status === "published" ? "open" : "draft"
+}
+
 export function eventPhase(
   ev: { status: string; starts_at: string; ends_at: string | null },
   tickets?: { quantity: number; sold: number; on_sale?: boolean }[],

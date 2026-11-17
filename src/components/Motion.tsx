@@ -1,13 +1,24 @@
 "use client"
 
 import { useEffect } from "react"
+import { usePathname } from "next/navigation"
+
+const APP = /^\/(dashboard|hq|gate)(\/|$)/
 
 // Same entrance motion as ganor.ng (assets/js/site.js): the hero rises in on load,
 // headline lines slide up, and [data-reveal] blocks fade up as they scroll into view.
-// Pages stream in after hydration (loading.tsx), so new elements are picked up as they arrive.
+// The working areas (dashboard, HQ, gate) skip it so content shows at once (html.app-fast,
+// set before first paint in layout.tsx). Only newly added elements are looked at, so long
+// pages and live updates stay cheap.
 export function Motion() {
+  const path = usePathname()
+  const app = APP.test(path)
+
   useEffect(() => {
-    const $$ = (sel: string, root: ParentNode = document) => Array.from(root.querySelectorAll<HTMLElement>(sel))
+    document.documentElement.classList.toggle("app-fast", app)
+  }, [app])
+
+  useEffect(() => {
     const seen = new WeakSet<Element>()
     const io =
       "IntersectionObserver" in window
@@ -20,40 +31,54 @@ export function Motion() {
           }, { rootMargin: "0px 0px 15% 0px", threshold: 0 })
         : null
 
-    function scan() {
-      $$("[data-lines]").forEach((el) => {
-        if (seen.has(el)) return
-        $$(".line > span", el).forEach((s, i) => s.style.setProperty("--i", String(i)))
-      })
-      const groups = new Map<Element | null, number>()
-      $$("[data-reveal]").forEach((el) => {
-        const n = groups.get(el.parentElement) ?? 0
-        groups.set(el.parentElement, n + 1)
-        if (!seen.has(el)) el.style.setProperty("--i", String(Math.min(n, 6)))
-      })
-      $$("[data-hero]").forEach((hero) => {
-        if (seen.has(hero)) return
+    // Prepare everything under `root` that hasn't been seen yet.
+    function scan(root: ParentNode) {
+      const all = <T extends Element>(sel: string) => {
+        const list = Array.from(root.querySelectorAll<HTMLElement>(sel)) as unknown as T[]
+        if (root instanceof Element && root.matches(sel)) list.unshift(root as unknown as T)
+        return list as unknown as HTMLElement[]
+      }
+      for (const el of all("[data-lines]")) {
+        if (seen.has(el)) continue
+        el.querySelectorAll<HTMLElement>(".line > span").forEach((s, i) => s.style.setProperty("--i", String(i)))
+      }
+      for (const hero of all("[data-hero]")) {
+        if (seen.has(hero)) continue
         seen.add(hero)
-        $$("[data-rise]", hero).forEach((el, i) => el.style.setProperty("--d", String(i)))
+        hero.querySelectorAll<HTMLElement>("[data-rise]").forEach((el, i) => el.style.setProperty("--d", String(i)))
         requestAnimationFrame(() => {
           hero.classList.add("is-ready")
-          $$("[data-lines]", hero).forEach((t) => { seen.add(t); t.classList.add("is-in") })
+          hero.querySelectorAll("[data-lines]").forEach((t) => { seen.add(t); t.classList.add("is-in") })
         })
-      })
-      const targets = [...$$("[data-reveal]"), ...$$("[data-lines]").filter((el) => !el.closest("[data-hero]"))]
-      for (const el of targets) {
+      }
+      const reveal = all("[data-reveal]")
+      const groups = new Map<Element | null, number>()
+      for (const el of reveal) {
+        if (seen.has(el)) continue
+        const n = groups.get(el.parentElement) ?? 0
+        groups.set(el.parentElement, n + 1)
+        el.style.setProperty("--i", String(Math.min(n, 6)))
+      }
+      for (const el of [...reveal, ...all("[data-lines]").filter((e) => !e.closest("[data-hero]"))]) {
         if (seen.has(el)) continue
         seen.add(el)
-        if (io) io.observe(el)
+        if (io && !document.documentElement.classList.contains("app-fast")) io.observe(el)
         else el.classList.add("is-in")
       }
     }
 
-    scan()
+    scan(document)
     let queued = 0
-    const mo = new MutationObserver(() => {
-      if (queued) return
-      queued = requestAnimationFrame(() => { queued = 0; scan() })
+    const pending = new Set<Element>()
+    const mo = new MutationObserver((records) => {
+      for (const r of records) r.addedNodes.forEach((n) => { if (n.nodeType === 1) pending.add(n as Element) })
+      if (!pending.size || queued) return
+      queued = requestAnimationFrame(() => {
+        queued = 0
+        const nodes = [...pending]
+        pending.clear()
+        for (const n of nodes) if (n.isConnected) scan(n)
+      })
     })
     mo.observe(document.body, { childList: true, subtree: true })
     return () => {

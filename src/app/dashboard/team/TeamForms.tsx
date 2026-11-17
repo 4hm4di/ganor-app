@@ -10,6 +10,8 @@ import { CheckPick } from "@/components/CheckPick"
 import { ShareLogin } from "@/components/ShareLogin"
 
 export type TeamEvent = { id: string; label: string; when: string; venue: string; draft: boolean; free: boolean; heldBy: string | null }
+// Assigned events that have closed for check-in (ended over 12 hours ago, or cancelled): kept for the record only.
+export type PastCount = number
 type Staff = { id: string; username: string; display_name: string; active: boolean; locked_until: string | null; last_login_at: string | null }
 
 // Easy to read aloud, no look-alike characters.
@@ -82,13 +84,16 @@ export function NewStaffForm({ events, gateUrl }: { events: TeamEvent[]; gateUrl
   )
 }
 
-export function StaffCard({ staff, assigned, events, gateUrl }: { staff: Staff; assigned: string[]; events: TeamEvent[]; gateUrl: string }) {
+export function StaffCard({ staff, assigned, events, gateUrl, past = 0 }: { staff: Staff; assigned: string[]; events: TeamEvent[]; gateUrl: string; past?: PastCount }) {
   const [state, action] = useActionState<TeamState, FormData>(updateStaff, { status: "idle" })
   const [pwState, pwAction] = useActionState<TeamState, FormData>(resetStaffPassword, { status: "idle" })
   const [pw, setPw] = useState("")
   const [panel, setPanel] = useState<null | "edit" | "password">(null)
   const locked = !!staff.locked_until && new Date(staff.locked_until) > new Date()
+  // The same events the gate app shows them: open now, plus drafts that appear once published.
   const mine = events.filter((e) => assigned.includes(e.id))
+  const scanNow = mine.filter((e) => !e.draft)
+  const waiting = mine.filter((e) => e.draft)
   const first = staff.display_name.split(/\s+/)[0]
   const status = locked ? { text: "Locked 15 min", cls: "pill--soldout" } : staff.active ? { text: "Active", cls: "pill--published" } : { text: "Switched off", cls: "pill--draft" }
   // Passwords are stored scrambled, so they can't be shown or copied again. The details carry the rest.
@@ -121,9 +126,15 @@ export function StaffCard({ staff, assigned, events, gateUrl }: { staff: Staff; 
         <div>
           <dt>Checks in</dt>
           <dd>
-            {mine.length === 0
-              ? <span className="staffcard__none"><Icon name="warning" size={16} />No events yet, so {first} can&rsquo;t scan anything. Use Edit to tick one.</span>
-              : <span className="staffcard__events">{mine.map((e) => <span key={e.id} className="badge">{e.label}</span>)}</span>}
+            {mine.length === 0 ? (
+              <span className="staffcard__none"><Icon name="warning" size={16} />No open events, so {first} can&rsquo;t scan anything right now. Use Edit to tick one.</span>
+            ) : (
+              <span className="staffcard__events">
+                {scanNow.map((e) => <span key={e.id} className="badge badge--ok" title={`${e.when} · ${e.venue}`}><Icon name="qr-code" size={12} />{e.label}</span>)}
+                {waiting.map((e) => <span key={e.id} className="badge" title="Shows on their phone once you publish it"><Icon name="clock" size={12} />{e.label} · draft</span>)}
+              </span>
+            )}
+            {past > 0 && <small className="staffcard__past">{past} past {past === 1 ? "event" : "events"} closed for check-in</small>}
           </dd>
         </div>
       </dl>
@@ -139,7 +150,7 @@ export function StaffCard({ staff, assigned, events, gateUrl }: { staff: Staff; 
         {tab("password", "New password", "lock")}
         <form action={deleteStaff} className="staffcard__del">
           <input type="hidden" name="id" value={staff.id} />
-          <ConfirmButton className="staffcard__tab staffcard__tab--danger" confirmText="Tap again to delete" pendingText="Deleting…"><Icon name="close-circle" size={16} />Delete</ConfirmButton>
+          <ConfirmButton className="staffcard__tab staffcard__tab--danger" title={`Delete ${staff.display_name}’s gate account?`} body={<>{first} is signed out at once and can&rsquo;t scan tickets again. You can&rsquo;t undo this, but you can make a new account later.</>} confirmLabel="Delete account" pendingText="Deleting…"><Icon name="close-circle" size={16} />Delete</ConfirmButton>
         </form>
       </div>
 

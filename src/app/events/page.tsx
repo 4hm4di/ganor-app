@@ -78,7 +78,7 @@ export default async function Events({ searchParams }: { searchParams: Promise<S
                 <span className="ecard__img">
                   {e.cover_url ? (
                     // eslint-disable-next-line @next/next/no-img-element
-                    <img src={e.cover_url} alt="" width={640} height={320} loading="lazy" />
+                    <img src={e.cover_url} alt="" width={640} height={320} loading="lazy" decoding="async" />
                   ) : (
                     <span className="ecard__ph"><Icon name="calendar" size={32} /></span>
                   )}

@@ -49,14 +49,27 @@ export function Toaster() {
 
   useEffect(() => {
     if (quiet) return
-    const check = () => { for (const f of readFlash()) push(f.k === "error" ? "error" : "ok", f.m, f.t) }
+    const check = () => { if (document.cookie.includes(`${COOKIE}=`)) for (const f of readFlash()) push(f.k === "error" ? "error" : "ok", f.m, f.t) }
     const onEvent = (e: Event) => { const d = (e as CustomEvent<{ k: "ok" | "error"; m: string }>).detail; if (d) push(d.k, d.m) }
     check()
-    const iv = setInterval(check, 400)
+    // Browsers with the Cookie Store API (Chrome, Edge, Safari 18.4+) tell us the moment the flash
+    // cookie arrives. Others check once a second, and only while the page is on screen.
+    const store = (window as unknown as { cookieStore?: EventTarget }).cookieStore
+    const onCookie = () => check()
+    store?.addEventListener("change", onCookie)
+    const iv = store ? 0 : window.setInterval(() => { if (document.visibilityState === "visible") check() }, 1000)
+    const onVisible = () => { if (document.visibilityState === "visible") check() }
     window.addEventListener("focus", check)
     window.addEventListener("ganor:toast", onEvent)
-    return () => { clearInterval(iv); window.removeEventListener("focus", check); window.removeEventListener("ganor:toast", onEvent) }
-  }, [push, quiet])
+    document.addEventListener("visibilitychange", onVisible)
+    return () => {
+      store?.removeEventListener("change", onCookie)
+      if (iv) clearInterval(iv)
+      window.removeEventListener("focus", check)
+      window.removeEventListener("ganor:toast", onEvent)
+      document.removeEventListener("visibilitychange", onVisible)
+    }
+  }, [push, quiet, pathname])
 
   if (quiet) return null
   return (

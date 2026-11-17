@@ -1,3 +1,4 @@
+import { cache } from "react"
 import { createServerClient } from "@supabase/ssr"
 import { cookies, headers } from "next/headers"
 import { AREA_HEADER, cookieOptionsFor, type Area } from "./area"
@@ -35,8 +36,9 @@ export async function createClient(area?: Area, opts?: { eventSlug?: string }) {
 }
 
 // The signed-in user's id, verified against the project's signing keys, or null.
-export async function getUserId() {
+// Cached per request, so the header and the page share one check.
+export const getUserId = cache(async () => {
   const supabase = await createClient()
   const { data } = await supabase.auth.getClaims()
   return { supabase, userId: (data?.claims?.sub as string | undefined) ?? null, email: (data?.claims?.email as string | undefined) ?? null }
-}
+})

@@ -33,7 +33,7 @@ export type GateSession = {
 }
 
 export type CheckInResult = {
-  result: "ok" | "already" | "not_found" | "wrong_event" | "not_valid" | "not_allowed" | "signed_out"
+  result: "ok" | "already" | "not_found" | "wrong_event" | "not_valid" | "not_allowed" | "signed_out" | "closed"
   reason?: "replaced" | "ended"
   guest?: string
   ticket_type?: string

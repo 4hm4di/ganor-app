@@ -2,8 +2,9 @@ import type { Metadata } from "next"
 import { notFound } from "next/navigation"
 import { createClient, getUserId } from "@/lib/supabase/server"
 import { gateToken, type GateSession } from "@/lib/gate"
-import { formatDate, formatTime } from "@/lib/ganor"
+import { formatDate, formatTime, checkInState } from "@/lib/ganor"
 import { Scanner } from "./Scanner"
+import { Icon } from "@/components/Icon"
 import { CloseLink } from "@/components/BackLink"
 import { IdleGuard } from "@/components/IdleGuard"
 
@@ -18,7 +19,7 @@ export default async function ScanPage({ params, searchParams }: { params: Promi
   const preferHost = (await searchParams).as === "host"
 
   type Ev = { id: string; title: string; starts_at: string; venue: string; checked_in: number; total: number }
-  type Found = { event: Ev; who: string; mode: "host" | "gate" }
+  type Found = { event: Ev; who: string; mode: "host" | "gate"; state?: "open" | "draft" | "closed" }
 
   const asGate = async (): Promise<Found | null> => {
     const token = await gateToken()
@@ -32,7 +33,7 @@ export default async function ScanPage({ params, searchParams }: { params: Promi
   const asHost = async (): Promise<Found | null> => {
     const { supabase: authed, userId } = await getUserId()
     if (!userId) return null
-    const { data: e } = await authed.from("events").select("id, title, starts_at, venue_name, host_id").eq("id", eventId).maybeSingle()
+    const { data: e } = await authed.from("events").select("id, title, starts_at, ends_at, status, venue_name, host_id").eq("id", eventId).maybeSingle()
     const staff = (await authed.rpc("is_staff")).data === true
     if (!e || (e.host_id !== userId && !staff)) return null
     const { data: rows } = await authed.from("tickets").select("checked_in_at, orders!inner(status)").eq("event_id", eventId).eq("orders.status", "paid")
@@ -40,11 +41,12 @@ export default async function ScanPage({ params, searchParams }: { params: Promi
       event: { id: e.id, title: e.title, starts_at: e.starts_at, venue: e.venue_name, checked_in: (rows ?? []).filter((r) => r.checked_in_at).length, total: (rows ?? []).length },
       who: e.host_id === userId ? "Host" : "Ganor staff",
       mode: "host",
+      state: checkInState(e),
     }
   }
   const found = preferHost ? (await asHost()) ?? (await asGate()) : (await asGate()) ?? (await asHost())
   if (!found) notFound()
-  const { event, who, mode } = found
+  const { event, who, mode, state } = found
 
   return (
     <div className="wrap--narrow gate-page">
@@ -57,6 +59,9 @@ export default async function ScanPage({ params, searchParams }: { params: Promi
         </div>
         <CloseLink href={mode === "host" ? `/dashboard/events/${event.id}` : "/gate"} label="Close scanner" />
       </div>
+      {state && state !== "open" && (
+        <div className="alert alert--warn" role="status" style={{ marginBottom: 12 }}><Icon name="warning" /><span>{state === "draft" ? "This event is a draft. Check-in opens when you publish it." : "Check-in for this event has closed (it ended more than 12 hours ago, or was cancelled)."}</span></div>
+      )}
       <Scanner eventId={event.id} initialIn={event.checked_in} total={event.total} scannerName={who} mode={mode} />
     </div>
   )

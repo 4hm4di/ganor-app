@@ -20,24 +20,29 @@ export default async function EventTools({
   const { supabase, userId } = await getUserId()
   if (!userId) redirect("/login")
 
-  const { data: ev } = await supabase
-    .from("events")
-    .select("*, ticket_types(*)")
-    .eq("id", id)
-    .eq("host_id", userId)
-    .order("sort_order", { referencedTable: "ticket_types", ascending: true })
-    .single()
+  // Everything this page needs, in one round of parallel queries.
+  const [{ data: ev }, { data: rows }, { data: prof }, { data: gate }] = await Promise.all([
+    supabase
+      .from("events")
+      .select("*, ticket_types(*)")
+      .eq("id", id)
+      .eq("host_id", userId)
+      .order("sort_order", { referencedTable: "ticket_types", ascending: true })
+      .single(),
+    supabase
+      .from("tickets")
+      .select("checked_in_at, created_at, ticket_types(name), orders!inner(buyer_name, status, paid_at)")
+      .eq("event_id", id)
+      .eq("orders.status", "paid")
+      .order("checked_in_at", { ascending: false, nullsFirst: false }),
+    supabase.from("profiles").select("contact_whatsapp, contact_phone").eq("id", userId).maybeSingle(),
+    supabase.from("host_staff_events").select("host_staff(display_name, active)").eq("event_id", id),
+  ])
   if (!ev) notFound()
 
   const h = await headers()
   const host = h.get("x-forwarded-host") ?? h.get("host") ?? "app.ganor.ng"
   const publicUrl = `${host.startsWith("localhost") ? "http" : "https"}://${host}/e/${ev.slug}`
-  const { data: rows } = await supabase
-    .from("tickets")
-    .select("checked_in_at, created_at, ticket_types(name), orders!inner(buyer_name, status, paid_at)")
-    .eq("event_id", id)
-    .eq("orders.status", "paid")
-    .order("checked_in_at", { ascending: false, nullsFirst: false })
   const guests = (rows ?? []).map((r) => ({
     name: (r.orders as unknown as { buyer_name: string }).buyer_name,
     ticket: (r.ticket_types as unknown as { name: string } | null)?.name ?? "Ticket",
@@ -63,7 +68,7 @@ export default async function EventTools({
     ? Array.from({ length: Math.max(...hours) - Math.min(...hours) + 1 }, (_, i) => { const h = Math.min(...hours) + i; return { hour: h, count: scans.get(String(h)) ?? 0 } })
     : []
   const daysLeft = Math.max(0, Math.ceil((new Date(ev.starts_at).getTime() - nowMs()) / 86_400_000))
-  const { data: prof } = await supabase.from("profiles").select("contact_whatsapp, contact_phone").eq("id", userId).maybeSingle()
+  const team = (gate ?? []).map((g) => g.host_staff as unknown as { display_name: string; active: boolean } | null).filter((s): s is { display_name: string; active: boolean } => !!s)
   const hasContact = Boolean(prof?.contact_whatsapp || prof?.contact_phone)
-  return <EventToolsView ev={ev} userId={userId} publicUrl={publicUrl} sp={sp} guests={guests} daily={daily} scanHours={scanHours} daysLeft={daysLeft} hasContact={hasContact} />
+  return <EventToolsView ev={ev} userId={userId} publicUrl={publicUrl} sp={sp} guests={guests} daily={daily} scanHours={scanHours} daysLeft={daysLeft} hasContact={hasContact} team={team} />
 }

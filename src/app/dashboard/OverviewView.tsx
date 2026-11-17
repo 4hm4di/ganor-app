@@ -148,7 +148,7 @@ export function OverviewView({ range, first, stats, events, suspended, passwordU
               <div className="nextup__img">
                 {nextUp.e.cover_url ? (
                   // eslint-disable-next-line @next/next/no-img-element
-                  <img src={nextUp.e.cover_url} alt="" width={640} height={320} />
+                  <img src={nextUp.e.cover_url} alt="" width={640} height={320} decoding="async" />
                 ) : <span><Icon name="calendar" size={28} /></span>}
               </div>
               <div className="nextup__body">

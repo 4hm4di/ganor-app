@@ -19,6 +19,7 @@ const RESULT: Record<CheckInResult["result"], { view: View; icon: string; title:
   not_valid: { view: "bad", icon: "/img/gate/ganor-status-not-valid.svg", title: "Refunded or cancelled" },
   not_allowed: { view: "bad", icon: "/img/gate/ganor-status-not-valid.svg", title: "Not assigned to this event" },
   signed_out: { view: "bad", icon: "/img/gate/ganor-status-not-valid.svg", title: "Signed out" },
+  closed: { view: "bad", icon: "/img/gate/ganor-status-not-valid.svg", title: "Check-in is closed" },
 }
 
 type BarcodeDetectorLike = { detect: (src: CanvasImageSource) => Promise<{ rawValue: string }[]> }
@@ -154,6 +155,7 @@ export function Scanner({ eventId, initialIn, total, scannerName, mode }: { even
               <p className="gate__sub">
                 {res?.guest ? `${res.guest}${res.ticket_type ? ` · ${res.ticket_type}` : ""}` : ""}
                 {res?.result === "already" && res.at ? ` · in at ${formatTime(res.at)}` : ""}
+                {res?.result === "closed" ? "This event isn't open for check-in: it isn't published, or it ended more than 12 hours ago." : ""}
                 {res?.result === "signed_out" ? (res.reason === "replaced" ? "This gate account signed in on another phone. Sign in again here to keep scanning." : "Sign in again to keep scanning.") : ""}
               </p>
             </>
