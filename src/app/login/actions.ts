@@ -1,6 +1,7 @@
 "use server"
 
 import { redirect } from "next/navigation"
+import { TERMS_REQUIRED, TERMS_VERSION, termsAcceptance } from "@/lib/terms"
 import { flash } from "@/lib/flash"
 import { landingFor } from "@/lib/onboarding"
 import { createClient } from "@/lib/supabase/server"
@@ -46,6 +47,7 @@ export async function signUpWithPassword(_prev: AuthState, fd: FormData): Promis
   const name = read(fd, "name")
   const next = safeNext(read(fd, "next"))
   if (name.length < 2) return { status: "error", message: "Enter your name or your organisation's name.", email }
+  if (read(fd, "agree") !== "1") return { status: "error", message: TERMS_REQUIRED, email }
   if (!EMAIL_RE.test(email)) return { status: "error", message: "Enter a valid email address.", email }
   if (password.length < PASSWORD_MIN) return { status: "error", message: `Use at least ${PASSWORD_MIN} characters for your password.`, email }
   if (!/[A-Za-z]/.test(password) || !/[0-9]/.test(password)) return { status: "error", message: "Use letters and numbers in your password.", email }
@@ -56,7 +58,7 @@ export async function signUpWithPassword(_prev: AuthState, fd: FormData): Promis
     email,
     password,
     options: {
-      data: { display_name: name },
+      data: { display_name: name, ...termsAcceptance() },
       // The link confirms the email, then shows "verified, sign in" instead of opening the dashboard.
       emailRedirectTo: `${origin}/auth/callback?verified=1&next=${encodeURIComponent(next)}`,
     },
@@ -89,12 +91,15 @@ export async function signInWithProvider(fd: FormData) {
   const next = safeNext(read(fd, "next"))
   if (!PROVIDERS.some((p) => p.id === provider)) redirect("/login")
 
+  const signup = read(fd, "intent") === "signup"
+  // New accounts must agree to the Terms first; the callback records the agreement.
+  if (signup && read(fd, "agree") !== "1") redirect(`/login?mode=signup&error=terms${next !== "/dashboard" ? `&next=${encodeURIComponent(next)}` : ""}`)
   const supabase = await createClient()
   const origin = await siteOrigin()
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider,
     options: {
-      redirectTo: `${origin}/auth/callback?next=${encodeURIComponent(next)}&intent=${read(fd, "intent") === "signup" ? "signup" : "signin"}`,
+      redirectTo: `${origin}/auth/callback?next=${encodeURIComponent(next)}&intent=${signup ? `signup&terms=${TERMS_VERSION}` : "signin"}`,
       scopes: provider === "azure" ? "email" : undefined,
     },
   })

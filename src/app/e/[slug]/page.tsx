@@ -30,7 +30,7 @@ type Host = {
 
 // Row Level Security returns published events to everyone, and drafts only to their host.
 const getEvent = cache(async (slug: string) => {
-  const supabase = await createClient()
+  const supabase = await createClient(undefined, { eventSlug: slug })
   const { data } = await supabase
     .from("events")
     .select("*, ticket_types(*), profiles(display_name, logo_url, bio, contact_whatsapp, contact_phone, contact_email, website, instagram)")
@@ -49,7 +49,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   return {
     title: ev.title,
     description,
-    robots: ev.status === "published" ? undefined : { index: false, follow: false },
+    robots: ev.status === "published" && ev.visibility === "public" ? undefined : { index: false, follow: false },
     openGraph: {
       title: ev.title,
       description,

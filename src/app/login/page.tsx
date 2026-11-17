@@ -1,4 +1,5 @@
 import type { Metadata } from "next"
+import Link from "next/link"
 import { redirect } from "next/navigation"
 import { getUserId } from "@/lib/supabase/server"
 import { enabledProviders, PROVIDERS, safeNext } from "@/lib/auth"
@@ -13,6 +14,7 @@ const ERRORS: Record<string, string> = {
   email: "That email-change link has expired or was already used. Sign in and start the change again from your profile.",
   provider: "We couldn't connect to that sign-in provider. Try again, or use your email.",
   "no-account": "There's no Ganor account for that Google account yet. Create one below: tap Continue with Google again to sign up with it.",
+  terms: "Tick the box to agree to Ganor's Terms and Privacy policy, then continue with Google again.",
   hq: "That's a Ganor staff account, so it can't host events. Use a different account to host on Ganor.",
 }
 
@@ -47,7 +49,7 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
         </div>
       </aside>
       <div className="authpage__form">
-      <a href="/" className="authback"><Icon name="arrow-right" size={16} />Back to homepage</a>
+      <Link href="/" className="authback"><Icon name="arrow-right" size={16} />Back to homepage</Link>
       <div className="pagehead" data-hero key={mode}>
         <div>
           <span className="kicker" data-rise>For hosts</span>

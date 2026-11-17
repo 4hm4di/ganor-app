@@ -29,6 +29,7 @@ export type Database = {
           updated_at: string
           venue_address: string
           venue_name: string
+          visibility: string
         }
         Insert: {
           category: string
@@ -53,6 +54,7 @@ export type Database = {
           updated_at?: string
           venue_address?: string
           venue_name: string
+          visibility?: string
         }
         Update: Partial<Database["public"]["Tables"]["events"]["Insert"]>
         Relationships: [
@@ -90,6 +92,7 @@ export type Database = {
           id: string
           instagram: string | null
           logo_url: string | null
+          setup_hidden_at: string | null
           updated_at: string
           website: string | null
         }
@@ -103,6 +106,7 @@ export type Database = {
           id: string
           instagram?: string | null
           logo_url?: string | null
+          setup_hidden_at?: string | null
           updated_at?: string
           website?: string | null
         }
@@ -317,6 +321,7 @@ export type Database = {
       ticket_view: { Args: { p_token: string }; Returns: Json }
       free_rsvp_allowance: { Args: Record<string, never>; Returns: Json }
       host_find_guest: { Args: { p_event: string; p_phone: string }; Returns: Json }
+      admin_track_ticket: { Args: { p_q: string }; Returns: Json }
       admin_recent_actions: {
         Args: { p_limit?: number }
         Returns: { created_at: string; actor_name: string; action: string; target_type: string; target_id: string | null; note: string | null }[]

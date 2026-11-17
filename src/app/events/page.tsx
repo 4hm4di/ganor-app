@@ -24,6 +24,7 @@ export default async function Events({ searchParams }: { searchParams: Promise<S
     .from("events")
     .select("slug, title, city, venue_name, starts_at, ends_at, status, category, halal_friendly, cover_url, ticket_types(price_kobo, on_sale, quantity, sold)")
     .eq("status", "published")
+    .eq("visibility", "public")
     .order("starts_at", { ascending: true })
     .limit(60)
   // Hide events that have ended (no end time: treated as 6 hours long).

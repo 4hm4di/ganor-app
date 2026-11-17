@@ -59,7 +59,7 @@ export default async function MyEvents({ searchParams }: { searchParams: Promise
 
   const { data: events } = await supabase
     .from("events")
-    .select("id, title, city, venue_name, starts_at, ends_at, status, cover_url, ticket_types(quantity, sold, on_sale, price_kobo)")
+    .select("id, title, city, venue_name, starts_at, ends_at, status, cover_url, visibility, event_kind, ticket_types(quantity, sold, on_sale, price_kobo)")
     .eq("host_id", userId)
     .order("starts_at", { ascending: true })
 
@@ -107,6 +107,9 @@ export default async function MyEvents({ searchParams }: { searchParams: Promise
           <h1 style={{ marginTop: 10 }}>Your events</h1>
           <p className="muted">Everything you&rsquo;ve hosted. Search, filter by date or city, and open an event to manage it.</p>
         </div>
+        {all.length > 0 && (
+          <Link href="/dashboard/events/new" className="btn btn--primary btn--sm"><span>New event</span><span className="btn__arrow" aria-hidden="true"><Icon name="add-circle" /></span></Link>
+        )}
       </div>
 
       {!all.length ? (
@@ -134,7 +137,7 @@ export default async function MyEvents({ searchParams }: { searchParams: Promise
             <select name="sort" defaultValue={sort} aria-label="Sort">
               {SORT.map((s) => <option key={s.value} value={s.value}>{s.label}</option>)}
             </select>
-            <button className="btn btn--primary btn--sm btn--plain">Apply</button>
+            <button className="btn btn--primary btn--sm btn--plain"><Icon name="filter" size={18} />Apply</button>
           </form>
 
           <nav className="evstats" aria-label="Status">
@@ -175,6 +178,8 @@ export default async function MyEvents({ searchParams }: { searchParams: Promise
                       {formatDate(e.starts_at, { weekday: "short", day: "numeric", month: "short", year: "numeric" })} · {formatTime(e.starts_at)} · {e.city}
                     </span>
                     <span className="evrow__money" style={{ display: "block" }}>
+                      <Icon name={e.event_kind === "rsvp" ? "add-user" : "ticket"} size={14} className="evrow__ic" />
+                      {e.visibility === "private" && <span className="evrow__priv"><Icon name="lock" size={12} />Private</span>}
                       {e.ticket_types.length ? `${sold.toLocaleString("en-NG")} of ${total.toLocaleString("en-NG")} ${free ? "RSVPs" : "tickets"}${gross ? ` · ${formatNaira(gross)}` : ""}` : "No tickets yet"}
                     </span>
                   </span>

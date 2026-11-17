@@ -4,6 +4,7 @@ import { useActionState, useOptimistic, useState, useTransition } from "react"
 import { deleteTicketType, setTicketOnSale, updateTicketType, type FormState } from "./actions"
 import { SubmitButton } from "@/components/SubmitButton"
 import { ConfirmButton } from "@/components/ConfirmButton"
+import { FormIdleButton } from "@/components/FormIdleButton"
 import { Icon } from "@/components/Icon"
 import { formatNaira } from "@/lib/ganor"
 import type { TicketTypeRow } from "@/lib/database.types"
@@ -78,10 +79,10 @@ export function TicketRow({ t, kind = "paid" }: { t: TicketTypeRow; kind?: "paid
         <div className="actions" style={{ justifyContent: "space-between" }}>
           <div className="actions" style={{ gap: 8 }}>
             <SubmitButton size="xs" arrow={false} pendingText="Saving…">Save</SubmitButton>
-            <button type="button" className="btn btn--ghost btn--xs btn--plain" onClick={() => setEditing(false)}>Cancel</button>
+            <FormIdleButton onClick={() => setEditing(false)}>Cancel</FormIdleButton>
           </div>
           {t.sold === 0 && (
-            <ConfirmButton formAction={deleteTicketType} className="btn btn--danger btn--xs btn--plain" confirmText="Tap again to delete" pendingText="Deleting…">Delete</ConfirmButton>
+            <ConfirmButton formAction={deleteTicketType} className="btn btn--danger btn--xs btn--plain" confirmText="Tap again to delete" pendingText="Deleting…"><Icon name="close-circle" size={14} />Delete</ConfirmButton>
           )}
         </div>
       </form>

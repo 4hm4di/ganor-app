@@ -132,16 +132,33 @@ export async function setEventStatus(fd: FormData) {
     if (!prof?.contact_whatsapp && !prof?.contact_phone) { await flash("error", "Add a WhatsApp or call number to your profile before you publish."); redirect(`/dashboard/events/${id}?error=contact`) }
   }
 
-  const { data, error } = await supabase.from("events").update({ status: to }).eq("id", id).select("slug").single()
+  // Publishing asks who can find the event: public (listed on Find events) or private (link only).
+  const vis = str(fd, "visibility")
+  const patch: { status: string; visibility?: string } = { status: to }
+  if (to === "published" && (vis === "public" || vis === "private")) patch.visibility = vis
+  const { data, error } = await supabase.from("events").update(patch).eq("id", id).select("slug, visibility").single()
   if (error || !data) {
     await flash("error", dbMessage(error, "We couldn't change the event. Try again."))
     redirect(`/dashboard/events/${id}`)
   }
-  await flash("ok", to === "published" ? "Your event is live." : to === "cancelled" ? "Event cancelled." : "Event unpublished. It's a draft again.")
+  await flash("ok", to === "published" ? (data.visibility === "private" ? "Your event is live and private. Only people with the link can open it." : "Your event is live and listed on Find events.") : to === "cancelled" ? "Event cancelled." : "Event unpublished. It's a draft again.")
   revalidatePath("/dashboard", "layout")
   revalidatePath(`/dashboard/events/${id}`)
   if (data) revalidatePath(`/e/${data.slug}`)
   redirect(`/dashboard/events/${id}${to === "published" ? "?published=1" : ""}`)
+}
+
+export async function setEventVisibility(fd: FormData) {
+  const { supabase } = await requireHost()
+  const id = str(fd, "id")
+  const vis = str(fd, "visibility")
+  if (vis !== "public" && vis !== "private") return
+  const { data, error } = await supabase.from("events").update({ visibility: vis }).eq("id", id).select("slug").single()
+  await flash(error || !data ? "error" : "ok", error || !data ? dbMessage(error, "We couldn't change who can find this event. Try again.") : vis === "private" ? "Event is now private. It's off Find events; your link still works." : "Event is now public and listed on Find events.")
+  revalidatePath("/dashboard", "layout")
+  revalidatePath("/events")
+  if (data) revalidatePath(`/e/${data.slug}`)
+  redirect(`/dashboard/events/${id}`)
 }
 
 export async function deleteDraft(fd: FormData) {
@@ -437,4 +454,13 @@ export async function upgradePlan(fd: FormData) {
   await flash(error ? "error" : "ok", error ? "We couldn't change the plan. Try again." : `${plan.name} plan chosen. Pay with the reference in the Plan card.`)
   revalidatePath(`/dashboard/events/${id}`)
   redirect(`/dashboard/events/${id}?upgraded=${plan.id}#plan`)
+}
+
+// Hide or bring back the "Finish setting up" list on the overview.
+export async function setSetupHidden(fd: FormData) {
+  const { supabase, userId } = await requireHost()
+  const hide = fd.get("hide") === "1"
+  const { error } = await supabase.from("profiles").update({ setup_hidden_at: hide ? new Date().toISOString() : null }).eq("id", userId)
+  await flash(error ? "error" : "ok", error ? "We couldn't change that. Try again." : hide ? "To-do list hidden. Bring it back from the top of your overview any time." : "Your to-do list is back on the overview.")
+  revalidatePath("/dashboard", "layout")
 }

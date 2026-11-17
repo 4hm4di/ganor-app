@@ -22,6 +22,7 @@ export function ProfileForm({ initial }: { initial: Values }) {
   const key = state.fields ? JSON.stringify(state.fields) : "init"
   return (
     <form action={action} className="stack" key={key} noValidate>
+      <span className="kicker"><Icon name="user" size={16} />Host details</span>
       {state.status === "error" && <div className="alert alert--error" role="alert"><Icon name="warning" /><span>{state.message}</span></div>}
       {state.status === "ok" && <div className="alert alert--ok" role="status"><Icon name="check-circle" /><span>{state.message}</span></div>}
 
@@ -30,12 +31,12 @@ export function ProfileForm({ initial }: { initial: Values }) {
         <input name="display_name" required maxLength={80} defaultValue={v.display_name} placeholder="Your name or organisation" autoComplete="organization" />
         <span className="field__hint">Shown on your event pages as &ldquo;Hosted by&rdquo;.</span>
       </label>
-      <label className="field">
+      <label className="field" id="about">
         <span className="field__label">About you <small>(optional, 280 characters)</small></span>
         <textarea name="bio" maxLength={280} defaultValue={v.bio} style={{ minHeight: 90 }} placeholder="Who you are and the events you run…" />
       </label>
 
-      <div>
+      <div id="contact">
         <span className="kicker"><Icon name="chat" size={16} />Contact for guests</span>
         <p className="field__hint" style={{ marginTop: 6 }}>Shown on your event pages so guests can reach you. <b>A WhatsApp or call number is required to publish events.</b> Email and social links are optional.</p>
       </div>

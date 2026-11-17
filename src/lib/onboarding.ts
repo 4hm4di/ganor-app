@@ -5,7 +5,7 @@ import type { Database } from "@/lib/database.types"
 type Db = SupabaseClient<Database>
 
 // A host who hasn't added a contact number and has no events yet is new: their first
-// stop is the profile page, so they can finish setting up before creating an event.
+// stop is the overview, where the to-do list walks them through finishing setup.
 export async function landingFor(supabase: Db, userId: string, next: string) {
   if (next !== "/dashboard") return next
   const [{ data: p }, { count }] = await Promise.all([
@@ -13,7 +13,7 @@ export async function landingFor(supabase: Db, userId: string, next: string) {
     supabase.from("events").select("id", { count: "exact", head: true }).eq("host_id", userId),
   ])
   const isNew = !p?.contact_whatsapp && !p?.contact_phone && (count ?? 0) === 0
-  return isNew ? "/dashboard/profile?welcome=1" : next
+  return isNew ? "/dashboard?welcome=1" : next
 }
 
 // True when this Google sign-in has just created the account (first sign-in moments after creation).

@@ -27,7 +27,7 @@ export default async function Profile({ searchParams }: { searchParams: Promise<
     <div className="wrap--narrow">
       <div className="pagehead">
         <div>
-          <span className="kicker">Host profile</span>
+          <span className="kicker"><Icon name="user" size={18} />Host profile</span>
           <h1 style={{ marginTop: 10 }}>Profile</h1>
           <p className="muted">Signed in as {email}.</p>
         </div>
@@ -44,7 +44,7 @@ export default async function Profile({ searchParams }: { searchParams: Promise<
       {sp.email === "changed" && <div className="alert alert--ok" role="status" style={{ marginBottom: 14 }}><Icon name="check-circle" /><span>Done. You now sign in with {email}.</span></div>}
       {sp.email === "one-more" && <div className="alert alert--ok" role="status" style={{ marginBottom: 14 }}><Icon name="mail" /><span>One address confirmed. Open the Ganor email in your other inbox and press its button to finish.</span></div>}
       <div className="stack">
-        <div className="card">
+        <div className="card" id="logo">
           <ImageUpload
             bucket="host-logos"
             userId={userId}

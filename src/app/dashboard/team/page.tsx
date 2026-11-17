@@ -52,8 +52,8 @@ export default async function Team() {
           <NewStaffForm events={evs} gateUrl={gateUrl} />
         </section>
         <section className="stack" aria-labelledby="list-h">
-          <h2 id="list-h" className="section-t">Accounts ({staff?.length ?? 0})</h2>
-          {(staff ?? []).length === 0 && <div className="card"><p className="muted">No gate accounts yet. You can always scan tickets yourself from an event&rsquo;s Gate check-in card.</p></div>}
+          <h2 id="list-h" className="section-t section-t--ic"><Icon name="users" size={18} />Accounts ({staff?.length ?? 0})</h2>
+          {(staff ?? []).length === 0 && <div className="card wallet__empty"><Icon name="scan" size={28} /><div><b>No gate accounts yet.</b><p className="muted small">Add the people who&rsquo;ll scan tickets at your door. You can always scan yourself from an event&rsquo;s Gate check-in card.</p></div></div>}
           {(staff ?? []).map((s) => (
             <StaffCard
               key={s.id}

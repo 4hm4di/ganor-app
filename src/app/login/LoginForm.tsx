@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { useActionState } from "react"
+import { useActionState, useRef, useState } from "react"
 import { sendLoginLink, signInWithPassword, signInWithProvider, signUpWithPassword, type AuthState } from "./actions"
 import { SubmitButton } from "@/components/SubmitButton"
 import { Loader } from "@/components/Loader"
@@ -9,6 +9,8 @@ import { useFormStatus } from "react-dom"
 import { Icon } from "@/components/Icon"
 import { ProviderLogo } from "@/components/ProviderLogo"
 import { PasswordField } from "@/components/PasswordField"
+import { PRIVACY_URL, TERMS_URL } from "@/lib/terms"
+import { hapticError } from "@/lib/haptics"
 
 type Mode = "signin" | "signup" | "link"
 type Provider = { id: "google" | "azure" | "apple"; label: string }
@@ -22,6 +24,22 @@ export function LoginForm({ mode, next, providers, error }: { mode: Mode; next: 
   const [signin, signinAction] = useActionState<AuthState, FormData>(signInWithPassword, { status: "idle" })
   const [signup, signupAction] = useActionState<AuthState, FormData>(signUpWithPassword, { status: "idle" })
   const [link, linkAction] = useActionState<AuthState, FormData>(sendLoginLink, { status: "idle" })
+  // Sign-up needs the Terms box ticked, for Google and for email alike.
+  const [agreed, setAgreed] = useState(false)
+  const [nudge, setNudge] = useState(0)
+  const agreeRef = useRef<HTMLInputElement>(null)
+  const agreeBox = useRef<HTMLDivElement>(null)
+  const needAgree = (e: React.FormEvent) => {
+    if (mode !== "signup" || agreed) return
+    e.preventDefault()
+    setNudge((n) => n + 1)
+    hapticError()
+    if (!matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      agreeBox.current?.animate([{ transform: "none" }, { transform: "translateX(-4px)" }, { transform: "translateX(4px)" }, { transform: "translateX(-3px)" }, { transform: "none" }], { duration: 320, easing: "ease-in-out" })
+    }
+    agreeRef.current?.scrollIntoView({ block: "center", behavior: "smooth" })
+    agreeRef.current?.focus({ preventScroll: true })
+  }
   const q = (m: Mode) => `/login?mode=${m}${next !== "/dashboard" ? `&next=${encodeURIComponent(next)}` : ""}`
 
   if (signup.status === "confirm") {
@@ -60,10 +78,11 @@ export function LoginForm({ mode, next, providers, error }: { mode: Mode; next: 
         <>
           <div className="oauth">
             {providers.map((p) => (
-              <form action={signInWithProvider} key={p.id}>
+              <form action={signInWithProvider} key={p.id} onSubmit={needAgree}>
                 <input type="hidden" name="provider" value={p.id} />
                 <input type="hidden" name="next" value={next} />
                 <input type="hidden" name="intent" value={mode === "signup" ? "signup" : "signin"} />
+                {mode === "signup" && <input type="hidden" name="agree" value={agreed ? "1" : ""} />}
                 <ProviderButton id={p.id} label={p.label} />
               </form>
             ))}
@@ -86,7 +105,7 @@ export function LoginForm({ mode, next, providers, error }: { mode: Mode; next: 
       )}
 
       {mode === "signup" && (
-        <form action={signupAction} className="stack" noValidate>
+        <form action={signupAction} className="stack" noValidate onSubmit={needAgree}>
           <input type="hidden" name="next" value={next} />
           <Alert state={signup} />
           <label className="field">
@@ -98,8 +117,14 @@ export function LoginForm({ mode, next, providers, error }: { mode: Mode; next: 
             <input type="email" name="email" required autoComplete="email" inputMode="email" autoCapitalize="none" autoCorrect="off" defaultValue={signup.email} placeholder="you@example.com" />
           </label>
           <PasswordField autoComplete="new-password" minLength={8} meter enterKeyHint="go" />
+          <div ref={agreeBox} className={`agree${nudge && !agreed ? " agree--nudge" : ""}`}>
+            <label className="checkrow">
+              <input ref={agreeRef} type="checkbox" name="agree" value="1" checked={agreed} onChange={(e) => setAgreed(e.target.checked)} aria-describedby={nudge && !agreed ? "agree-msg" : undefined} aria-invalid={nudge > 0 && !agreed} />
+              <span>I agree to Ganor&rsquo;s <a href={TERMS_URL} target="_blank" rel="noopener">Terms</a> and <a href={PRIVACY_URL} target="_blank" rel="noopener">Privacy policy</a>.</span>
+            </label>
+            {nudge > 0 && !agreed && <p id="agree-msg" className="agree__msg" role="alert"><Icon name="warning" size={16} />Tick this box to create your account.</p>}
+          </div>
           <SubmitButton pendingText="Creating account…" block>Create host account</SubmitButton>
-          <p className="small muted">By creating an account you agree to Ganor&rsquo;s <a href="https://ganor.ng/terms.html">Terms</a> and <a href="https://ganor.ng/privacy.html">Privacy policy</a>.</p>
         </form>
       )}
 

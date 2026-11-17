@@ -57,7 +57,7 @@ export function NewStaffForm({ events, gateUrl }: { events: TeamEvent[]; gateUrl
     return (
       <div className="stack">
         <Credentials c={state.created} gateUrl={gateUrl} />
-        <button type="button" className="btn btn--ghost btn--sm btn--plain" style={{ justifySelf: "start" }} onClick={() => window.location.reload()}>Add another</button>
+        <button type="button" className="btn btn--ghost btn--sm btn--plain" style={{ justifySelf: "start" }} onClick={() => window.location.reload()}><Icon name="add-user" size={16} />Add another</button>
       </div>
     )
   }
@@ -73,7 +73,7 @@ export function NewStaffForm({ events, gateUrl }: { events: TeamEvent[]; gateUrl
       <label className="field"><span className="field__label">Password <small>(at least 8 characters)</small></span>
         <span className="pwrow">
           <input name="password" required minLength={8} autoComplete="new-password" autoCapitalize="none" spellCheck={false} value={pw} onChange={(e) => setPw(e.target.value)} />
-          <button type="button" className="btn btn--ghost btn--xs btn--plain" onClick={() => setPw(makePassword())}>Suggest</button>
+          <button type="button" className="btn btn--ghost btn--xs btn--plain" onClick={() => setPw(makePassword())}><Icon name="shield" size={14} />Suggest</button>
         </span>
       </label>
       <EventPicker events={events} />
@@ -139,7 +139,7 @@ export function StaffCard({ staff, assigned, events, gateUrl }: { staff: Staff; 
         {tab("password", "New password", "lock")}
         <form action={deleteStaff} className="staffcard__del">
           <input type="hidden" name="id" value={staff.id} />
-          <ConfirmButton className="staffcard__tab staffcard__tab--danger" confirmText="Tap again to delete" pendingText="Deleting…">Delete</ConfirmButton>
+          <ConfirmButton className="staffcard__tab staffcard__tab--danger" confirmText="Tap again to delete" pendingText="Deleting…"><Icon name="close-circle" size={16} />Delete</ConfirmButton>
         </form>
       </div>
 
@@ -169,7 +169,7 @@ export function StaffCard({ staff, assigned, events, gateUrl }: { staff: Staff; 
               <label className="field"><span className="field__label">New password <small>(at least 8 characters)</small></span>
                 <span className="pwrow">
                   <input name="password" required minLength={8} autoComplete="new-password" autoCapitalize="none" spellCheck={false} value={pw} onChange={(e) => setPw(e.target.value)} />
-                  <button type="button" className="btn btn--ghost btn--xs btn--plain" onClick={() => setPw(makePassword())}>Suggest</button>
+                  <button type="button" className="btn btn--ghost btn--xs btn--plain" onClick={() => setPw(makePassword())}><Icon name="shield" size={14} />Suggest</button>
                 </span>
               </label>
               <p className="small muted">Setting a new password signs {first} out on their phone. You&rsquo;ll get the full details to copy straight after.</p>

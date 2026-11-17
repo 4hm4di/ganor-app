@@ -8,13 +8,15 @@ import { sessionOnly } from "@/lib/session"
 // the proxy refreshes the session on every request instead.
 // The area (host or HQ) comes from the proxy, so HQ pages use the HQ sign-in and
 // everything else uses the host sign-in.
-export async function createClient(area?: Area) {
+// eventSlug: names the event link being opened, so a private (unlisted) event can be read by its link.
+export async function createClient(area?: Area, opts?: { eventSlug?: string }) {
   const cookieStore = await cookies()
   const which: Area = area ?? ((await headers()).get(AREA_HEADER) === "hq" ? "hq" : "host")
   return createServerClient<Database>(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!,
     {
+      ...(opts?.eventSlug ? { global: { headers: { "x-ganor-event": opts.eventSlug } } } : {}),
       cookieOptions: cookieOptionsFor(which),
       cookies: {
         getAll() {

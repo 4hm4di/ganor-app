@@ -8,7 +8,8 @@ import { EventForm } from "../../EventForm"
 import { TicketForm } from "../../TicketForm"
 import { TicketRow } from "../../TicketRow"
 import { FeeSeg } from "../../FeeSeg"
-import { deleteDraft, saveEventBanner, setEventStatus, upgradePlan } from "../../actions"
+import { deleteDraft, saveEventBanner, setEventStatus, setEventVisibility, upgradePlan } from "../../actions"
+import { PublishDialog, VisibilitySwitch, type Visibility } from "@/components/PublishDialog"
 import { SubmitButton } from "@/components/SubmitButton"
 import { ConfirmButton } from "@/components/ConfirmButton"
 import { ImageUpload } from "@/components/ImageUpload"
@@ -69,23 +70,22 @@ export function EventToolsView({ ev, userId, publicUrl, sp, guests, daily, scanH
           <BackLink href="/dashboard/events" label="My events" />
           <div className="actions" style={{ gap: 8 }}>
             <PhasePill phase={phase} />
+            {ev.visibility === "private" && <span className="pill pill--private"><Icon name="lock" size={14} />Private</span>}
             {ev.halal_friendly && <span className="pill pill--halal"><Icon name="halal" size={14} />Halal-friendly</span>}
           </div>
           <h1 style={{ marginTop: 10 }}>{ev.title}</h1>
           <p className="muted">{when} · {ev.venue_name}, {ev.city}</p>
         </div>
         <div className="actions">
-          <Link href={publicPath} className="btn btn--ghost btn--sm btn--plain" target="_blank">{live ? "View page" : "Preview"}</Link>
-          {!over && (
+          <Link href={publicPath} className="btn btn--ghost btn--sm btn--plain" target="_blank"><Icon name={live ? "globe" : "search"} size={18} />{live ? "View page" : "Preview"}</Link>
+          {!over && (live ? (
             <form action={setEventStatus}>
               <input type="hidden" name="id" value={ev.id} />
-              {live ? (
-                <SubmitButton name="to" value="draft" variant="outline" size="sm" arrow={false} pendingText="Unpublishing…">Unpublish</SubmitButton>
-              ) : (
-                <SubmitButton name="to" value="published" size="sm" pendingText="Publishing…">Publish</SubmitButton>
-              )}
+              <SubmitButton name="to" value="draft" variant="outline" size="sm" arrow={false} pendingText="Unpublishing…"><Icon name="lock" size={16} /> Unpublish</SubmitButton>
             </form>
-          )}
+          ) : (
+            <PublishDialog eventId={ev.id} action={setEventStatus} initial={(ev.visibility as Visibility) ?? "public"} />
+          ))}
         </div>
       </div>
 
@@ -134,7 +134,7 @@ export function EventToolsView({ ev, userId, publicUrl, sp, guests, daily, scanH
               <span>Open scanner</span>
               <span className="btn__arrow" aria-hidden="true"><Icon name="qr-code" /></span>
             </Link>
-            <Link href="/dashboard/team" className="btn btn--ghost btn--sm btn--plain">Gate team</Link>
+            <Link href="/dashboard/team" className="btn btn--ghost btn--sm btn--plain"><Icon name="users" size={18} />Gate team</Link>
           </div>
           <p className="card__empty">Scan on your phone, or add gate accounts so your team can scan with their own username and password.</p>
         </article>
@@ -234,8 +234,9 @@ export function EventToolsView({ ev, userId, publicUrl, sp, guests, daily, scanH
           </div>
         </article>}
 
-        <article className="card card--share" data-reveal>
+        <article className="card card--share" id="share" data-reveal>
           <header className="card__head"><h2 className="card__title"><Icon name="share" />Share</h2><span className="card__tag">{live ? "Live" : "After publish"}</span></header>
+          {live && <VisibilitySwitch eventId={ev.id} value={(ev.visibility as Visibility) ?? "public"} action={setEventVisibility} />}
           {live ? (
             <ShareButtons url={publicUrl} title={ev.title} text={`${ev.title} · ${when} · ${ev.venue_name}, ${ev.city}. Get your ticket on Ganor:`} />
           ) : (
@@ -276,7 +277,7 @@ export function EventToolsView({ ev, userId, publicUrl, sp, guests, daily, scanH
           {ev.status === "draft" && (
             <form action={deleteDraft} className="actions" style={{ justifyContent: "flex-end", borderTop: "1px solid var(--ganor-line)", paddingTop: 16 }}>
               <input type="hidden" name="id" value={ev.id} />
-              <ConfirmButton confirmText="Tap again to delete" pendingText="Deleting…">Delete draft</ConfirmButton>
+              <ConfirmButton confirmText="Tap again to delete" pendingText="Deleting…"><Icon name="close-circle" size={16} />Delete draft</ConfirmButton>
             </form>
           )}
         </article>

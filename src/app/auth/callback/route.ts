@@ -1,4 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server"
+import { TERMS_VERSION, termsAcceptance } from "@/lib/terms"
 import type { EmailOtpType } from "@supabase/supabase-js"
 import { createClient } from "@/lib/supabase/server"
 import { safeNext } from "@/lib/auth"
@@ -37,8 +38,17 @@ export async function GET(request: NextRequest) {
         await supabase.auth.signOut({ scope: "local" }).catch(() => null)
         return NextResponse.redirect(`${origin}/login?mode=signup&error=no-account`)
       }
-      // New account from Google sign-up: bring over their Google photo as the host logo.
-      if (fresh) await importGooglePhoto(supabase, ex.user)
+      if (fresh) {
+        // A new account must come from the sign-up page with the Terms box ticked.
+        if (searchParams.get("terms") !== TERMS_VERSION) {
+          await supabase.rpc("discard_new_google_account")
+          await supabase.auth.signOut({ scope: "local" }).catch(() => null)
+          return NextResponse.redirect(`${origin}/login?mode=signup&error=terms`)
+        }
+        await supabase.auth.updateUser({ data: termsAcceptance() })
+        // Bring over their Google photo as the host logo.
+        await importGooglePhoto(supabase, ex.user)
+      }
       // Host sign-ins keep one active device: end the account's other sessions.
       await supabase.auth.signOut({ scope: "others" })
       return NextResponse.redirect(`${origin}${await landingFor(supabase, ex.user.id, next)}`)

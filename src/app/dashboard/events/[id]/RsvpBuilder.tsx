@@ -60,7 +60,7 @@ export function RsvpBuilder({ eventId, initial, max = RSVP_MAX }: { eventId: str
           <label className="field"><span className="field__label">Choices <small>(optional, comma separated)</small></span>
             <input value={customChoices} onChange={(e) => setCustomChoices(e.target.value)} maxLength={200} placeholder="Morning, Afternoon" autoComplete="off" />
           </label>
-          <div><button type="button" className="btn btn--ghost btn--sm btn--plain" onClick={addCustom} disabled={custom.trim().length < 2}>Add question</button></div>
+          <div><button type="button" className="btn btn--ghost btn--sm btn--plain" onClick={addCustom} disabled={custom.trim().length < 2}><Icon name="add-circle" size={16} />Add question</button></div>
         </div>
       )}
 

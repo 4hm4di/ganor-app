@@ -81,6 +81,11 @@ export async function removeMember(fd: FormData) {
 export async function setPayoutStatus(fd: FormData) {
   const supabase = await db()
   if (!supabase) return
+  // The host sees this note, so a rejection must say what to fix.
+  if (String(fd.get("status")) === "rejected" && !String(fd.get("note") ?? "").trim()) {
+    await flash("error", "Add a note telling the host what to fix, then reject.")
+    return
+  }
   const { error } = await supabase.rpc("admin_set_payout_status", { p_host: String(fd.get("host_id")), p_status: String(fd.get("status")), p_note: String(fd.get("note") ?? "") || undefined })
   await flash(error ? "error" : "ok", error ? dbMessage(error, "We couldn't update those payout details.") : `Payout details marked ${String(fd.get("status")) === "verified" ? "checked" : String(fd.get("status"))}.`)
   revalidatePath("/hq", "layout")

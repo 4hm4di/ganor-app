@@ -178,7 +178,7 @@ export default async function AdminOverview() {
             {(log ?? []).length === 0 ? <p className="muted">Nothing yet. Suspensions, event changes and payout checks show here.</p> : (
               <ul className="sendlist">
                 {(log ?? []).map((l, i) => (
-                  <li key={i}><span className="sendlist__ic" aria-hidden="true"><Icon name={/suspend/.test(l.action) ? "shield" : /payout/.test(l.action) ? "wallet" : /member|staff/.test(l.action) ? "user" : "calendar"} size={18} /></span><span><b>{l.action.replace(/_/g, " ")}</b><small>{l.actor_name} · {formatDate(l.created_at, { day: "numeric", month: "short" })} {formatTime(l.created_at)}{l.note ? ` · ${l.note}` : ""}</small></span></li>
+                  <li key={i}><span className="sendlist__ic" aria-hidden="true"><Icon name={/suspend/.test(l.action) ? "shield" : /payout/.test(l.action) ? "wallet" : /ticket/.test(l.action) ? "search" : /member|staff/.test(l.action) ? "user" : "calendar"} size={18} /></span><span><b>{l.action.replace(/_/g, " ")}</b><small>{l.actor_name} · {formatDate(l.created_at, { day: "numeric", month: "short" })} {formatTime(l.created_at)}{l.note ? ` · ${l.note}` : ""}</small></span></li>
                 ))}
               </ul>
             )}

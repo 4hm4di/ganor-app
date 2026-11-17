@@ -4,6 +4,8 @@ import { PhasePill } from "@/components/PhasePill"
 import { Figure } from "@/components/widgets/Figure"
 import { BarChart } from "@/components/widgets/BarChart"
 import { SalesTrend } from "@/components/widgets/SalesTrend"
+import { SetupChecklist, type SetupStep } from "./SetupChecklist"
+import { setSetupHidden } from "./actions"
 import { eventPhase, formatDate, formatNaira, formatTime, PHASE_LABEL, type EventPhase } from "@/lib/ganor"
 
 export type Totals = { tickets: number; orders: number; take_home: number; checkins: number }
@@ -31,9 +33,13 @@ export type OverviewEvent = {
   ticket_types: { quantity: number; sold: number; on_sale: boolean; price_kobo: number }[]
 }
 
-export function OverviewView({ range, first, stats, events, suspended, passwordUpdated }: {
+export function OverviewView({ range, first, stats, events, suspended, passwordUpdated, setup }: {
   range: number; first?: string; stats: Stats | null; events: OverviewEvent[]; suspended: { reason: string } | null; passwordUpdated: boolean
+  setup?: { steps: SetupStep[]; hidden: boolean; welcome: boolean }
 }) {
+  const left = setup ? setup.steps.filter((s) => !s.done).length : 0
+  // Shown until every step is done, unless the host hid it (the welcome visit always shows it).
+  const showSetup = !!setup && left > 0 && (!setup.hidden || setup.welcome)
   const sp = { password: passwordUpdated ? "updated" : undefined }
 
   const phased = (events ?? []).map((e) => ({ e, phase: eventPhase(e, e.ticket_types) }))
@@ -86,6 +92,9 @@ export function OverviewView({ range, first, stats, events, suspended, passwordU
           <span className="kicker"><Icon name="home" size={18} />Overview</span>
           <h1>{first ? `Hi ${first}` : "Your overview"}</h1>
           <p className="muted">Numbers for your events only.</p>
+          {setup && setup.hidden && left > 0 && !showSetup && (
+            <form action={setSetupHidden}><input type="hidden" name="hide" value="0" /><button className="linkbtn"><Icon name="check-circle" size={14} /> Show my to-do list ({left} left)</button></form>
+          )}
         </div>
         <nav className="seg2" aria-label="Date range">
           {RANGES.map((r) => (
@@ -100,6 +109,8 @@ export function OverviewView({ range, first, stats, events, suspended, passwordU
         <div className="alert alert--error" role="alert"><Icon name="warning" /><span>Your host account is suspended, so your events are hidden and you can&rsquo;t publish. Reason: {suspended.reason}. Contact support@ganor.ng to resolve this.</span></div>
       )}
       {sp.password === "updated" && <div className="alert alert--ok" role="status"><Icon name="check-circle" /><span>Your password was updated.</span></div>}
+
+      {showSetup && <SetupChecklist steps={setup!.steps} first={first} welcome={setup!.welcome} />}
 
       <div className="astats hov__kpis">
         {kpis.map((k) => (
