@@ -44,7 +44,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
     <html lang="en" className={`${inter.variable} ${bricolage.variable}`} suppressHydrationWarning>
       <head>
         {/* Motion styles apply only once JS runs, so content never stays hidden without it. */}
-        <script dangerouslySetInnerHTML={{ __html: "document.documentElement.classList.add('js');if(/^\\/(dashboard|hq|gate)(\\/|$)/.test(location.pathname))document.documentElement.classList.add('app-fast')" }} />
+        <script dangerouslySetInnerHTML={{ __html: "document.documentElement.classList.add('js')" }} />
         {/* Theme before first paint: ganor_theme cookie (system by default) + the device setting. */}
         <script dangerouslySetInnerHTML={{ __html: THEME_SCRIPT }} />
       </head>

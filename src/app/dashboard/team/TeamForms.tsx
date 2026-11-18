@@ -6,10 +6,13 @@ import { createStaff, deleteStaff, resetStaffPassword, updateStaff, type TeamSta
 import { SubmitButton } from "@/components/SubmitButton"
 import { ConfirmButton } from "@/components/ConfirmButton"
 import { Icon } from "@/components/Icon"
-import { CheckPick } from "@/components/CheckPick"
+import { AssignedEvents, EventChecklist } from "./EventChecklist"
 import { ShareLogin } from "@/components/ShareLogin"
 
-export type TeamEvent = { id: string; label: string; when: string; venue: string; draft: boolean; free: boolean; heldBy: string | null }
+export type TeamEvent = {
+  id: string; label: string; when: string; wd: string; day: string; mon: string; time: string; venue: string
+  draft: boolean; live: boolean; free: boolean; heldBy: string | null; heldByName?: string | null
+}
 // Assigned events that have closed for check-in (ended over 12 hours ago, or cancelled): kept for the record only.
 export type PastCount = number
 type Staff = { id: string; username: string; display_name: string; active: boolean; locked_until: string | null; last_login_at: string | null }
@@ -27,25 +30,7 @@ async function copyText(text: string, done: string) {
 }
 
 function EventPicker({ events, selected = [], staffId }: { events: TeamEvent[]; selected?: string[]; staffId?: string }) {
-  // A free RSVP event that already has its one gate account can't be picked for anyone else.
-  const taken = (e: TeamEvent) => !!e.heldBy && e.heldBy !== staffId
-  return (
-    <CheckPick
-      name="event_ids"
-      label="Events they can check in"
-      help="They only see the events you tick here. You can change this any time."
-      empty="No events open for check-in yet. Create or publish an upcoming event first, then come back and tick it."
-      defaultValue={selected}
-      options={events.map((e) => ({
-        id: e.id,
-        label: e.label,
-        meta: `${e.when} · ${e.venue}`,
-        tags: [...(e.draft ? ["Draft: shows once published"] : []), ...(e.free && !taken(e) ? ["Free plan: 1 gate account"] : [])],
-        disabled: taken(e),
-        why: "Free plan: its 1 gate account is taken. Upgrade the plan to add more.",
-      }))}
-    />
-  )
+  return <EventChecklist events={events} selected={selected} staffId={staffId} />
 }
 
 function Credentials({ c, gateUrl }: { c: NonNullable<TeamState["created"]>; gateUrl: string }) {
@@ -126,15 +111,7 @@ export function StaffCard({ staff, assigned, events, gateUrl, past = 0 }: { staf
         <div>
           <dt>Checks in</dt>
           <dd>
-            {mine.length === 0 ? (
-              <span className="staffcard__none"><Icon name="warning" size={16} />No open events, so {first} can&rsquo;t scan anything right now. Use Edit to tick one.</span>
-            ) : (
-              <span className="staffcard__events">
-                {scanNow.map((e) => <span key={e.id} className="badge badge--ok" title={`${e.when} · ${e.venue}`}><Icon name="qr-code" size={12} />{e.label}</span>)}
-                {waiting.map((e) => <span key={e.id} className="badge" title="Shows on their phone once you publish it"><Icon name="clock" size={12} />{e.label} · draft</span>)}
-              </span>
-            )}
-            {past > 0 && <small className="staffcard__past">{past} past {past === 1 ? "event" : "events"} closed for check-in</small>}
+            <AssignedEvents events={[...scanNow, ...waiting]} past={past} first={first} />
           </dd>
         </div>
       </dl>

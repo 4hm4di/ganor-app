@@ -1,23 +1,11 @@
 "use client"
 
 import { useEffect } from "react"
-import { usePathname } from "next/navigation"
-
-const APP = /^\/(dashboard|hq|gate)(\/|$)/
 
 // Same entrance motion as ganor.ng (assets/js/site.js): the hero rises in on load,
 // headline lines slide up, and [data-reveal] blocks fade up as they scroll into view.
-// The working areas (dashboard, HQ, gate) skip it so content shows at once (html.app-fast,
-// set before first paint in layout.tsx). Only newly added elements are looked at, so long
-// pages and live updates stay cheap.
+// Only newly added elements are looked at, so long pages and live updates stay cheap.
 export function Motion() {
-  const path = usePathname()
-  const app = APP.test(path)
-
-  useEffect(() => {
-    document.documentElement.classList.toggle("app-fast", app)
-  }, [app])
-
   useEffect(() => {
     const seen = new WeakSet<Element>()
     const io =
@@ -52,17 +40,16 @@ export function Motion() {
         })
       }
       const reveal = all("[data-reveal]")
-      const groups = new Map<Element | null, number>()
       for (const el of reveal) {
         if (seen.has(el)) continue
-        const n = groups.get(el.parentElement) ?? 0
-        groups.set(el.parentElement, n + 1)
-        el.style.setProperty("--i", String(Math.min(n, 6)))
+        // Stagger by position among its revealing siblings (capped), as before.
+        const sibs = el.parentElement ? Array.from(el.parentElement.children).filter((c) => c.hasAttribute("data-reveal")) : [el]
+        el.style.setProperty("--i", String(Math.min(Math.max(0, sibs.indexOf(el)), 6)))
       }
       for (const el of [...reveal, ...all("[data-lines]").filter((e) => !e.closest("[data-hero]"))]) {
         if (seen.has(el)) continue
         seen.add(el)
-        if (io && !document.documentElement.classList.contains("app-fast")) io.observe(el)
+        if (io) io.observe(el)
         else el.classList.add("is-in")
       }
     }

@@ -3,7 +3,7 @@ import { redirect } from "next/navigation"
 import { getUserId } from "@/lib/supabase/server"
 import { siteOrigin } from "@/lib/auth"
 import { Icon } from "@/components/Icon"
-import { checkInState, formatDate } from "@/lib/ganor"
+import { checkInState, eventEndsAt, formatDate, formatTime } from "@/lib/ganor"
 import { NewStaffForm, StaffCard } from "./TeamForms"
 
 const clock = () => Date.now()
@@ -28,14 +28,21 @@ export default async function Team() {
     .map((e) => {
       // Free RSVP events (free plan or not yet paid) get one gate account.
       const free = e.event_kind === "rsvp" && (e.rsvp_plan === "free" || !e.plan_paid_at)
+      const heldBy = free ? (links ?? []).find((l) => l.event_id === e.id)?.staff_id ?? null : null
       return {
         id: e.id,
         label: e.title,
         when: formatDate(e.starts_at, { weekday: "short", day: "numeric", month: "short" }),
+        wd: formatDate(e.starts_at, { weekday: "short" }),
+        day: formatDate(e.starts_at, { day: "numeric" }),
+        mon: formatDate(e.starts_at, { month: "short" }),
+        time: formatTime(e.starts_at),
         venue: e.venue_name,
         draft: e.status === "draft",
+        live: e.status === "published" && new Date(e.starts_at).getTime() <= now && now < eventEndsAt(e),
         free,
-        heldBy: free ? (links ?? []).find((l) => l.event_id === e.id)?.staff_id ?? null : null,
+        heldBy,
+        heldByName: heldBy ? (staff ?? []).find((s) => s.id === heldBy)?.display_name ?? null : null,
       }
     })
 
