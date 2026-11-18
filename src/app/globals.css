@@ -1783,3 +1783,19 @@ form[data-busy="confirm"] .field, form[data-busy="confirm"] .checkrow { opacity:
 .hqwallet { display: grid; grid-template-columns: minmax(0, 420px) minmax(0, 1fr); gap: 16px; align-items: stretch; }
 .hqwallet > .astats { align-content: start; }
 @media (max-width: 960px) { .hqwallet { grid-template-columns: 1fr; } }
+/* HQ payouts filter on phones: five chips in two even rows (3 + 2), counts as small pills. */
+.pfilter .seg2 small { display: inline-grid; place-items: center; min-width: 20px; height: 18px; margin-left: 6px; padding: 0 5px; border-radius: 999px; background: var(--ganor-sand); opacity: 1; font: 700 11px/1 var(--ganor-font-body); }
+.pfilter .seg2 a.is-on small { background: rgba(255, 255, 255, .18); color: #fff; }
+@media (max-width: 560px) {
+  .pfilter { flex-direction: column; align-items: stretch; gap: 8px; }
+  .pfilter .seg2 { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 4px; width: 100%; box-sizing: border-box; }
+  .pfilter .seg2 a { grid-column: span 2; justify-content: center; padding: 0 6px; min-height: 40px; }
+  .pfilter .seg2 a:nth-child(n + 4) { grid-column: span 3; }
+  .pfilter > .btn { align-self: flex-start; }
+}
+@media (max-width: 360px) {
+  .pfilter .seg2 a { font-size: 12px; padding: 0 4px; }
+  .pfilter .seg2 small { margin-left: 4px; min-width: 18px; }
+}
+.wcard__acct:has(.wcard__split) { align-items: end; }
+.wcard__split { gap: 4px 14px; }

@@ -20,7 +20,7 @@ const naira = (kobo: number) => Math.round(kobo / 100)
 // runs along the bottom, and the card rises in like the other cards. Used by hosts (Wallet page,
 // payout account) and by the HQ owner (Ganor's own earnings).
 export function WalletCard({
-  takeHome, month, account, manageHref, manageLabel,
+  takeHome, month, account, manageHref, manageLabel, external = false,
   brand = "Ganor wallet", label = "Your take-home", status, split,
 }: {
   takeHome: number
@@ -28,6 +28,7 @@ export function WalletCard({
   account?: WalletAccount
   manageHref?: string
   manageLabel?: string
+  external?: boolean
   brand?: string
   label?: string
   status?: Status
@@ -59,7 +60,9 @@ export function WalletCard({
         ) : (
           <span className="wcard__who"><b>Add where your money goes</b><small>Bank account for paid ticket payouts</small></span>
         )}
-        {manageHref && <Link href={manageHref} className="wcard__btn">{manageLabel ?? (account ? "Change" : "Add account")}<Icon name="arrow-right" size={14} /></Link>}
+        {manageHref && (external
+          ? <a href={manageHref} target="_blank" rel="noopener noreferrer" className="wcard__btn">{manageLabel}<Icon name="arrow" size={14} /><span className="sr-only"> (opens in a new tab)</span></a>
+          : <Link href={manageHref} className="wcard__btn">{manageLabel ?? (account ? "Change" : "Add account")}<Icon name="arrow-right" size={14} /></Link>)}
       </footer>
     </article>
   )

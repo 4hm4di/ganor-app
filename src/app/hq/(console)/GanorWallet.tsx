@@ -20,8 +20,9 @@ export function GanorWallet({ w }: { w: GanorWalletData }) {
       month={w.fees_month_kobo + plansMonth}
       status={{ label: "Owner only", tone: "ok", icon: "shield" }}
       split={[{ label: "Ticket fees", kobo: w.fees_kobo }, { label: "RSVP plans", kobo: plans }]}
-      manageHref="/hq/payouts"
-      manageLabel="Payouts"
+      manageHref="https://dashboard.paystack.com/#/settlements"
+      manageLabel="Paystack"
+      external
     />
   )
 }
