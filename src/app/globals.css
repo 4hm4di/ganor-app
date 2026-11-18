@@ -1646,18 +1646,6 @@ form[data-busy="confirm"] .field, form[data-busy="confirm"] .checkrow { opacity:
 .payout__bad { color: var(--ganor-danger); font-weight: 500; }
 .theme-dark .payout__bad { color: #F7A8AC; }
 
-/* Confirm sheet for deletes (ConfirmButton): a native dialog, so it sits above every card and transform. */
-.cdlg { padding: 0; border: 0; background: transparent; color: var(--text); width: min(400px, calc(100vw - 32px)); max-width: none; max-height: none; overflow: visible; }
-.cdlg::backdrop { background: rgb(14 13 24 / .55); }
-.cdlg[open] .chooser__panel { animation: crop-panel 200ms var(--ganor-ease-out); }
-.cdlg .confirmd__panel { width: 100%; }
-.cdlg .confirmd__btns .btn { gap: 8px; min-height: 48px; }
-.theme-dark .confirmd__ic { background: rgba(224, 72, 78, .18); color: #F29A9E; }
-@media (max-width: 520px) {
-  .cdlg { margin: auto auto 12px; }
-  .cdlg .confirmd__btns { grid-template-columns: 1fr; }
-  .cdlg .confirmd__btns .btn--danger { order: -1; }
-}
 /* Delete buttons: comfortable tap size and no double-tap zoom delay on phones. */
 .btn--danger, .staffcard__tab, .txt-bad { touch-action: manipulation; }
 .btn--danger.btn--xs { min-height: 36px; }
@@ -1799,3 +1787,12 @@ form[data-busy="confirm"] .field, form[data-busy="confirm"] .checkrow { opacity:
 }
 .wcard__acct:has(.wcard__split) { align-items: end; }
 .wcard__split { gap: 4px 14px; }
+
+/* Two-tap delete: the armed state ("Tap again to delete") is clearly red everywhere. */
+.staffcard__tab--danger.is-armed, .txt-bad.is-armed { background: var(--ganor-danger); color: #fff; box-shadow: none; }
+.btn--danger.is-blocked { opacity: .55; }
+.types__why { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 8px 10px; padding: 10px 12px; border-radius: 12px; background: var(--ganor-sand); font: 400 13px/18px var(--ganor-font-body); }
+.types__why > .i { flex: none; margin-top: 1px; color: var(--accent-text); }
+.types__why > span { flex: 1 1 200px; }
+.types__why > .btn { margin-left: auto; }
+.types__why b { display: inline; font: inherit; font-weight: 600; }

@@ -127,7 +127,7 @@ export function StaffCard({ staff, assigned, events, gateUrl, past = 0 }: { staf
         {tab("password", "New password", "lock")}
         <form action={deleteStaff} className="staffcard__del">
           <input type="hidden" name="id" value={staff.id} />
-          <ConfirmButton className="staffcard__tab staffcard__tab--danger" title={`Delete ${staff.display_name}’s gate account?`} body={<>{first} is signed out at once and can&rsquo;t scan tickets again. You can&rsquo;t undo this, but you can make a new account later.</>} confirmLabel="Delete account" pendingText="Deleting…"><Icon name="close-circle" size={16} />Delete</ConfirmButton>
+          <ConfirmButton className="staffcard__tab staffcard__tab--danger" confirmText="Tap again to delete" pendingText="Deleting…"><Icon name="close-circle" size={16} />Delete</ConfirmButton>
         </form>
       </div>
 

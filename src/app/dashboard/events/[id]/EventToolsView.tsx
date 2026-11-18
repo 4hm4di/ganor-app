@@ -285,7 +285,7 @@ export function EventToolsView({ ev, userId, publicUrl, sp, guests, daily, scanH
           {ev.status === "draft" && (
             <form action={deleteDraft} className="actions" style={{ justifyContent: "flex-end", borderTop: "1px solid var(--ganor-line)", paddingTop: 16 }}>
               <input type="hidden" name="id" value={ev.id} />
-              <ConfirmButton title="Delete this draft?" body={<>&ldquo;{ev.title}&rdquo; and its ticket types are removed for good. This can&rsquo;t be undone.</>} confirmLabel="Delete draft" pendingText="Deleting…"><Icon name="close-circle" size={16} />Delete draft</ConfirmButton>
+              <ConfirmButton confirmText="Tap again to delete" pendingText="Deleting…"><Icon name="close-circle" size={16} />Delete draft</ConfirmButton>
             </form>
           )}
         </article>

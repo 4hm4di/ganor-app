@@ -12,6 +12,7 @@ import type { TicketTypeRow } from "@/lib/database.types"
 // One row of the Ticket types card: same layout and switch as the landing page, plus an edit pencil.
 export function TicketRow({ t, kind = "paid" }: { t: TicketTypeRow; kind?: "paid" | "rsvp" }) {
   const [editing, setEditing] = useState(false)
+  const [why, setWhy] = useState(false)
   const [onSale, setOnSale] = useOptimistic(t.on_sale)
   const [, startTransition] = useTransition()
   const [state, action] = useActionState<FormState, FormData>(async (prev, fd) => {
@@ -81,10 +82,22 @@ export function TicketRow({ t, kind = "paid" }: { t: TicketTypeRow; kind?: "paid
             <SubmitButton size="xs" arrow={false} pendingText="Saving…">Save</SubmitButton>
             <FormIdleButton onClick={() => setEditing(false)}>Cancel</FormIdleButton>
           </div>
-          {t.sold === 0 && (
-            <ConfirmButton formAction={deleteTicketType} className="btn btn--danger btn--xs btn--plain" title={`Delete “${t.name}”?`} body="No tickets have been sold for it yet, so no guest is affected. This can’t be undone." confirmLabel="Delete ticket type" pendingText="Deleting…"><Icon name="close-circle" size={14} />Delete</ConfirmButton>
+          {t.sold > 0 ? (
+            <button type="button" className="btn btn--danger btn--xs btn--plain is-blocked" aria-expanded={why} aria-controls={`why-${t.id}`} onClick={() => setWhy((w) => !w)}><Icon name="close-circle" size={14} />Delete</button>
+          ) : (
+            <ConfirmButton formAction={deleteTicketType} className="btn btn--danger btn--xs btn--plain" confirmText="Tap again to delete" pendingText="Deleting…"><Icon name="close-circle" size={14} />Delete</ConfirmButton>
           )}
         </div>
+        {why && t.sold > 0 && (
+          <div className="types__why" id={`why-${t.id}`} role="status">
+            <Icon name="info" size={16} />
+            <span>
+              <b>{t.sold.toLocaleString("en-NG")} {t.sold === 1 ? "ticket is" : "tickets are"} already sold</b>, so &ldquo;{t.name}&rdquo; can&rsquo;t be deleted: those guests keep their tickets.{" "}
+              {onSale ? "To stop new sales, take it off sale." : "It\u2019s already off sale, so no new tickets can be bought."}
+            </span>
+            {onSale && <button type="button" className="btn btn--ghost btn--xs btn--plain" onClick={() => { toggle(); setWhy(false) }}>Take off sale</button>}
+          </div>
+        )}
       </form>
     </li>
   )

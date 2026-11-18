@@ -49,7 +49,7 @@ export default async function HqTeam() {
                 {owner && m.role !== "owner" && (
                   <form action={removeMember}>
                     <input type="hidden" name="user_id" value={m.user_id} />
-                    <ConfirmButton className="btn btn--ghost btn--xs btn--plain txt-bad" title={m.login_kind !== "email" ? "Delete this HQ login?" : "Remove HQ access?"} body={m.login_kind !== "email" ? "They are signed out and the username stops working. This can’t be undone." : "They are signed out of HQ and lose access. Their own account stays."} confirmLabel={m.login_kind !== "email" ? "Delete login" : "Remove access"} pendingText="Removing…">Remove</ConfirmButton>
+                    <ConfirmButton className="btn btn--ghost btn--xs btn--plain txt-bad" confirmText={m.login_kind !== "email" ? "Tap again to delete this login" : "Tap again to remove access"} pendingText="Removing…">Remove</ConfirmButton>
                   </form>
                 )}
               </li>
