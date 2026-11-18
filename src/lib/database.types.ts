@@ -322,6 +322,7 @@ export type Database = {
       free_rsvp_allowance: { Args: Record<string, never>; Returns: Json }
       host_find_guest: { Args: { p_event: string; p_phone: string }; Returns: Json }
       admin_track_ticket: { Args: { p_q: string }; Returns: Json }
+      admin_wallet: { Args: Record<string, never>; Returns: Json }
       admin_recent_actions: {
         Args: { p_limit?: number }
         Returns: { created_at: string; actor_name: string; action: string; target_type: string; target_id: string | null; note: string | null }[]

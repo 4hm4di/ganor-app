@@ -1627,7 +1627,7 @@ form[data-busy="confirm"] .field, form[data-busy="confirm"] .checkrow { opacity:
 .wcard__st--bad { background: rgba(242, 154, 158, .22); color: #FFC2C5; }
 .wcard__bal { display: grid; align-content: center; gap: 2px; min-width: 0; }
 .wcard__l { font: 600 11px/16px var(--ganor-font-body); letter-spacing: .08em; text-transform: uppercase; opacity: .75; }
-.wcard__v { font: 800 clamp(26px, 11cqi, 44px)/1.05 var(--ganor-font-display); letter-spacing: -.01em; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.wcard__v { --fig-max: 44px; --fig-min: 22px; --fig-room: 100cqi; display: flex; align-items: flex-end; min-height: calc(var(--fig-max) * 1.1); min-width: 0; font-family: var(--ganor-font-display); font-weight: 800; letter-spacing: -.01em; font-variant-numeric: tabular-nums; }
 .wcard__m { font: 500 13px/18px var(--ganor-font-body); opacity: .8; }
 .wcard__acct { display: grid; grid-template-columns: 1fr auto; grid-template-areas: "num btn" "who btn"; align-items: end; gap: 2px 10px; min-width: 0; }
 .wcard__num { grid-area: num; font: 600 15px/20px ui-monospace, "SF Mono", Menlo, Consolas, monospace; letter-spacing: .14em; }
@@ -1767,3 +1767,19 @@ form[data-busy="confirm"] .field, form[data-busy="confirm"] .checkrow { opacity:
 .staffcard__facts dd:has(> .ecl__assigned) { display: block; }
 .ecl__assigned { display: grid; gap: 8px; width: 100%; min-width: 0; margin-top: 4px; }
 .ecl__assigned .staffcard__past { margin-top: 0; }
+
+.wcard__m { display: inline-flex; align-items: baseline; gap: 4px; }
+.wcard__m .roll { font-weight: 700; }
+.wcard__split { grid-area: who / num; display: flex; flex-wrap: wrap; gap: 4px 18px; min-width: 0; }
+.wcard__split > span { display: grid; gap: 1px; }
+.wcard__split small { font: 600 10px/14px var(--ganor-font-body); letter-spacing: .08em; text-transform: uppercase; opacity: .7; }
+.wcard__split b { font: 700 15px/20px var(--ganor-font-display); font-variant-numeric: tabular-nums; }
+/* When the card has risen in, a soft light passes across it once. */
+.wcard::after { content: ""; position: absolute; inset: 0; z-index: 1; pointer-events: none; background: linear-gradient(105deg, transparent 35%, rgba(255, 255, 255, .16) 50%, transparent 65%); transform: translateX(-120%); }
+.wcard.is-in::after { animation: wcard-sheen 1100ms cubic-bezier(.23, 1, .32, 1) 350ms 1 both; }
+@keyframes wcard-sheen { to { transform: translateX(120%); } }
+@media (prefers-reduced-motion: reduce) { .wcard.is-in::after { animation: none; } }
+/* HQ owner: Ganor's wallet beside the headline tiles. */
+.hqwallet { display: grid; grid-template-columns: minmax(0, 420px) minmax(0, 1fr); gap: 16px; align-items: stretch; }
+.hqwallet > .astats { align-content: start; }
+@media (max-width: 960px) { .hqwallet { grid-template-columns: 1fr; } }

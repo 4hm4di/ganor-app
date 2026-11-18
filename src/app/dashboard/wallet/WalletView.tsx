@@ -51,7 +51,7 @@ export function WalletView({ e, account, plans }: { e: Earnings; account: Wallet
         <WalletCard takeHome={e.takeHome} month={e.month} account={account} manageHref="/dashboard/profile#payouts" />
         <div className="wallet__tiles">
           {tiles.map((t) => (
-            <article key={t.label} className={`card astat astat--${t.tone}`}>
+            <article key={t.label} className={`card astat astat--${t.tone}`} data-reveal>
               <span className="astat__ic" aria-hidden="true"><Icon name={t.icon} size={22} /></span>
               <p className="astat__l">{t.label}</p>
               <p className="astat__v"><Figure value={t.value} naira={t.naira} /></p>
@@ -61,7 +61,7 @@ export function WalletView({ e, account, plans }: { e: Earnings; account: Wallet
         </div>
       </div>
 
-      <article className="card wallet__how">
+      <article className="card wallet__how" data-reveal>
         <h2 className="wallet__h2"><Icon name="route" size={20} />How you get paid</h2>
         <ol className="wallet__steps">
           <li><span className="wallet__step" aria-hidden="true"><Icon name="ticket" size={18} /></span><span><b>A guest pays</b><small>By card, bank transfer or USSD at checkout.</small></span></li>
@@ -73,13 +73,13 @@ export function WalletView({ e, account, plans }: { e: Earnings; account: Wallet
       <section className="stack wallet__sec">
         <h2 className="wallet__h2"><Icon name="calendar" size={20} />By event</h2>
         {byEvent.length === 0 ? (
-          <div className="card wallet__empty">
+          <div className="card wallet__empty" data-reveal>
             <Icon name="ticket" size={28} />
             <div><b>No paid sales yet.</b><p className="muted small">When guests buy paid tickets, each event&rsquo;s sales, fees and take-home show here.</p></div>
             <Link href="/dashboard/events/new" className="btn btn--primary btn--sm"><span>New event</span><span className="btn__arrow" aria-hidden="true"><Icon name="add-circle" /></span></Link>
           </div>
         ) : (
-          <div className="card wtable__wrap">
+          <div className="card wtable__wrap" data-reveal>
             <table className="wtable">
               <thead><tr><th scope="col">Event</th><th scope="col">Paid tickets</th><th scope="col">Guests paid</th><th scope="col">Ganor fee</th><th scope="col">Refunds</th><th scope="col">Your take-home</th></tr></thead>
               <tbody>
@@ -118,7 +118,7 @@ export function WalletView({ e, account, plans }: { e: Earnings; account: Wallet
         <section className="stack wallet__sec">
           <h2 className="wallet__h2"><Icon name="add-user" size={20} />RSVP plans</h2>
           <p className="small muted">What you pay Ganor for bigger free RSVP events, by bank transfer.</p>
-          <ul className="card wtx">
+          <ul className="card wtx" data-reveal>
             {plans.map((p) => {
               const plan = planById(p.rsvp_plan)
               return (

@@ -4,6 +4,7 @@ import { maskAccount } from "@/lib/banks"
 import { planById, naira } from "@/lib/plans"
 import { setPayoutStatus, setPlanPaid } from "../actions"
 import { Icon } from "@/components/Icon"
+import { GanorWallet, type GanorWalletData } from "../GanorWallet"
 import { Figure } from "@/components/widgets/Figure"
 import { SubmitButton } from "@/components/SubmitButton"
 
@@ -46,7 +47,7 @@ const when = (iso: string) => `${formatDate(iso, { day: "numeric", month: "short
 export type PayoutRow = { host_id: string; host_name: string; account_type: string | null; business_name: string | null; bank_name: string | null; account_number: string | null; account_name: string | null; status: string; status_note: string | null; updated_at: string | null; paid_events: number; gross_kobo: number; tickets_sold: number }
 export type PlanDue = { event_id: string; title: string; host_name: string; plan: string; paid_at: string | null; starts_at: string }
 
-export function PayoutsView({ sp, all, plans, found, trackError }: { sp: Search; all: PayoutRow[]; plans: PlanDue[]; found: Tracked[] | null; trackError: string }) {
+export function PayoutsView({ sp, all, plans, found, trackError, wallet = null }: { sp: Search; all: PayoutRow[]; plans: PlanDue[]; found: Tracked[] | null; trackError: string; wallet?: GanorWalletData }) {
   const tab: Tab = sp.tab === "plans" || sp.tab === "track" ? sp.tab : "accounts"
   const due = plans.filter((p) => !p.paid_at)
   const toCheck = all.filter((r) => r.status === "pending").length
@@ -73,15 +74,18 @@ export function PayoutsView({ sp, all, plans, found, trackError }: { sp: Search;
       <h1 className="hq__h1"><Icon name="wallet" size={26} />Payouts</h1>
       <p className="muted">Check hosts&rsquo; bank details, confirm RSVP plan transfers, and look up any ticket.</p>
 
+      <div className={wallet ? "hqwallet" : undefined}>
+      {wallet && <GanorWallet w={wallet} />}
       <div className="astats">
         {tiles.map((t) => (
-          <article key={t.label} className={`card astat astat--${t.tone}`}>
+          <article key={t.label} className={`card astat astat--${t.tone}`} data-reveal>
             <span className="astat__ic" aria-hidden="true"><Icon name={t.icon} size={22} /></span>
             <p className="astat__l">{t.label}</p>
             <p className="astat__v"><Figure value={t.value} naira={Boolean(t.naira)} /></p>
             <p className="astat__s">{t.sub}</p>
           </article>
         ))}
+      </div>
       </div>
 
       <nav className="tabs ptabs" aria-label="Payout sections">

@@ -11,7 +11,7 @@ export function SalesList({ rows, step = 10 }: { rows: SaleRow[]; step?: number 
   const left = rows.length - shown
   return (
     <>
-      <ul className="card wtx">
+      <ul className="card wtx" data-reveal>
         {rows.slice(0, shown).map((o) => (
           <li key={o.id} className={o.refunded ? "is-refunded" : ""}>
             <span className={`wtx__ic${o.refunded ? " wtx__ic--bad" : ""}`} aria-hidden="true"><Icon name={o.refunded ? "receipt" : "ticket"} size={18} /></span>

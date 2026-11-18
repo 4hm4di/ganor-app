@@ -3,6 +3,7 @@ import Link from "next/link"
 import { notFound, redirect } from "next/navigation"
 import { getHq, hqAllows, hqHome } from "@/lib/hq"
 import { Icon } from "@/components/Icon"
+import { GanorWallet, type GanorWalletData } from "./GanorWallet"
 import { PhasePill } from "@/components/PhasePill"
 import { eventPhase, formatDate, formatTime, PHASE_LABEL, RATINGS_ENABLED, type EventPhase } from "@/lib/ganor"
 import { Figure } from "@/components/widgets/Figure"
@@ -28,13 +29,15 @@ export default async function AdminOverview() {
   if (!me) notFound()
   if (!hqAllows(me.role, "overview")) redirect(hqHome(me.role))
   const opens = (page: Parameters<typeof hqAllows>[1]) => hqAllows(me.role, page)
-  const [{ data: o }, { data: log }, { data: daily }, { data: events }, { data: watch }, { data: hosts }] = await Promise.all([
+  const owner = me.role === "owner"
+  const [{ data: o }, { data: log }, { data: daily }, { data: events }, { data: watch }, { data: hosts }, { data: wallet }] = await Promise.all([
     supabase.rpc("admin_overview"),
     me?.can.audit ? supabase.rpc("admin_recent_actions", { p_limit: 6 }) : Promise.resolve({ data: null }),
     supabase.rpc("admin_daily", { p_days: 14 }),
     supabase.from("events").select("id, title, slug, starts_at, ends_at, status, profiles(display_name), ticket_types(quantity, sold, on_sale)").order("starts_at").limit(1000),
     supabase.rpc("admin_watchlist"),
     supabase.rpc("admin_hosts"),
+    owner ? supabase.rpc("admin_wallet") : Promise.resolve({ data: null }),
   ])
   const sev = (k: string) => (watch ?? []).filter((w) => w.severity === k).length
   const topHosts = (hosts ?? []).filter((h) => h.tickets_sold > 0 || h.published > 0).sort((a, b) => b.tickets_sold - a.tickets_sold).slice(0, 5)
@@ -67,6 +70,8 @@ export default async function AdminOverview() {
         <LiveRefresh />
       </div>
 
+      <div className={owner && wallet ? "hqwallet" : undefined}>
+      {owner && wallet && <GanorWallet w={wallet as GanorWalletData} />}
       <div className="astats">
         {tiles.map((t) => (
           <article key={t.label} className={`card astat astat--${t.tone}`} data-reveal>
@@ -76,6 +81,7 @@ export default async function AdminOverview() {
             <p className="astat__s">{"href" in t && t.href ? <Link href={t.href}>{t.sub}</Link> : t.sub}</p>
           </article>
         ))}
+      </div>
       </div>
 
       <div className="dash">
