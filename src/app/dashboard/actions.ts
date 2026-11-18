@@ -414,7 +414,7 @@ export async function savePayout(_prev: FormState, fd: FormData): Promise<FormSt
   })
   if (error) return fail("We couldn't save those details. Try again in a moment.")
   revalidatePath("/dashboard/profile")
-  return report({ status: "ok", message: "Saved. Ganor checks new payout details before your first payout; you'll see the status here." })
+  return report({ status: "ok", message: "Saved. Ganor confirms the account name, then your share of each paid ticket settles straight to this account. You'll see the status here." })
 }
 
 // RSVP questions for free tickets. Kept short on purpose: guests answer on a phone at the door.

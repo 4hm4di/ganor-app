@@ -14,8 +14,8 @@ export type Payout = {
 } | null
 
 const STATUS: Record<string, { label: string; cls: string; text: string }> = {
-  pending: { label: "Being checked", cls: "badge--warn", text: "Ganor checks the account name against your bank before the first payout." },
-  verified: { label: "Verified", cls: "badge--ok", text: "Payouts for paid tickets go to this account." },
+  pending: { label: "Being checked", cls: "badge--warn", text: "Ganor is confirming the account name with your bank. Once it matches, your share of each paid ticket settles straight to this account." },
+  verified: { label: "Verified", cls: "badge--ok", text: "Your share of each paid ticket is split at checkout and settles straight to this account." },
   rejected: { label: "Needs a fix", cls: "badge--bad", text: "These details didn't match. Update them below." },
 }
 

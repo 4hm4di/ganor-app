@@ -42,7 +42,7 @@ export function WalletView({ e, account, plans }: { e: Earnings; account: Wallet
       {(rejected || !account) && (
         <div className={`alert ${rejected ? "alert--error" : "alert--warn"}`} role="status">
           <Icon name={rejected ? "warning" : "wallet"} />
-          <span>{rejected ? <><b>Your payout account needs a fix.</b> {account?.status_note ? `Ganor says: ${account.status_note}` : "The details didn't match your bank."}</> : <><b>Add your payout account</b> so money from paid tickets has somewhere to go. Ganor checks it before anything is paid out.</>}</span>
+          <span>{rejected ? <><b>Your payout account needs a fix.</b> {account?.status_note ? `Ganor says: ${account.status_note}` : "The details didn't match your bank."}</> : <><b>Add your payout account</b> so your share of each paid ticket has somewhere to settle. Ganor confirms the account name first.</>}</span>
           <Link href="/dashboard/profile#payouts" className="alert__link">{rejected ? "Fix details" : "Add account"}</Link>
         </div>
       )}
