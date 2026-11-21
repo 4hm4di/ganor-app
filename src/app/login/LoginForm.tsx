@@ -9,7 +9,7 @@ import { useFormStatus } from "react-dom"
 import { Icon } from "@/components/Icon"
 import { ProviderLogo } from "@/components/ProviderLogo"
 import { PasswordField } from "@/components/PasswordField"
-import { PRIVACY_URL, TERMS_URL } from "@/lib/terms"
+import { ACCEPTABLE_USE_URL, PRIVACY_URL, TERMS_URL } from "@/lib/terms"
 import { hapticError } from "@/lib/haptics"
 
 type Mode = "signin" | "signup" | "link"
@@ -120,7 +120,7 @@ export function LoginForm({ mode, next, providers, error }: { mode: Mode; next: 
           <div ref={agreeBox} className={`agree${nudge && !agreed ? " agree--nudge" : ""}`}>
             <label className="checkrow">
               <input ref={agreeRef} type="checkbox" name="agree" value="1" checked={agreed} onChange={(e) => setAgreed(e.target.checked)} aria-describedby={nudge && !agreed ? "agree-msg" : undefined} aria-invalid={nudge > 0 && !agreed} />
-              <span>I agree to Ganor&rsquo;s <a href={TERMS_URL} target="_blank" rel="noopener">Terms</a> and <a href={PRIVACY_URL} target="_blank" rel="noopener">Privacy policy</a>.</span>
+              <span>I agree to Ganor&rsquo;s <a href={TERMS_URL} target="_blank" rel="noopener">Terms</a>, <a href={ACCEPTABLE_USE_URL} target="_blank" rel="noopener">Acceptable use policy</a> and <a href={PRIVACY_URL} target="_blank" rel="noopener">Privacy policy</a>.</span>
             </label>
             {nudge > 0 && !agreed && <p id="agree-msg" className="agree__msg" role="alert"><Icon name="warning" size={16} />Tick this box to create your account.</p>}
           </div>

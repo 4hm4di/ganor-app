@@ -53,7 +53,9 @@ const nextConfig: NextConfig = {
   async redirects() {
     return [
       { source: "/index.html", destination: "/", permanent: true },
-      ...["docs", "terms", "privacy", "refunds"].map((p) => ({ source: `/${p}.html`, destination: `https://ganor.ng/${p}.html`, permanent: true })),
+      ...["docs", "terms", "privacy", "refunds", "acceptable-use", "ticket-delivery"].map((p) => ({ source: `/${p}.html`, destination: `https://ganor.ng/${p}.html`, permanent: true })),
+      // The host money page was called Wallet; it shows earnings only (Ganor holds no balance).
+      { source: "/dashboard/wallet", destination: "/dashboard/earnings", permanent: true },
     ]
   },
   async rewrites() {

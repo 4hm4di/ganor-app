@@ -59,7 +59,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
           <div className="wrap foot__in">
             <span>Ganor · Your city, found.</span>
             <span>
-              <a href="https://ganor.ng/terms.html">Terms</a> · <a href="https://ganor.ng/privacy.html">Privacy</a> · <a href="mailto:support@ganor.ng">support@ganor.ng</a>
+              <a href="https://ganor.ng/terms.html">Terms</a> · <a href="https://ganor.ng/acceptable-use.html">Acceptable use</a> · <a href="https://ganor.ng/privacy.html">Privacy</a> · <a href="https://ganor.ng/refunds.html">Refunds</a> · <a href="mailto:support@ganor.ng">support@ganor.ng</a>
             </span>
           </div>
         </footer>

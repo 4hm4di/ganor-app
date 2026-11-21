@@ -42,7 +42,7 @@ export function PayoutForm({ current, defaultName, defaultEmail, earned }: { cur
           {st && <span className={`small${current.status === "rejected" ? " payout__bad" : " muted"}`}>{current.status === "rejected" && current.status_note ? `Ganor says: ${current.status_note}` : st.text}</span>}
           <div className="actions" style={{ gap: 8 }}>
             <button type="button" className="btn btn--ghost btn--xs btn--plain" onClick={() => setEditing(true)}><Icon name="pen" size={14} />Change payout details</button>
-            <Link href="/dashboard/wallet" className="btn btn--ghost btn--xs btn--plain"><Icon name="wallet" size={14} />Open wallet</Link>
+            <Link href="/dashboard/earnings" className="btn btn--ghost btn--xs btn--plain"><Icon name="wallet" size={14} />See earnings</Link>
           </div>
         </div>
       )}

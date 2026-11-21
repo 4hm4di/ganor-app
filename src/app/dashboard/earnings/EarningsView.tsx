@@ -12,7 +12,7 @@ const n = (kobo: number) => money.format(Math.round(kobo / 100))
 
 export type PlanRow = { id: string; title: string; rsvp_plan: string; plan_paid_at: string | null }
 
-export function WalletView({ e, account, plans }: { e: Earnings; account: WalletAccount; plans: PlanRow[] }) {
+export function EarningsView({ e, account, plans }: { e: Earnings; account: WalletAccount; plans: PlanRow[] }) {
   const byEvent = Object.values(
     e.sales.reduce<Record<string, { id: string; title: string; starts_at: string; tickets: number; sales: number; fees: number; refunds: number; take: number }>>((acc, s) => {
       const row = (acc[s.eventId] ??= { id: s.eventId, title: s.event, starts_at: s.startsAt, tickets: 0, sales: 0, fees: 0, refunds: 0, take: 0 })
@@ -33,9 +33,9 @@ export function WalletView({ e, account, plans }: { e: Earnings; account: Wallet
     <div className="wrap wallet">
       <div className="pagehead">
         <div>
-          <span className="kicker"><Icon name="wallet" size={18} />Wallet</span>
-          <h1 style={{ marginTop: 10 }}>Your money</h1>
-          <p className="muted">What your paid tickets earned, what Ganor kept, and where your payouts go. Free RSVPs don&rsquo;t pass through your wallet.</p>
+          <span className="kicker"><Icon name="wallet" size={18} />Earnings</span>
+          <h1 style={{ marginTop: 10 }}>Your earnings</h1>
+          <p className="muted">What your paid tickets earned, what Ganor kept, and where your payouts go. Ganor doesn&rsquo;t hold a balance for you: your share of each sale settles straight to your bank.</p>
         </div>
       </div>
 

@@ -16,12 +16,12 @@ const STATUS: Record<string, Status> = {
 }
 const naira = (kobo: number) => Math.round(kobo / 100)
 
-// A wallet as a bank card: the balance rolls in on the front, the payout account (or a breakdown)
-// runs along the bottom, and the card rises in like the other cards. Used by hosts (Wallet page,
+// Earnings shown as a bank card: the take-home rolls in on the front, the payout account (or a breakdown)
+// runs along the bottom, and the card rises in like the other cards. Used by hosts (Earnings page,
 // payout account) and by the HQ owner (Ganor's own earnings).
 export function WalletCard({
   takeHome, month, account, manageHref, manageLabel, external = false,
-  brand = "Ganor wallet", label = "Your take-home", status, split,
+  brand = "Ganor earnings", label = "Your take-home", status, split,
 }: {
   takeHome: number
   month?: number

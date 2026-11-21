@@ -35,7 +35,7 @@ export function AppNav({ name, email, logo, staff, hqOnly, hqRole }: Props) {
   })) : [
     { href: "/dashboard", label: "Overview", icon: "home", match: (p: string) => p === "/dashboard" },
     { href: "/dashboard/events", label: "My events", icon: "calendar", match: (p: string) => p.startsWith("/dashboard/events") },
-    { href: "/dashboard/wallet", label: "Wallet", icon: "wallet", match: (p: string) => p.startsWith("/dashboard/wallet") },
+    { href: "/dashboard/earnings", label: "Earnings", icon: "wallet", match: (p: string) => p.startsWith("/dashboard/earnings") },
     { href: "/dashboard/team", label: "Gate team", icon: "users", match: (p: string) => p.startsWith("/dashboard/team") },
   ]
   // Profile lives in the account menu (and the phone menu), not in the top bar.
@@ -116,7 +116,7 @@ export function AppNav({ name, email, logo, staff, hqOnly, hqRole }: Props) {
                   <>
                     <Link href="/dashboard/profile" className="acct__item" role="menuitem"><Icon name="user" size={18} />Host profile</Link>
                     <Link href="/dashboard/events" className="acct__item" role="menuitem"><Icon name="calendar" size={18} />My events</Link>
-                    <Link href="/dashboard/wallet" className="acct__item" role="menuitem"><Icon name="wallet" size={18} />Wallet</Link>
+                    <Link href="/dashboard/earnings" className="acct__item" role="menuitem"><Icon name="wallet" size={18} />Earnings</Link>
                     <Link href="/dashboard/team" className="acct__item" role="menuitem"><Icon name="users" size={18} />Gate team</Link>
                   </>
                 )}

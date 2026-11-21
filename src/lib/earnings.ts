@@ -14,7 +14,7 @@ export type Sale = { id: string; at: string; buyer: string; event: string; event
 const monthKey = (iso: string) => new Intl.DateTimeFormat("en-CA", { timeZone: TZ, year: "numeric", month: "2-digit" }).format(new Date(iso))
 
 // A host's paid sales and what they earned: share after the Ganor fee (when the host absorbs it), fees, refunds.
-// Free tickets and free RSVPs never pass through the wallet.
+// Free tickets and free RSVPs never count towards earnings.
 export async function hostEarnings(supabase: Db, userId: string) {
   const { data } = await supabase
     .from("orders")
