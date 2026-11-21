@@ -14,9 +14,9 @@ export type Payout = {
 } | null
 
 const STATUS: Record<string, { label: string; cls: string; text: string }> = {
-  pending: { label: "Being checked", cls: "badge--warn", text: "Ganor is confirming the account name with your bank. Once it matches, your share of each paid ticket settles straight to this account." },
+  pending: { label: "Being checked", cls: "badge--warn", text: "Ganor is confirming the account name with your bank. Paid tickets go on sale once it matches, and your share of each sale then settles straight to this account." },
   verified: { label: "Verified", cls: "badge--ok", text: "Your share of each paid ticket is split at checkout and settles straight to this account." },
-  rejected: { label: "Needs a fix", cls: "badge--bad", text: "These details didn't match. Update them below." },
+  rejected: { label: "Needs a fix", cls: "badge--bad", text: "These details didn't match. Update them below. Paid tickets stay off sale until they're verified." },
 }
 
 export function PayoutForm({ current, defaultName, defaultEmail, earned }: { current: Payout; defaultName: string; defaultEmail: string; earned?: { takeHome: number; month: number } }) {

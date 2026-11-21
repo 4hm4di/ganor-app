@@ -6,6 +6,8 @@ import { formatDate, formatTime } from "@/lib/ganor"
 import { naira as nairaPlan, planById } from "@/lib/plans"
 import type { Earnings } from "@/lib/earnings"
 import { SalesList } from "./SalesList"
+import { SalesNotice } from "@/components/SalesNotice"
+import { paidSalesState } from "@/lib/sales"
 
 const money = new Intl.NumberFormat("en-NG", { style: "currency", currency: "NGN", maximumFractionDigits: 0 })
 const n = (kobo: number) => money.format(Math.round(kobo / 100))
@@ -27,7 +29,7 @@ export function EarningsView({ e, account, plans }: { e: Earnings; account: Wall
     { label: "Ganor fees", value: Math.round(e.fees / 100), naira: true, icon: "percent", tone: "ink", sub: "6% + ₦100 per paid ticket" },
     { label: "Refunded", value: Math.round(e.refunded / 100), naira: true, icon: "receipt", tone: e.refunded ? "danger" : "ink", sub: e.refunded ? "Taken off your take-home" : "No refunds" },
   ]
-  const rejected = account?.status === "rejected"
+  const sales = paidSalesState(account)
 
   return (
     <div className="wrap wallet">
@@ -39,13 +41,7 @@ export function EarningsView({ e, account, plans }: { e: Earnings; account: Wall
         </div>
       </div>
 
-      {(rejected || !account) && (
-        <div className={`alert ${rejected ? "alert--error" : "alert--warn"}`} role="status">
-          <Icon name={rejected ? "warning" : "wallet"} />
-          <span>{rejected ? <><b>Your payout account needs a fix.</b> {account?.status_note ? `Ganor says: ${account.status_note}` : "The details didn't match your bank."}</> : <><b>Add your payout account</b> so your share of each paid ticket has somewhere to settle. Ganor confirms the account name first.</>}</span>
-          <Link href="/dashboard/profile#payouts" className="alert__link">{rejected ? "Fix details" : "Add account"}</Link>
-        </div>
-      )}
+      {!sales.open && <SalesNotice s={sales} />}
 
       <div className="wallet__hero">
         <WalletCard takeHome={e.takeHome} month={e.month} account={account} manageHref="/dashboard/profile#payouts" />

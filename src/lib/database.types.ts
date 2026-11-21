@@ -320,6 +320,7 @@ export type Database = {
       rsvp_submit: { Args: { p_key: string; p_event: string; p_ticket_type: string; p_name: string; p_phone: string; p_email: string; p_answers: Json; p_consent: boolean; p_device: string; p_net: string }; Returns: Json }
       ticket_view: { Args: { p_token: string }; Returns: Json }
       free_rsvp_allowance: { Args: Record<string, never>; Returns: Json }
+      event_paid_sales_open: { Args: { p_event: string }; Returns: boolean }
       host_find_guest: { Args: { p_event: string; p_phone: string }; Returns: Json }
       admin_track_ticket: { Args: { p_q: string }; Returns: Json }
       admin_wallet: { Args: Record<string, never>; Returns: Json }

@@ -21,6 +21,8 @@ import { SalesTrend } from "@/components/widgets/SalesTrend"
 import { Figure } from "@/components/widgets/Figure"
 import { RSVP_PLANS, planById, questionLimit, naira as nairaWhole } from "@/lib/plans"
 import { PhasePill } from "@/components/PhasePill"
+import { SalesNotice } from "@/components/SalesNotice"
+import type { SalesState } from "@/lib/sales"
 import { BackLink } from "@/components/BackLink"
 import { eventPhase, PHASE_LABEL, feeKobo, formatDate, formatNaira, formatTime, isoToLagosLocal, checkInState, checkInClosesAt } from "@/lib/ganor"
 
@@ -43,7 +45,7 @@ export type ToolsGuest = { name: string; ticket: string; in: boolean }
 const dayLabel = (d: string) => formatDate(`${d}T12:00:00Z`, { day: "numeric", month: "short" })
 const hourLabel = (h: number) => `${((h + 11) % 12) + 1}${h < 12 ? "am" : "pm"}`
 
-export function EventToolsView({ ev, userId, publicUrl, sp, guests, daily, scanHours, daysLeft, hasContact, team = [] }: { team?: { display_name: string; active: boolean }[]; hasContact: boolean; ev: ToolsEvent; userId: string; publicUrl: string; sp: { created?: string; published?: string; error?: string; upgraded?: string }; guests: ToolsGuest[]; daily: { day: string; count: number }[]; scanHours: { hour: number; count: number }[]; daysLeft: number }) {
+export function EventToolsView({ ev, userId, publicUrl, sp, guests, daily, scanHours, daysLeft, hasContact, team = [], sales }: { sales?: SalesState; team?: { display_name: string; active: boolean }[]; hasContact: boolean; ev: ToolsEvent; userId: string; publicUrl: string; sp: { created?: string; published?: string; error?: string; upgraded?: string }; guests: ToolsGuest[]; daily: { day: string; count: number }[]; scanHours: { hour: number; count: number }[]; daysLeft: number }) {
   const hasFree = ev.ticket_types.some((t) => t.price_kobo === 0)
   const publicPath = `/e/${ev.slug}`
   const tickets = ev.ticket_types ?? []
@@ -95,6 +97,8 @@ export function EventToolsView({ ev, userId, publicUrl, sp, guests, daily, scanH
       {sp.published && <div className="alert alert--ok" role="status" style={{ marginBottom: 14 }}><Icon name="check-circle" /><span>Your event is live. Share the link below.</span></div>}
       {sp.error && <div className="alert alert--error" role="alert" style={{ marginBottom: 14 }}><Icon name="warning" /><span>{ERRORS[sp.error] ?? "Something went wrong."}</span>{sp.error === "contact" && <Link href="/dashboard/profile" className="alert__link">Add contact</Link>}</div>}
       {!hasContact && !live && sp.error !== "contact" && <div className="alert alert--warn" role="status" style={{ marginBottom: 14 }}><Icon name="phone" /><span>Before you publish, add a WhatsApp or call number to your host profile. Email and social links are optional.</span><Link href="/dashboard/profile" className="alert__link">Add contact</Link></div>}
+      {/* Paid tickets stay off sale until the payout account is verified and set up with Paystack (enforced in the database too). */}
+      {ev.event_kind !== "rsvp" && sales && !sales.open && <SalesNotice s={sales} style={{ marginBottom: 14 }} />}
 
       <div className="bento">
         <article className="card card--sales" data-reveal>

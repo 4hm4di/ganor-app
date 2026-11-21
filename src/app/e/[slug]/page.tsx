@@ -40,6 +40,14 @@ const getEvent = cache(async (slug: string) => {
   return data
 })
 
+// Paid tickets can only be sold once the host's payout account is verified and set up with Paystack.
+// The database enforces this at checkout; here it only decides what guests are shown.
+async function paidSalesOpen(eventId: string) {
+  const supabase = await createClient()
+  const { data, error } = await supabase.rpc("event_paid_sales_open", { p_event: eventId })
+  return !error && data === true
+}
+
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params
   const ev = await getEvent(slug)
@@ -86,6 +94,8 @@ export default async function EventPage({ params }: { params: Promise<{ slug: st
   const phase = eventPhase(ev, ev.ticket_types)
   const ended = phase === "ended"
   const live = ev.status === "published"
+  const hasPaidTickets = tickets.some((t) => t.price_kobo > 0)
+  const paidOpen = live && !ended && hasPaidTickets ? await paidSalesOpen(ev.id) : false
   const h = await headers()
   const hostName = h.get("x-forwarded-host") ?? h.get("host") ?? "app.ganor.ng"
   const url = `${hostName.startsWith("localhost") ? "http" : "https"}://${hostName}/e/${ev.slug}`
@@ -228,7 +238,7 @@ export default async function EventPage({ params }: { params: Promise<{ slug: st
                   <div className="tt__row" key={t.id}>
                     <div>
                       <div className="tt__name">{t.name}</div>
-                      <div className="tt__meta">{left <= 0 ? "Sold out" : t.description || `${left} left`}</div>
+                      <div className="tt__meta">{left <= 0 ? "Sold out" : t.price_kobo > 0 && !paidOpen ? "Not on sale yet" : t.description || `${left} left`}</div>
                     </div>
                     <div className="tt__end">
                       <span className="tt__price">{formatNaira(t.price_kobo)}</span>
@@ -247,8 +257,10 @@ export default async function EventPage({ params }: { params: Promise<{ slug: st
               <RsvpForm eventId={ev.id} eventTitle={ev.title} options={freeOptions} fields={parseRsvpFields(ev.rsvp_fields)} stamp={formStamp(ev.id)} full={capLeft <= 0} />
             </div>
           )}
-          {!ended && tickets.some((t) => t.price_kobo > 0) && (
-            <div className="alert alert--info"><Icon name="info" /><span>Ticket sales open soon. Pay by card, transfer or USSD, and get your ticket on WhatsApp.</span></div>
+          {!ended && hasPaidTickets && (
+            <div className="alert alert--info"><Icon name="info" /><span>{paidOpen
+              ? "Ticket sales open soon. Pay by card, transfer or USSD, and get your ticket on WhatsApp."
+              : "Paid tickets for this event aren’t on sale yet. Check back soon, or message the host."}</span></div>
           )}
         </aside>
       </div>

@@ -3,6 +3,7 @@ import { headers } from "next/headers"
 import { notFound, redirect } from "next/navigation"
 import { getUserId } from "@/lib/supabase/server"
 import { EventToolsView } from "./EventToolsView"
+import { paidSalesState } from "@/lib/sales"
 
 export const metadata: Metadata = { title: "Event tools" }
 
@@ -21,7 +22,7 @@ export default async function EventTools({
   if (!userId) redirect("/login")
 
   // Everything this page needs, in one round of parallel queries.
-  const [{ data: ev }, { data: rows }, { data: prof }, { data: gate }] = await Promise.all([
+  const [{ data: ev }, { data: rows }, { data: prof }, { data: gate }, { data: payout }] = await Promise.all([
     supabase
       .from("events")
       .select("*, ticket_types(*)")
@@ -37,6 +38,7 @@ export default async function EventTools({
       .order("checked_in_at", { ascending: false, nullsFirst: false }),
     supabase.from("profiles").select("contact_whatsapp, contact_phone").eq("id", userId).maybeSingle(),
     supabase.from("host_staff_events").select("host_staff(display_name, active)").eq("event_id", id),
+    supabase.from("payout_accounts").select("status, status_note, paystack_subaccount_code").eq("host_id", userId).maybeSingle(),
   ])
   if (!ev) notFound()
 
@@ -70,5 +72,5 @@ export default async function EventTools({
   const daysLeft = Math.max(0, Math.ceil((new Date(ev.starts_at).getTime() - nowMs()) / 86_400_000))
   const team = (gate ?? []).map((g) => g.host_staff as unknown as { display_name: string; active: boolean } | null).filter((s): s is { display_name: string; active: boolean } => !!s)
   const hasContact = Boolean(prof?.contact_whatsapp || prof?.contact_phone)
-  return <EventToolsView ev={ev} userId={userId} publicUrl={publicUrl} sp={sp} guests={guests} daily={daily} scanHours={scanHours} daysLeft={daysLeft} hasContact={hasContact} team={team} />
+  return <EventToolsView ev={ev} userId={userId} publicUrl={publicUrl} sp={sp} guests={guests} daily={daily} scanHours={scanHours} daysLeft={daysLeft} hasContact={hasContact} team={team} sales={paidSalesState(payout)} />
 }

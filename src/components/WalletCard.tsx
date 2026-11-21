@@ -5,7 +5,7 @@ import { CountUp } from "./widgets/CountUp"
 import { Figure } from "./widgets/Figure"
 import { maskAccount } from "@/lib/banks"
 
-export type WalletAccount = { bank_name: string; account_number: string; account_name: string; status: string; status_note?: string | null } | null
+export type WalletAccount = { bank_name: string; account_number: string; account_name: string; status: string; status_note?: string | null; paystack_subaccount_code?: string | null } | null
 type Status = { label: string; tone: "ok" | "warn" | "bad"; icon: string }
 
 const STATUS: Record<string, Status> = {
